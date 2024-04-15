@@ -1,110 +1,101 @@
 print(__name__)
-import os, random
-from src import player, enemy, map, save
-from src.combat import battle
-from src.menu import mainMenu
-
-run = True
-play = False
-safe = True
-rules = False
-menu_open = True
-
-x_len = len(map.map[0])-1
-y_len = len(map.map)-1
-
-def clear():
-  os.system('cls||clear')
-def draw():
-  print("xX--------------------xX")
+import random
+from src import enemy
+from src.map import Map
+from src.player import Player
+from src.combat import Combat
+from src.menu import Menu
+from src.save import Save
+from src.game import Game
 
 def runGame():
-  global run, menu_open, play, safe
-  while run:
-    while menu_open:
-      mainMenu()
+  game = Game()
+  player = Player("", 10, 2, 1, 0, 0, 0, 0, False, False)
+  menu = Menu()
+  map = Map()
 
-    while play:
-      print()
-      save.save()
-      clear()
-      tile = map.biomes[map.map[player.player["y"]][player.player["x"]]]
-      if not safe:
+  while game.run:
+    while menu.mainmenu:
+      game.clear()
+      menu.mainMenu(player, game)
+
+    while game.play:
+      Save().save(player)
+      game.clear()
+      tile = map.biomes[map.map[player["y"]][player["x"]]]
+      if not game.safe:
         if tile["e"]:
-          selectEnemy = enemy.e_list[random.randint(0, len(enemy.e_list)-1)]
+          selectEnemy = enemy.enemy_list[random.randint(0, len(enemy.enemy_list)-1)]
           encounterCheck = random.randint(0, 100)
-          if encounterCheck < enemy.mobs[selectEnemy]["spawn"]:
-            player.player["combat"] = True
-            battle(selectEnemy, tile)
-            save.save()
-      if play:
-        draw()
+          if encounterCheck < enemy.enemy_stats[selectEnemy]["spawn"]:
+            player["combat"] = True
+            combat = Combat(selectEnemy)
+            game.play =combat.battle(player, tile, game)
+            menu.mainmenu = not game.play
+            Save().save(player)
+      if game.play:
+        game.draw()
         print("Current location: " + tile['t'])
-        draw()
+        game.draw()
 
         print("STATS")
-        print("  Name - " + player.player["name"])
-        print("  HP - " + str(player.player["HP"]) + "/" + str(player.player["MAX_HP"]))
-        print("  ATK - " + str(player.player["ATK"]))
-        print("  Potion(s) - " + str(player.player["potions"]))
-        print("  Elixir(s) - " + str(player.player["elixirs"]))
-        print("  Coin(s) - " + str(player.player["money"]))
-        draw()
+        print("  Name - " + player["name"])
+        print("  HP - " + str(player["HP"]) + "/" + str(player["MAX_HP"]))
+        print("  ATK - " + str(player["ATK"]))
+        print("  Potion(s) - " + str(player["potions"]))
+        print("  Elixir(s) - " + str(player["elixirs"]))
+        print("  Coin(s) - " + str(player["money"]))
+        game.draw()
 
         print("Available actions:")
-        if player.player["y"] > 0:
+        if player["y"] > 0:
           print("  1 - Move North")
-        if player.player["x"] < x_len:
+        if player["x"] < map.x_len:
           print("  2 - Move East")
-        if player.player["y"] < y_len:
+        if player["y"] < map.y_len:
           print("  3 - Move South")
-        if player.player["x"] > 0:
+        if player["x"] > 0:
           print("  4 - Move West")
-        if player.player["potions"] > 0:
+        if player["potions"] > 0:
           print("  5 - Use Potion")
         print("  quit - Quit")
-        draw()
+        game.draw()
         dest = input("\n#> ")
         match dest:
           case "quit":
-            play = False
-            menu_open = True
-            save.save()
+            game.play = False
+            menu.mainmenu = True
+            Save().save(player)
           case "1":
-            if player.player["y"] > 0:
-              player.player["y"] -= 1
-              safe = False
+            if player["y"] > 0:
+              player["y"] -= 1
+              game.safe = False
             else :
               print("You can't go that way")
           case "2":
-            if player.player["x"] < x_len:
-              player.player["x"] += 1
-              safe = False
+            if player["x"] < map.x_len:
+              player["x"] += 1
+              game.safe = False
             else:
               print("You can't go that way")
           case "3":
-            if player.player["y"] < y_len:
-              player.player["y"] += 1
-              safe = False
+            if player["y"] < map.y_len:
+              player["y"] += 1
+              game.safe = False
             else:
               print("You can't go that way")
           case "4":
-            if player.player["x"] > 0:
-              player.player["x"] -= 1
-              safe = False
+            if player["x"] > 0:
+              player["x"] -= 1
+              game.safe = False
             else:
               print("You can't go that way")
           case "5":
-            safe = True
-            if player.player["potions"] > 0:
-              player.player["potions"] -= 1
-              player.player["HP"] += 5
-              if player.player["HP"] > player.player["MAX_HP"]:
-                player.player["HP"] = player.player["MAX_HP"]
-              print("You used a potion and restored 5 HP!")
-            else:
-              print("You don't have any potions left!")
+            game.safe = True
+            player.heal()
           case _:
-            safe = True
+            game.safe = True
 
-runGame()
+
+if __name__ == "__main__":
+  runGame()

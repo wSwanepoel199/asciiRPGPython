@@ -1,7 +1,7 @@
 
-e_list = ["Goblin", "Orc", "Slime"]
+enemy_list = ["Goblin", "Orc", "Slime"]
 
-mobs = {
+enemy_stats = {
   "Goblin": {
     "hp": 5,
     "atk": 1,
