@@ -14,7 +14,7 @@ class Save:
       os.makedirs(path)
       print("Directory '% s' created" % 'saves')
     except OSError:
-      print("Directory '% s' already exists" % 'saves')
+      pass
 
     with open("./saves/save.json", "w") as outfile:
       outfile.write(json_object)

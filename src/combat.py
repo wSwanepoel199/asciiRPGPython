@@ -72,7 +72,6 @@ class Combat:
             print(str(player['name']) + ' used an elixir and gained 1 ATK!')
         case '5':
           player["combat"] = False
-      input('> ')
       if hp >= 1:
         # if defending
         #   check if able to damage
