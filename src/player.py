@@ -25,6 +25,8 @@ class Player:
     self.money=money
     self.x= x
     self.y= y
+    self.location = "overworld"
+    self.safe = True
     self.key= key
     self.combat= combat
 
@@ -40,13 +42,12 @@ class Player:
   def items(self):
     return self.__dict__.items()
 
-
-  def heal(self):
-    if self["potions"] > 0:
-      self["potions"] -= 1
-      self["HP"] += 5
-      if self["HP"] > self["MAX_HP"]:
-        self["HP"] = self["MAX_HP"]
+  def heal(self, player):
+    if player["potions"] > 0:
+      player["potions"] -= 1
+      player["HP"] += 5
+      if player["HP"] > player["MAX_HP"]:
+        player["HP"] = player["MAX_HP"]
         print("You used a potion and restored 5 HP!")
     else:
       print("You don't have any potions!")

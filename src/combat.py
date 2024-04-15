@@ -1,5 +1,6 @@
 import random
 from src import enemy
+from src.game import Game
 
 class Combat:
   def __init__(self, target):
@@ -17,7 +18,7 @@ class Combat:
   def __getitem__(self, key):
     return getattr(self, key)
 
-  def battle(self, player, tile, game):
+  def battle(self, player):
 
     hp = self.enemyStats["hp"]
     max_hp = self.enemyStats["hp"]
@@ -25,20 +26,20 @@ class Combat:
     gold = self.enemyStats["gold"]
 
     while player["combat"]:
-      game.clear()
-      game.draw()
-      print("A wild " + self.enemy + " has appeared from the " + tile["t"] + "!")
-      game.draw()
+      Game().clear()
+      Game().draw()
+      print("A " + self.enemy + " has challanged you to mortal combat!")
+      Game().draw()
       print(self.enemy+"'s STATS")
       print(self.enemy + "'s HP: " + str(hp) + "/" + str(max_hp))
       print(self.enemy + "'s ATK: " + str(atk))
-      game.draw()
+      Game().draw()
       print(player["name"] + "'s STATS")
       print(player["name"] + "'s HP: " + str(player["HP"]) + "/" + str(player["MAX_HP"]))
       print(player["name"] + "'s ATK: " + str(player["ATK"]))
       print('Available Potions: ' + str(player["potions"]))
       print('Available Elixirs: ' + str(player["elixirs"]))
-      game.draw()
+      Game().draw()
       print("Available actions:")
       print("  1 - Attack")
       print("  2 - Defend")
@@ -63,7 +64,7 @@ class Combat:
           print(str(player['name']) + ' is defending against the ' + self.enemy + "'s attacks!")
         case '3':
           if player["potions"] > 0:
-            player.heal()
+            player.heal(player)
         case '4':
           if player["elixirs"] > 0:
             self.usedElixir = True
@@ -89,7 +90,6 @@ class Combat:
       else:
         print('You have defeated the ' + self.enemy + '!')
         player["money"] += gold
-        player["combat"] = False
         if random.randint(0,100) <= 10:
           print('You found a potion after the battle!')
           player["potions"] += 1
@@ -97,17 +97,19 @@ class Combat:
           print('You found an elixir after the battle!')
           player["elixirs"] += 1
         input('> ')
+        player["combat"] = False
         return True
       if player["HP"] <= 0:
-        player["combat"] = False
-        game.draw()
+        Game().draw()
         print("GAME OVER.\nYou have been defeated by the " + self.enemy + "!")
         if self.usedElixir:
           self.usedElixir = False
           player["ATK"] -= 1
         if self.defend:
           self.defend = False
-        game.draw()
+        Game().draw()
         input('> ')
+        player["combat"] = False
         return False
       input('> ')
+    return True

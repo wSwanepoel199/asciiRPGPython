@@ -1,4 +1,5 @@
 from src.save import Save
+from src.player import Player
 
 print(__name__)
 
@@ -34,16 +35,20 @@ class Menu:
 
     match self.choice:
       case "1":
+        player = Player("", 50, 3, 1, 0, 0, 0, 0, False, False)
         player["name"] = input("Enter your hero's name: ")
         self.mainmenu = False
         game['play'] = True
+        return player
 
       case "2":
+        player = Player("", 50, 3, 1, 0, 0, 0, 0, False, False)
         Save().load(player)
         print("Hero " + player["name"] + " was successfully loaded with HP: "+str(player["HP"])+" and ATK: "+str(player["ATK"])+". They had "+str(player["potions"])+" potion(s), "+ str(player["elixirs"])+" elixir(s) and "+str(player["money"])+" coin(s) on them.")
         input('> ')
         self.mainmenu = False
         game['play'] = True
+        return player
       case "3":
         self.rules = True
       case "4":
