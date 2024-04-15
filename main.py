@@ -10,7 +10,7 @@ from src.game import Game
 
 def runGame():
   game = Game()
-  player = Player("", 10, 2, 1, 0, 0, 0, 0, False, False)
+  player = Player("", 50, 3, 1, 0, 0, 0, 0, False, False)
   menu = Menu()
   map = Map()
 

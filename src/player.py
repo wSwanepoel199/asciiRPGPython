@@ -48,5 +48,5 @@ class Player:
       if self["HP"] > self["MAX_HP"]:
         self["HP"] = self["MAX_HP"]
         print("You used a potion and restored 5 HP!")
-      else:
-        print("You don't have any potions left!")
+    else:
+      print("You don't have any potions!")
