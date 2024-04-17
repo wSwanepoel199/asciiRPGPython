@@ -1,8 +1,12 @@
 
 
 
+from _collections_abc import dict_items
+from typing import Any
+
+
 class Player:
-  def __init__(self, name, HP, ATK, potions, elixirs, money, x, y, key, combat):
+  def __init__(self, name, HP, ATK, potions, elixirs, money, x, y, key, combat) -> None:
     self.name = name
     self.HP = HP
     self.MAX_HP= HP
@@ -19,19 +23,19 @@ class Player:
     self.key= key
     self.combat= combat
 
-  def __str__(self):
+  def __str__(self) -> str:
     return f"{self.__dict__}"
 
-  def __setitem__(self, key, value):
+  def __setitem__(self, key, value) -> None:
     setattr(self, key, value)
 
-  def __getitem__(self, key):
+  def __getitem__(self, key):# -> Any:
     return getattr(self, key)
 
-  def items(self):
+  def items(self) -> dict_items[str, Any]:
     return self.__dict__.items()
 
-  def heal(self, player):
+  def heal(self, player) -> None:
     if player["potions"] > 0:
       player["potions"] -= 1
       player["HP"] += 5

@@ -1,7 +1,6 @@
 print(__name__)
-import tcod.context
 import random
-from src import enemy, window
+from src import window
 from src.map import Map
 # from src.player import Player
 from src.entity import Entity, enemy_stats
@@ -12,7 +11,7 @@ from src.game import Game
 
 initialLoad = True
 
-def runGame():
+def runGame() -> None:
   global initialLoad
   game = Game()
   player = Entity()
@@ -22,44 +21,44 @@ def runGame():
   while game.run:
     while menu.mainmenu:
       game.clear()
-      player = menu.mainMenu(player, game)
+      player = menu.mainMenu(player=player, game=game)
 
     while game.play:
-      Save().save(player)
+      Save().save(player=player)
       game.clear()
       tile = map.biomes[map.map[player["y"]][player["x"]]]
       if not player.safe or not initialLoad:
         if tile["e"]:
-          selectEnemy = enemy_stats.items()[random.randint(0, len(enemy_stats)-1)]
-          encounterCheck = random.randint(0, 100)
+          selectEnemy = enemy_stats.items()[random.randint(a=0, b=len(enemy_stats)-1)]
+          encounterCheck = random.randint(a=0, b=100)
           if encounterCheck < enemy_stats[selectEnemy]["spawn"]:
             player["combat"] = True
-            combat = Combat(selectEnemy)
-            game.play = combat.battle(player)
+            combat = Combat(target=selectEnemy)
+            game.play = combat.battle(player=player)
             menu.mainmenu = not game.play
-            Save().save(player)
+            Save().save(player=player)
             game.clear()
       initialLoad = False
       if game.play:
         match player.location:
           case "TOWN":
-            map.town(player)
+            map.town(player=player)
           case "SHOP":
-            map.shop(player)
+            map.shop(player=player)
           case "MAYOR":
-            map.mayor(player)
+            map.mayor(player=player)
           case "CAVE":
-            map.cave(player)
+            map.cave(player=player)
           case "BOSS":
-            combat = Combat("Dragon")
-            game.play = combat.battle(player)
+            combat = Combat(target="Dragon")
+            game.play = combat.battle(player=player)
             menu.mainmenu = not game.play
             if game.play:
               player.location = "CAVE"
-            Save().save(player)
+            Save().save(player=player)
             game.clear()
           case _:
-            game.play = map.overworld(player, tile)
+            game.play = map.overworld(player=player, tile=tile)
             menu.mainmenu = not game.play
 
 

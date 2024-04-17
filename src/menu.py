@@ -4,21 +4,21 @@ from src.entity import Entity
 print(__name__)
 
 class Menu:
-  def __init__(self):
+  def __init__(self) -> None:
     self.mainmenu = True
     self.rules = False
     self.choice = ''
 
-  def __str__(self):
+  def __str__(self) -> str:
     return f"{self.__dict__}"
 
-  def __setitem__(self, key, value):
+  def __setitem__(self, key, value) -> None:
         setattr(self, key, value)
 
-  def __getitem__(self, key):
+  def __getitem__(self, key):# -> Any:
     return getattr(self, key)
 
-  def mainMenu(self, player, game):
+  def mainMenu(self, player, game) -> Entity | None:
 
     print("1: New Game")
     print("2: Load Game")
@@ -26,20 +26,20 @@ class Menu:
     print("4: Quit/Exit")
 
     if self.rules:
-      print("I'm the creator and here are my rules MUAHAHAHA")
+      print("I'm the creator and here are my rules MUHAHAHAHA")
       self.rules = False
       self.choice = ""
-      input('> ')
+      input(prompt='> ')
     else:
-      self.choice = input("#> ")
+      self.choice = input(prompt="#> ")
 
     match self.choice:
       case "1":
         # player = Player("", 50, 3, 1, 0, 0, 0, 0, False, False)
-        name = input("Enter your hero's name: ")
+        name = input(prompt="Enter your hero's name: ")
 
-        player = Entity({
-          "enitityType": "PLAYER",
+        player = Entity(args={
+          "entityType": "PLAYER",
           'icon': "@",
           "name": name,
           "HP": 50,
@@ -56,9 +56,9 @@ class Menu:
 
       case "2":
         player = Entity()
-        Save().load(player)
-        print("Hero " + player["name"] + " was successfully loaded with HP: "+str(player["HP"])+" and ATK: "+str(player["ATK"])+". They had "+str(player["potions"])+" potion(s), "+ str(player["elixirs"])+" elixir(s) and "+str(player["money"])+" coin(s) on them.")
-        input('> ')
+        Save().load(player=player)
+        print("Hero " + player["name"] + " was successfully loaded with HP: "+str(object=player["HP"])+" and ATK: "+str(object=player["ATK"])+". They had "+str(object=player["potions"])+" potion(s), "+ str(object=player["elixirs"])+" elixir(s) and "+str(object=player["money"])+" coin(s) on them.")
+        input(prompt='> ')
         self.mainmenu = False
         game['play'] = True
         return player

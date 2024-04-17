@@ -1,13 +1,14 @@
+from typing import NoReturn
 import tcod
 from src import entity
-from action import Action, MovementAction
+from action import Action, MovementAction, EscapeAction
 
-def screen(): 
+def screen() -> NoReturn: 
   screen_width = 80
   screen_height = 60
 
-  player = entity.Entity({
-    'enitityType': 'PLAYER',
+  player = entity.Entity(args={
+    'entityType': 'PLAYER',
     'icon': '@',
     'colour': 'white',
     'name': '',
@@ -27,31 +28,31 @@ def screen():
   })
   
   tileset = tcod.tileset.load_tilesheet(
-    "./src/assets/dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
+    "./src/assets/dejavu10x10_gs_tc.png", columns=32, rows=8, charmap=tcod.tileset.CHARMAP_TCOD
   )
 
   with tcod.context.new_terminal(
-    screen_width,
-    screen_height,
+    columns=screen_width,
+    rows=screen_height,
     tileset=tileset,
     title="Rogue but worse",
     vsync=True,
   ) as context:
-    root_console = tcod.console.Console(screen_width, screen_height, order="F")
+    root_console = tcod.console.Console(width=screen_width, height=screen_height, order="F")
     while True:
-      root_console.print(0, 0, "Hello, world!", fg=(255, 255, 255))
-      root_console.print(player.x, player.y, "@", fg=(255, 255, 255))
-      context.present(root_console)
+      root_console.print(x=0, y=0, string="Hello, world!", fg=(255, 255, 255))
+      root_console.print(x=player.x, y=player.y, string="@", fg=(255, 255, 255))
+      context.present(console=root_console)
 
       for event in tcod.event.wait():
         if event.type == "QUIT":
           raise SystemExit()
         
 class EventHandler(tcod.event.EventDispatch[Action]):
-  def ev_quit(self, event: tcod.event.Quit):
+  def ev_quit(self, event: tcod.event.Quit) -> NoReturn:
     raise SystemExit()
 
-  def ev_keydown(self, event: tcod.event.KeyDown):
+  def ev_keydown(self, event: tcod.event.KeyDown):# -> MovementAction | Any | None:
         action = None
 
         key = event.sym

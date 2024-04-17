@@ -1,7 +1,7 @@
 from src.game import Game
 from src.save import Save
 class Map:
-  def __init__(self, ):
+  def __init__(self, ) -> None:
     self.map = [
       ["P","P","P","P","F","M","C"],
       ["F","F","F", "F", "F", "H", "M"],
@@ -20,7 +20,7 @@ class Map:
         "t": "FIELDS",
         "e": False},
       "B": {
-        "t": "BRIGE",
+        "t": "BRIDGE",
         "e": True},
       "T": {
         "t": "TOWN",
@@ -46,27 +46,27 @@ class Map:
     self.y_len = len(self.map)-1
     self.boss = False
 
-  def __str__(self):
+  def __str__(self) -> str:
     return f"{self.__dict__}"
   
-  def __setitem__(self, key, value):
+  def __setitem__(self, key, value) -> None:
     setattr(self, key, value)
 
-  def __getitem__(self, key):
+  def __getitem__(self, key):# -> Any:
     return getattr(self, key)
   
-  def overworld(self, player, tile):
+  def overworld(self, player, tile) -> bool:
     Game().draw()
     print("Current location: " + tile['t'])
     Game().draw()
 
     print("STATS")
     print("  Name - " + player["name"])
-    print("  HP - " + str(player["HP"]) + "/" + str(player["MAX_HP"]))
-    print("  ATK - " + str(player["ATK"]))
-    print("  Potion(s) - " + str(player["potions"]))
-    print("  Elixir(s) - " + str(player["elixirs"]))
-    print("  Coin(s) - " + str(player["money"]))
+    print("  HP - " + str(object=player["HP"]) + "/" + str(object=player["MAX_HP"]))
+    print("  ATK - " + str(object=player["ATK"]))
+    print("  Potion(s) - " + str(object=player["potions"]))
+    print("  Elixir(s) - " + str(object=player["elixirs"]))
+    print("  Coin(s) - " + str(object=player["money"]))
     Game().draw()
     print("Available actions:")
     if player["y"] > 0:
@@ -86,11 +86,11 @@ class Map:
     print('  quit - Exit Game')
     Game().draw()
 
-    choice = input("#> ")
+    choice = input(prompt="#> ")
 
     match choice:
       case 'quit':
-        Save().save(player)
+        Save().save(player=player)
         return False
       case "1":
         if player["y"] > 0:
@@ -128,7 +128,7 @@ class Map:
         player.safe = True
     return True
 
-  def town(self, player):
+  def town(self, player) -> None:
     print("Town")
     while player.location == "TOWN":
       Game().clear()
@@ -137,18 +137,18 @@ class Map:
       Game().draw()
       print("STATS")
       print("  Name - " + player["name"])
-      print("  HP - " + str(player["HP"]) + "/" + str(player["MAX_HP"]))
-      print("  ATK - " + str(player["ATK"]))
-      print("  Potion(s) - " + str(player["potions"]))
-      print("  Elixir(s) - " + str(player["elixirs"]))
-      print("  Coin(s) - " + str(player["money"]))
+      print("  HP - " + str(object=player["HP"]) + "/" + str(object=player["MAX_HP"]))
+      print("  ATK - " + str(object=player["ATK"]))
+      print("  Potion(s) - " + str(object=player["potions"]))
+      print("  Elixir(s) - " + str(object=player["elixirs"]))
+      print("  Coin(s) - " + str(object=player["money"]))
       Game().draw()
       print("Available actions:")
       print('  1 - Go Shopping')
       print('  2 - Talk to Mayor')
       print('  3 - Leave Town')
       Game().draw()
-      choice = input("#> ")
+      choice = input(prompt="#> ")
 
       match choice:
         case "1":
@@ -162,7 +162,7 @@ class Map:
           print("You leave town to go exploring")
         case _:
           pass
-      input("> ")
+      input(prompt="> ")
 
   def shop(self, player):
     print("Shop")
@@ -172,10 +172,10 @@ class Map:
       print("Welcome to the shop!")
       Game().draw()
       print("INVENTORY:")
-      print("  Potions: " + str(player.potions))
-      print("  Elixirs: " + str(player.elixirs))
-      print("  ATK: " + str(player.ATK))
-      print("  Gold: " + str(player.money))
+      print("  Potions: " + str(object=player.potions))
+      print("  Elixirs: " + str(object=player.elixirs))
+      print("  ATK: " + str(object=player.ATK))
+      print("  Gold: " + str(object=player.money))
       Game().draw()
       print("Available actions:")
       print("  1 - Buy Potion (+30 HP) - 5 Gold")
@@ -183,7 +183,7 @@ class Map:
       print("  3 - Upgrade Weapon (+2 ATK) - 10 Gold")
       print("  4 - Exit Shop")
       Game().draw()
-      choice = input("#> ")
+      choice = input(prompt="#> ")
 
       match choice:
         case "1":
@@ -211,7 +211,7 @@ class Map:
           player.location = "TOWN"
         case _:
           pass
-      input("> ")
+      input(prompt="> ")
 
 
   def mayor(self, player):
@@ -223,7 +223,7 @@ class Map:
         if player.ATK < 10:
           print("You don't look strong enough to face the dragon! Come back once you've grown stronger!")
         else:
-          print("You look like you might stand a chance against the dragon! Take this key and go to the cave far north east from here. But be on your guard that beast is dangerious!")
+          print("You look like you might stand a chance against the dragon! Take this key and go to the cave far north east from here. But be on your guard that beast is dangerous!")
           player.key = True
         Game().draw()
         print("Available actions:")

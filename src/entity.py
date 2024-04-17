@@ -1,4 +1,6 @@
+from _collections_abc import dict_items
 from enum import Enum
+from typing import Any
 
 player = {
   "name": '',
@@ -26,9 +28,9 @@ class Entity:
   def __init__(
        self,
        args = {}
-  ):
+  ) -> None:
     arg = {
-      "enitityType": "",
+      "entityType": "",
       'icon': '.',
       'colour': 'white',
       "name": "",
@@ -51,20 +53,20 @@ class Entity:
 
     self.MAX_HP = self.HP
 
-  def __str__(self):
+  def __str__(self) -> str:
     return f"{self.__dict__}"
 
-  def __setitem__(self, key, value):
+  def __setitem__(self, key, value) -> None:
     print(value, key)
     setattr(self, key, value)
 
-  def __getitem__(self, key):
+  def __getitem__(self, key):# -> Any:
     return getattr(self, key)
   
-  def items(self):
+  def items(self) -> dict_items[str, Any]:
     return self.__dict__.items()
   
-  def moveEntity(self, x, y):
+  def moveEntity(self, x, y) -> None:
     self.x = x
     self.y = y
 
@@ -76,8 +78,8 @@ enemy_stats = {
   #   "gold": 8,
   #   "spawn": 30
   # },
-  "Goblin" : Entity({
-    'enitityType': 'ENEMY',
+  "Goblin" : Entity(args={
+    'entityType': 'ENEMY',
     'icon': "G",
     'colour': 'green',
     'name': 'Goblin',
@@ -92,8 +94,8 @@ enemy_stats = {
   #   "gold": 18,
   #   "spawn": 10
   # },
-  "Orc" : Entity({
-    'enitityType': 'ENEMY',
+  "Orc" : Entity(args={
+    'entityType': 'ENEMY',
     'icon': "O",
     'colour': 'grey',
     'name': 'Orc',
@@ -108,8 +110,8 @@ enemy_stats = {
   #   "gold": 12,
   #   "spawn": 20,
   # },
-  "Slime" : Entity({
-    'enitityType': 'ENEMY',
+  "Slime" : Entity(args={
+    'entityType': 'ENEMY',
     "icon": "S",
     'colour': 'blue',
     'name': 'Slime',
@@ -124,8 +126,8 @@ enemy_stats = {
   #   "gold": 100,
   #   "spawn": 100
   #   },
-  "Dragon" : Entity({
-  'enitityType': 'ENEMY',
+  "Dragon" : Entity(args={
+  'entityType': 'ENEMY',
   'icon': 'D',
   'colour': 'red',
   'name': 'Dragon',
