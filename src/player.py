@@ -1,18 +1,5 @@
 
 
-player = {
-  "name": '',
-  "HP": 10,
-  "MAX_HP": 10,
-  "ATK": 2,
-  "potions": 1,
-  "elixirs": 0,
-  "money": 0,
-  "x": 0,
-  "y": 0,
-  "key": False,
-  "combat": False,
-}
 
 class Player:
   def __init__(self, name, HP, ATK, potions, elixirs, money, x, y, key, combat):
@@ -20,8 +7,10 @@ class Player:
     self.HP = HP
     self.MAX_HP= HP
     self.ATK= ATK
-    self.potions= potions
-    self.elixirs= elixirs
+    self.inventory = {
+      "potions": potions,
+      "elixirs": elixirs,
+    }
     self.money=money
     self.x= x
     self.y= y

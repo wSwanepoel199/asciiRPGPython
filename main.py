@@ -1,8 +1,10 @@
 print(__name__)
+import tcod.context
 import random
-from src import enemy
+from src import enemy, window
 from src.map import Map
-from src.player import Player
+# from src.player import Player
+from src.entity import Entity, enemy_stats
 from src.combat import Combat
 from src.menu import Menu
 from src.save import Save
@@ -13,7 +15,7 @@ initialLoad = True
 def runGame():
   global initialLoad
   game = Game()
-  player = {}
+  player = Entity()
   menu = Menu()
   map = Map()
 
@@ -28,9 +30,9 @@ def runGame():
       tile = map.biomes[map.map[player["y"]][player["x"]]]
       if not player.safe or not initialLoad:
         if tile["e"]:
-          selectEnemy = enemy.enemy_list[random.randint(0, len(enemy.enemy_list)-1)]
+          selectEnemy = enemy_stats.items()[random.randint(0, len(enemy_stats)-1)]
           encounterCheck = random.randint(0, 100)
-          if encounterCheck < enemy.enemy_stats[selectEnemy]["spawn"]:
+          if encounterCheck < enemy_stats[selectEnemy]["spawn"]:
             player["combat"] = True
             combat = Combat(selectEnemy)
             game.play = combat.battle(player)
@@ -62,4 +64,5 @@ def runGame():
 
 
 if __name__ == "__main__":
-  runGame()
+  # runGame()
+  window.screen()

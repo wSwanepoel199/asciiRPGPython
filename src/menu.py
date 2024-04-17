@@ -1,5 +1,5 @@
 from src.save import Save
-from src.player import Player
+from src.entity import Entity
 
 print(__name__)
 
@@ -35,14 +35,27 @@ class Menu:
 
     match self.choice:
       case "1":
-        player = Player("", 50, 3, 1, 0, 0, 0, 0, False, False)
-        player["name"] = input("Enter your hero's name: ")
+        # player = Player("", 50, 3, 1, 0, 0, 0, 0, False, False)
+        name = input("Enter your hero's name: ")
+
+        player = Entity({
+          "enitityType": "PLAYER",
+          'icon': "@",
+          "name": name,
+          "HP": 50,
+          "ATK": 3,
+          'inventory':{
+            "potions": 1,
+            "elixirs": 0,
+          },
+          "money": 0
+        })
         self.mainmenu = False
         game['play'] = True
         return player
 
       case "2":
-        player = Player("", 50, 3, 1, 0, 0, 0, 0, False, False)
+        player = Entity()
         Save().load(player)
         print("Hero " + player["name"] + " was successfully loaded with HP: "+str(player["HP"])+" and ATK: "+str(player["ATK"])+". They had "+str(player["potions"])+" potion(s), "+ str(player["elixirs"])+" elixir(s) and "+str(player["money"])+" coin(s) on them.")
         input('> ')
