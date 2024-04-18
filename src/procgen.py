@@ -1,6 +1,10 @@
+from __future__ import annotations
 import random, tcod
-from typing import Tuple, Iterator
+from typing import Tuple, Iterator, List, TYPE_CHECKING
 from src.map import GameMap
+
+if TYPE_CHECKING:
+  from src.entity import Entity
 
 class RecRoom:
   def __init__(self, x: int, y: int, w: int, h: int) -> None:
@@ -23,7 +27,17 @@ class RecRoom:
     """Return the outer area of this room as a 2D array index."""
     return slice(self.point1[0], self.point2[0]+1), slice(self.point1[1], self.point2[1]+1)
   
-def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,int], Tuple[int,int]]:
+  def intersects(self, other: RecRoom) -> bool:
+    """Return True if this room overlaps with another RectangularRoom."""
+    return (
+      self.point1[0] <= other.point2[0]
+      and self.point2[0] >= other.point1[0]
+      and self.point1[1] <= other.point2[1]
+      and self.point2[1] >= other.point1[1]
+    )
+    pass
+  
+def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,int]]:
   """Return an L-shaped tunnel between these two points."""
   x1, y1 = start
   x2, y2 = end
@@ -41,18 +55,45 @@ def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,
     yield x, y
 
 
-def genDungeon(w: int, h: int) -> GameMap:
+def genDungeon(
+    *,
+    w: int,
+    h: int,
+    min: int,
+    max: int,
+    room_limit: int,
+    player: Entity
+    ) -> GameMap:
+  """Generate a new dungeon map."""
   dungeon = GameMap(width=w, height=h, map_type="dungeon")
+  
+  rooms: List[RecRoom] = []
 
-  room_1 = RecRoom(x=20, y=15, w=10, h=15)
-  room_2 = RecRoom(x=35, y=25, w=10, h=15)
+  for r in range(room_limit):
+    room_width = random.randint(a=min, b=max)
+    room_height = random.randint(a=min, b=max)
 
-  dungeon.tiles[room_1.outer] = dungeon.tile_types["wall"]
-  dungeon.tiles[room_2.outer] = dungeon.tile_types["wall"]
-  dungeon.tiles[room_1.inner] = dungeon.tile_types["floor"]
-  dungeon.tiles[room_2.inner] = dungeon.tile_types["floor"]
+    x = random.randint(a=0, b=dungeon.width - room_width - 1)
+    y = random.randint(a=0, b=dungeon.height - room_height - 1)
 
-  for x, y in genTunnel(start=room_2.center, end=room_1.center):
-    dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+    new_room = RecRoom(x=x, y=y, w=room_width, h=room_height)
+
+    if any(new_room.intersects(other=other) for other in rooms):
+      continue
+
+    dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
+    dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
+
+    if len(rooms) == 0:
+      player.x, player.y = new_room.center
+    else:
+      for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
+        if(dungeon.tiles[x+1,y-1] == dungeon.tile_types["mapfill"]):
+          dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
+        if(dungeon.tiles[x-1,y+1] == dungeon.tile_types["mapfill"]):
+          dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
+        dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+    
+    rooms.append(new_room)
 
   return dungeon

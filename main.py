@@ -65,7 +65,18 @@ def runGame() -> None:
 
 if __name__ == "__main__":
   # runGame()
+  screen_width = 80
+  screen_height = 45
+
+  map_width = 80
+  map_height = 45
+
+  room_size_min = 6
+  room_size_max = 10
+  max_rooms = 30
+
   game = Game()
+  
   game.addEntity(entity={
     'entityType': 'PLAYER',
     'char': '@',
@@ -78,8 +89,8 @@ if __name__ == "__main__":
       'elixirs': 0,
     },
     'money': 0,
-    'x': 0,
-    'y': 0,
+    'x': int(screen_width/2),
+    'y': int(screen_height/2),
     'location': 'overworld',
     'safe': True,
     'key': False,
@@ -98,30 +109,18 @@ if __name__ == "__main__":
       'elixirs': 0,
     },
     'money': 0,
-    'x': 0,
-    'y': 0,
+    'x': int(screen_width/2)-5,
+    'y': int(screen_height/2),
     'location': 'overworld'
   })
 
-  screen_width = 80
-  screen_height = 45
-
-  map_width = 80
-  map_height = 45
-
   game.setPlayer(player = list(filter(lambda player: player['entityType'] == 'PLAYER', game.entities))[0])
-  game.player.x = int(screen_width/2)
-  game.player.y = int(screen_height/2)
-
-  npc=game.entities[1]
-  npc.x = int(screen_width/2)-5
-  npc.y = int(screen_height/2)
 
   event_handler = EventHandler()
 
   # game_map = GameMap(width=80, height=45)
 
-  game_map = genDungeon(w=map_width, h=map_height)
+  game_map = genDungeon(w=map_width, h=map_height, min=room_size_min, max=room_size_max, room_limit=max_rooms, player=game.player)
 
   engine = Engine(entities=game.entities, event_handler=event_handler, player=game.player, game_map=game_map)
   
