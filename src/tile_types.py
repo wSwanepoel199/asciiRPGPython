@@ -23,11 +23,11 @@ def new_tile(
   transparent: int,
   dark: Tuple[int, Tuple[int,int,int], Tuple[int,int,int]]
 ) -> np.ndarray:
-  """Helper Function for defininf individual tile types."""
+  """Helper Function for defining individual tile types."""
   return np.array(object=(walkable, transparent, dark), dtype=tile_dt)
 
 tile_types = {
-  'floor': new_tile(walkable=True, transparent=True, dark=(ord(" "), (255, 255, 255), (50, 50, 150))),
-  'wall': new_tile(walkable=False, transparent=False, dark=(ord("#"), (255, 255, 255), (0, 0, 100))),
-  "mapfill": new_tile(walkable=True, transparent=True, dark=(ord(" "), (255, 255, 255), (0, 0, 150))),
+  'floor': new_tile(walkable=True, transparent=True, dark=(ord("."), (255, 255, 255), (0, 0, 0))),
+  'wall': new_tile(walkable=False, transparent=False, dark=(ord("#"), (255, 255, 255), (0, 0, 0))),
+  "mapfill": new_tile(walkable=True, transparent=True, dark=(ord(" "), (255, 255, 255), (0, 0, 1))),
 }

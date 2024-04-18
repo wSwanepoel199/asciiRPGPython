@@ -131,4 +131,3 @@ if __name__ == "__main__":
     engine.render()
 
     engine.handle_event(events=tcod.event.wait())
-  # engine.screen(game=game)

@@ -49,11 +49,28 @@ def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,
     corner_x = x1
     corner_y = y2
   
-  for x, y in tcod.los.bresenham((x1, y1), (corner_x,corner_y)).tolist():
+  for x, y in tcod.los.bresenham(start=(x1, y1), end=(corner_x,corner_y)).tolist():
     yield x, y
-  for x,y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
+  for x,y in tcod.los.bresenham(start=(corner_x, corner_y), end=(x2, y2)).tolist():
     yield x, y
 
+def placeWall(x:int, y:int, dungeon: GameMap) -> None:
+  if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
+    dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
+  if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:
+    dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
+  if not dungeon.tiles[x,y-1] == dungeon.tile_types["floor"]:
+    dungeon.tiles[x,y-1] = dungeon.tile_types["wall"]
+  if not dungeon.tiles[x-1,y-1] == dungeon.tile_types["floor"]:
+    dungeon.tiles[x-1,y-1] = dungeon.tile_types["wall"]
+  if not dungeon.tiles[x-1,y] == dungeon.tile_types["floor"]:
+    dungeon.tiles[x-1,y] = dungeon.tile_types["wall"]
+  if not dungeon.tiles[x-1,y+1] == dungeon.tile_types["floor"]:
+    dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
+  if not dungeon.tiles[x,y+1] == dungeon.tile_types["floor"]:
+    dungeon.tiles[x,y+1] = dungeon.tile_types["wall"]
+  if not dungeon.tiles[x+1,y+1] == dungeon.tile_types["floor"]:
+    dungeon.tiles[x+1,y+1] = dungeon.tile_types["wall"]
 
 def genDungeon(
     *,
@@ -81,19 +98,31 @@ def genDungeon(
     if any(new_room.intersects(other=other) for other in rooms):
       continue
 
-    dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
+    # dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
     dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
 
     if len(rooms) == 0:
       player.x, player.y = new_room.center
     else:
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
-        if(dungeon.tiles[x+1,y-1] == dungeon.tile_types["mapfill"]):
-          dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
-        if(dungeon.tiles[x-1,y+1] == dungeon.tile_types["mapfill"]):
-          dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
-    
+
     rooms.append(new_room)
+  i = 0
+  j = 0
+  while i < h:
+    if i+1 >= h:
+      break
+    while j < w:
+      if dungeon.tiles[j,i] == dungeon.tile_types["mapfill"] or dungeon.tiles[j,i] == dungeon.tile_types["wall"]:
+        j += 1
+        continue
+      if j+1 >= w:
+        break
+      placeWall(x=j,y=i,dungeon=dungeon)
+      j += 1
+    j = 0
+    i += 1
+
 
   return dungeon
