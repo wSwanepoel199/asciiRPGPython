@@ -1,5 +1,12 @@
-from _collections_abc import dict_items
-from typing import Any
+from __future__ import annotations
+
+import copy
+from typing import Tuple, TypeVar, TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from src.map import GameMap
+
+# T = TypeVar("T", bound="Entity")
 
 # class EntityList(Enum):
 #   OBJECT = '.'
@@ -25,11 +32,11 @@ class Entity:
       "money": 0,
       "x": 0,
       "y": 0,
-      "spawn": 0,
       "location": "overworld",
       "safe": True,
       "key": False,
-      "combat": False
+      "combat": False,
+      "blocks_movement": False
     }
     arg.update(args)
 
@@ -54,46 +61,55 @@ class Entity:
     self.x += dx
     self.y += dy
 
+  def spawn(self: Entity, gamemap: GameMap, x: int, y:int) -> Entity:
+    """Spawn a copy of this instance at the given location."""
+    print(self, gamemap, x, y)
+    clone = copy.deepcopy(self)
+    clone.x = x
+    clone.y = y
+    gamemap.entities.add(clone)
+    return clone
+
 
 enemy_stats = {
   "Goblin" : Entity(args={
     'entityType': 'ENEMY',
-    'char': "G",
-    'colour': (0,100,0),
-    'name': 'Goblin',
-    'HP': 15,
+    "char": "G",
+    "colour": (0,200,0),
+    "name": 'Goblin',
+    "HP": 15,
     'ATK': 3,
     'money': 8,
-    'spawn': 30
+    'blocks_movement':True
   }),
   "Orc" : Entity(args={
     'entityType': 'ENEMY',
     'char': "O",
-    'colour': (100,100,100),
+    'colour': (200,200,200),
     'name': 'Orc',
     'HP': 35,
     'ATK': 5,
     'money': 18,
-    'spawn': 10
+    'blocks_movement':True
   }),
   "Slime" : Entity(args={
     'entityType': 'ENEMY',
     "char": "S",
-    'colour': (0,0,110),
+    'colour': (0, 133, 235),
     'name': 'Slime',
     'HP': 30,
     'ATK': 2,
     'money': 18,
-    'spawn': 20
+    'blocks_movement':True
   }),
   "Dragon" : Entity(args={
     'entityType': 'ENEMY',
     'char': 'D',
-    'colour': (110,0,0),
+    'colour': (210,0,0),
     'name': 'Dragon',
     'HP': 100,
     'ATK': 8,
     'money': 100,
-    'spawn': 100
+    'blocks_movement':True
   }),
 }

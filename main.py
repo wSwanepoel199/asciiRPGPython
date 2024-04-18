@@ -75,6 +75,8 @@ if __name__ == "__main__":
   room_size_max = 10
   max_rooms = 30
 
+  room_max_enemy = 2
+
   game = Game()
   
   game.addEntity(entity={
@@ -89,30 +91,49 @@ if __name__ == "__main__":
       'elixirs': 0,
     },
     'money': 0,
-    'x': int(screen_width/2),
-    'y': int(screen_height/2),
+    'x': 0,
+    'y': 0,
     'location': 'overworld',
     'safe': True,
     'key': False,
-    'combat': False
+    'combat': False,
+    'blocks_movement':True
   })
 
-  game.addEntity(entity={
-    'entityType': 'NPC',
-    'char': '@',
-    'colour': (255,255,0),
-    'name': 'npc1',
-    'HP': 50,
-    'ATK': 3,
-    'inventory':{
-      'potions': 0,
-      'elixirs': 0,
-    },
-    'money': 0,
-    'x': int(screen_width/2)-5,
-    'y': int(screen_height/2),
-    'location': 'overworld'
-  })
+  # for enemy in enemy_stats.values():
+  #   game.addEntity(entity={
+  #     'entityType': 'ENEMY',
+  #     'char': enemy['char'],
+  #     'colour': enemy['colour'],
+  #     'name': enemy,
+  #     'HP': enemy["HP"],
+  #     'ATK': enemy["ATK"],
+  #     'inventory':{
+  #       'potions': 0,
+  #       'elixirs': 0,
+  #     },
+  #     'money': 0,
+  #     'x': 0,
+  #     'y': 0,
+  #     'location': 'overworld'
+  #   })
+
+  # game.addEntity(entity={
+  #   'entityType': 'NPC',
+  #   'char': '@',
+  #   'colour': (255,255,0),
+  #   'name': 'npc1',
+  #   'HP': 50,
+  #   'ATK': 3,
+  #   'inventory':{
+  #     'potions': 0,
+  #     'elixirs': 0,
+  #   },
+  #   'money': 0,
+  #   'x': int(screen_width/2)-5,
+  #   'y': int(screen_height/2),
+  #   'location': 'overworld'
+  # })
 
   game.setPlayer(player = list(filter(lambda player: player['entityType'] == 'PLAYER', game.entities))[0])
 
@@ -120,9 +141,18 @@ if __name__ == "__main__":
 
   # game_map = GameMap(width=80, height=45)
 
-  game_map = genDungeon(w=map_width, h=map_height, min=room_size_min, max=room_size_max, room_limit=max_rooms, player=game.player)
+  game_map = genDungeon(
+    w=map_width, 
+    h=map_height, 
+    min=room_size_min, 
+    max=room_size_max, 
+    room_limit=max_rooms, 
+    max_enemy_per_room=room_max_enemy,
+    player=game.player, 
+    entities=game.entities
+  )
 
-  engine = Engine(entities=game.entities, event_handler=event_handler, player=game.player, game_map=game_map)
+  engine = Engine(event_handler=event_handler, player=game.player, game_map=game_map)
   
   engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
   

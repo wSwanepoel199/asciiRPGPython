@@ -1,8 +1,8 @@
 from __future__ import annotations
 import random, tcod
-from typing import Tuple, Iterator, List, TYPE_CHECKING
+from typing import Tuple, Iterator, Iterable, List, TYPE_CHECKING
 from src.map import GameMap
-
+from src.entity import enemy_stats
 if TYPE_CHECKING:
   from src.entity import Entity
 
@@ -35,8 +35,28 @@ class RecRoom:
       and self.point1[1] <= other.point2[1]
       and self.point2[1] >= other.point1[1]
     )
-    pass
-  
+
+def place_entities(
+  room: RecRoom, dungeon: GameMap, maximum_monsters: int,
+) -> None:
+  number_of_monsters = random.randint(a=0, b=maximum_monsters)
+  for i in range(number_of_monsters):
+    x = random.randint(a=room.point1[0] + 1, b=room.point2[0] - 1)
+    y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
+    selectedEnemy = random.randint(a=1, b=len(enemy_stats))-1
+    start = 0
+    for key, value in enemy_stats.items():
+      if start == selectedEnemy:
+        selectedEnemy = value
+        break
+      else:
+        start += 1
+    if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
+      if random.random() < 0.8:
+        selectedEnemy.spawn(dungeon, x, y)
+      else:
+        pass  # TODO: Place a Troll here
+
 def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,int]]:
   """Return an L-shaped tunnel between these two points."""
   x1, y1 = start
@@ -79,10 +99,12 @@ def genDungeon(
     min: int,
     max: int,
     room_limit: int,
-    player: Entity
+    max_enemy_per_room: int,
+    player: Entity,
+    entities: Iterable[Entity],
     ) -> GameMap:
   """Generate a new dungeon map."""
-  dungeon = GameMap(width=w, height=h, map_type="dungeon")
+  dungeon = GameMap(width=w, height=h, map_type="dungeon", entities=entities)
   
   rooms: List[RecRoom] = []
 
@@ -106,6 +128,8 @@ def genDungeon(
     else:
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+
+    place_entities(room=new_room, dungeon=dungeon, maximum_monsters=max_enemy_per_room)
 
     rooms.append(new_room)
   i = 0

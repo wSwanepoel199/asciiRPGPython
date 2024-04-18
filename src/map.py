@@ -1,9 +1,16 @@
+from __future__ import annotations
+
+from typing import Iterable, TYPE_CHECKING
+
 import numpy as np
 import tcod
 
 import src.tile_types as tile_types
 from src.game import Game
 from src.save import Save
+
+if TYPE_CHECKING:
+    from entity import Entity
 
 class Map:
   def __init__(self, ) -> None:
@@ -273,11 +280,20 @@ class Map:
       input("> ")
 
 class GameMap:
-  def __init__(self, width: int, height: int, map_type: str = "openworld") -> None:
+  def __init__(
+      self, 
+      width: int, 
+      height: int, 
+      map_type: str = "openworld", 
+      entities: Iterable[Entity] = ()
+    ) -> None:
     self.width = width
     self.height = height
     self.map_type = map_type
     self.tile_types = tile_types.tile_types
+    self.seeing = np.full(shape=(width, height), fill_value=False, order="F")
+    self.seen = np.full(shape=(width, height), fill_value=False, order="F")
+    self.entities = set(entities)
     match map_type:
       # case "dungeon":
       #   self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["wall"], order="F")
@@ -289,4 +305,19 @@ class GameMap:
     return 0 <= x < self.width and 0 <= y < self.height
   
   def render(self, console:tcod.console.Console) -> None:
-    console.rgb[0:self.width, 0:self.height] = self.tiles["dark"]
+    """
+    Renders the map.
+
+    If a tile is in the "visible" array, then draw it with the "light" colors.
+    If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
+    Otherwise, the default is "SHROUD".
+    """
+    console.rgb[0:self.width, 0:self.height] = np.select(
+      condlist=[self.seeing, self.seen],
+      choicelist=[self.tiles["light"], self.tiles["dark"]],
+      default=self.tile_types['shroud']
+    )
+
+    for entity in self.entities:
+      if self.seeing[entity.x, entity.y]:
+        console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
