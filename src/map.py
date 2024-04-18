@@ -273,17 +273,17 @@ class Map:
       input("> ")
 
 class GameMap:
-  def __init__(self, width: int, height: int) -> None:
+  def __init__(self, width: int, height: int, map_type: str = "openworld") -> None:
     self.width = width
     self.height = height
-    self.floor = tile_types.new_tile(
-      walkable=True, transparent=True, dark=(ord(" "), (255, 255, 255), (50, 50, 150))
-    )
-    self.wall = tile_types.new_tile(
-      walkable=False, transparent=False, dark=(ord("#"), (255, 255, 255), (0, 0, 100))
-    )
-    self.tiles = np.full(shape=(width, height), fill_value=self.floor, order="F")
-    
+    self.map_type = map_type
+    self.tile_types = tile_types.tile_types
+    match map_type:
+      # case "dungeon":
+      #   self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["wall"], order="F")
+      case _:
+        self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["mapfill"], order="F")
+
   def in_bounds(self, x: int, y: int) -> bool:
     """Return True if x and y are inside the bounds of the map."""
     return 0 <= x < self.width and 0 <= y < self.height

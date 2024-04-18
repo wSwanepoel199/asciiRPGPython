@@ -9,6 +9,7 @@ from src.combat import Combat
 from src.menu import Menu
 from src.save import Save
 from src.game import Game
+from src.procgen import genDungeon
 
 initialLoad = True
 
@@ -105,6 +106,9 @@ if __name__ == "__main__":
   screen_width = 80
   screen_height = 45
 
+  map_width = 80
+  map_height = 45
+
   game.setPlayer(player = list(filter(lambda player: player['entityType'] == 'PLAYER', game.entities))[0])
   game.player.x = int(screen_width/2)
   game.player.y = int(screen_height/2)
@@ -115,7 +119,9 @@ if __name__ == "__main__":
 
   event_handler = EventHandler()
 
-  game_map = GameMap(width=80, height=45)
+  # game_map = GameMap(width=80, height=45)
+
+  game_map = genDungeon(w=map_width, h=map_height)
 
   engine = Engine(entities=game.entities, event_handler=event_handler, player=game.player, game_map=game_map)
   
