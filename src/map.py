@@ -1,5 +1,10 @@
+import numpy as np
+import tcod
+
+import src.tile_types as tile_types
 from src.game import Game
 from src.save import Save
+
 class Map:
   def __init__(self, ) -> None:
     self.map = [
@@ -266,3 +271,22 @@ class Map:
         case _:
           pass
       input("> ")
+
+class GameMap:
+  def __init__(self, width: int, height: int) -> None:
+    self.width = width
+    self.height = height
+    self.floor = tile_types.new_tile(
+      walkable=True, transparent=True, dark=(ord(" "), (255, 255, 255), (50, 50, 150))
+    )
+    self.wall = tile_types.new_tile(
+      walkable=False, transparent=False, dark=(ord("#"), (255, 255, 255), (0, 0, 100))
+    )
+    self.tiles = np.full(shape=(width, height), fill_value=self.floor, order="F")
+    
+  def in_bounds(self, x: int, y: int) -> bool:
+    """Return True if x and y are inside the bounds of the map."""
+    return 0 <= x < self.width and 0 <= y < self.height
+  
+  def render(self, console:tcod.console.Console) -> None:
+    console.rgb[0:self.width, 0:self.height] = self.tiles["dark"]

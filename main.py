@@ -1,7 +1,8 @@
 print(__name__)
-import random
-from src import window
-from src.map import Map
+import random, tcod
+from src.engine import Engine
+from src.map import Map, GameMap
+from src.event_handler import EventHandler
 # from src.player import Player
 from src.entity import Entity, enemy_stats
 from src.combat import Combat
@@ -61,7 +62,68 @@ def runGame() -> None:
             game.play = map.overworld(player=player, tile=tile)
             menu.mainmenu = not game.play
 
-
 if __name__ == "__main__":
   # runGame()
-  window.screen()
+  game = Game()
+  game.addEntity(entity={
+    'entityType': 'PLAYER',
+    'char': '@',
+    'colour': (255,255,255),
+    'name': 'Test',
+    'HP': 50,
+    'ATK': 3,
+    'inventory':{
+      'potions': 1,
+      'elixirs': 0,
+    },
+    'money': 0,
+    'x': 0,
+    'y': 0,
+    'location': 'overworld',
+    'safe': True,
+    'key': False,
+    'combat': False
+  })
+
+  game.addEntity(entity={
+    'entityType': 'NPC',
+    'char': '@',
+    'colour': (255,255,0),
+    'name': 'npc1',
+    'HP': 50,
+    'ATK': 3,
+    'inventory':{
+      'potions': 0,
+      'elixirs': 0,
+    },
+    'money': 0,
+    'x': 0,
+    'y': 0,
+    'location': 'overworld'
+  })
+
+  screen_width = 80
+  screen_height = 45
+
+  game.setPlayer(player = list(filter(lambda player: player['entityType'] == 'PLAYER', game.entities))[0])
+  game.player.x = int(screen_width/2)
+  game.player.y = int(screen_height/2)
+
+  npc=game.entities[1]
+  npc.x = int(screen_width/2)-5
+  npc.y = int(screen_height/2)
+
+  event_handler = EventHandler()
+
+  game_map = GameMap(width=80, height=45)
+
+  engine = Engine(entities=game.entities, event_handler=event_handler, player=game.player, game_map=game_map)
+  
+  engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
+  
+
+  while True:
+    engine.render()
+
+    engine.handle_event(events=tcod.event.wait())
+  # engine.screen(game=game)
