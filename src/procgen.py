@@ -93,7 +93,6 @@ def genDungeon(
     if len(rooms) == 0:
       player.place(*new_room.center, gamemap=dungeon)
     else:
-      print(rooms[-1].center, new_room.center)
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
 

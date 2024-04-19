@@ -79,7 +79,6 @@ class Entity:
 
   def spawn(self: T, gamemap: GameMap, x: int, y:int) -> T:
     """Spawn a copy of this instance at the given location."""
-    print(self, gamemap, x, y)
     clone = copy.deepcopy(self)
     clone.x = x
     clone.y = y

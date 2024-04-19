@@ -71,7 +71,6 @@ class MainGameEventHandler(EventHandler):
     action: Optional[Action] = None
     player = self.engine.player
     key = event.sym
-    # print(event.sym)
     if key in MOVE_KEYS:
       dx, dy = MOVE_KEYS[key]
       action = BumpAction(entity=player, dx=dx, dy=dy)
