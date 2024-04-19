@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, TYPE_CHECKING
+from typing import Iterable, Iterator, Optional, TYPE_CHECKING
 
 import numpy as np
 import tcod
@@ -8,9 +8,11 @@ import tcod
 import src.tile_types as tile_types
 from src.game import Game
 from src.save import Save
+from src.entity import Actor
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from src.entity import Entity
+    from src.engine import Engine
 
 class Map:
   def __init__(self, ) -> None:
@@ -282,24 +284,55 @@ class Map:
 class GameMap:
   def __init__(
       self, 
+      engine: Engine,
       width: int, 
       height: int, 
       map_type: str = "openworld", 
       entities: Iterable[Entity] = ()
     ) -> None:
+    self.engine = engine
     self.width = width
     self.height = height
     self.map_type = map_type
     self.tile_types = tile_types.tile_types
-    self.seeing = np.full(shape=(width, height), fill_value=False, order="F")
-    self.seen = np.full(shape=(width, height), fill_value=False, order="F")
+    self.seeing = np.full(
+      shape=(width, height), 
+      fill_value=False, 
+      order="F"
+    )
+    self.seen = np.full(
+      shape=(width, height), 
+      fill_value=False, 
+      order="F"
+    )
     self.entities = set(entities)
     match map_type:
       # case "dungeon":
       #   self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["wall"], order="F")
       case _:
         self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["mapfill"], order="F")
-
+  
+  @property
+  def actors(self) -> Iterable[Actor]:
+    yield from (
+      entity
+      for entity in self.entities
+      if isinstance(entity, Actor) and entity.alive
+    )
+  def get_blocking_entity(self, x:int, y:int) -> Optional[Entity]:
+    for entity in self.entities:
+      if (
+        entity.blocks_movement 
+        and entity.x == x 
+        and entity.y == y
+      ):
+        return entity
+    return None
+  def get_actor_at_location(self, x:int, y:int) -> Optional[Actor]:
+    for actor in self.actors:
+      if actor.x == x and actor.y == y:
+        return actor
+    return None
   def in_bounds(self, x: int, y: int) -> bool:
     """Return True if x and y are inside the bounds of the map."""
     return 0 <= x < self.width and 0 <= y < self.height
@@ -315,7 +348,7 @@ class GameMap:
     console.rgb[0:self.width, 0:self.height] = np.select(
       condlist=[self.seeing, self.seen],
       choicelist=[self.tiles["light"], self.tiles["dark"]],
-      default=self.tile_types['shroud']
+      default=self.tile_types['shroud'],
     )
 
     for entity in self.entities:

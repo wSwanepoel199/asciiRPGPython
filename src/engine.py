@@ -1,28 +1,35 @@
-from typing import Iterable, Any
+from __future__ import annotations
+from typing import Iterable, Any, TYPE_CHECKING
 import tcod
 from src.event_handler import EventHandler
-from src.entity import Entity
-from src.map import GameMap
 
+if TYPE_CHECKING:
+  from src.entity import Entity
+  from src.map import GameMap
 
 class Engine:
-  def __init__(self, event_handler: EventHandler, player: Entity, game_map: GameMap) -> None:
-    self.event_handler = event_handler
+  game_map: GameMap
+  def __init__(self, player: Entity) -> None:
     self.player = player
-    self.game_map = game_map
     self.console: tcod.console.Console = {}
     self.context: tcod.context.Context = {}
-    self.update_fov()
+    self.event_handler: EventHandler = EventHandler(engine=self)
 
-  def handle_event(self, events: Iterable[Any]) -> None:
-    for event in events:
-      action = self.event_handler.dispatch(event=event)
+  def handle_enemy_turn(self) -> None:
+    for entity in self.game_map.entities - {self.player}:
+      if entity.ai:
+        entity.ai.perform()
 
-      if action is None:
-        continue
+  # def handle_event(self, events: Iterable[Any]) -> None:
+  #   for event in events:
+  #     action = self.event_handler.dispatch(event=event)
 
-      action.perform(engine=self, entity=self.player)
-      self.update_fov()
+  #     if action is None:
+  #       continue
+
+  #     action.perform(engine=self, entity=self.player)
+  #     self.handle_enemy_turn()
+  #     self.update_fov()
 
   def update_fov(self) -> None:
     """Recompute the visible area based on the players point of view."""

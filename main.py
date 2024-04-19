@@ -1,10 +1,10 @@
 print(__name__)
-import random, tcod
+import random, tcod, copy
+import src.factory.entity_factory as entity_factory
 from src.engine import Engine
 from src.map import Map, GameMap
-from src.event_handler import EventHandler
 # from src.player import Player
-from src.entity import Entity, enemy_stats
+from src.entity import Entity
 from src.combat import Combat
 from src.menu import Menu
 from src.save import Save
@@ -13,55 +13,55 @@ from src.procgen import genDungeon
 
 initialLoad = True
 
-def runGame() -> None:
-  global initialLoad
-  game = Game()
-  player = Entity()
-  menu = Menu()
-  map = Map()
+# def runGame() -> None:
+#   global initialLoad
+#   game = Game()
+#   player = Entity()
+#   menu = Menu()
+#   map = Map()
 
-  while game.run:
-    while menu.mainmenu:
-      game.clear()
-      player = menu.mainMenu(player=player, game=game)
+#   while game.run:
+#     while menu.mainmenu:
+#       game.clear()
+#       player = menu.mainMenu(player=player, game=game)
 
-    while game.play:
-      Save().save(player=player)
-      game.clear()
-      tile = map.biomes[map.map[player["y"]][player["x"]]]
-      if not player.safe or not initialLoad:
-        if tile["e"]:
-          selectEnemy = enemy_stats.items()[random.randint(a=0, b=len(enemy_stats)-1)]
-          encounterCheck = random.randint(a=0, b=100)
-          if encounterCheck < enemy_stats[selectEnemy]["spawn"]:
-            player["combat"] = True
-            combat = Combat(target=selectEnemy)
-            game.play = combat.battle(player=player)
-            menu.mainmenu = not game.play
-            Save().save(player=player)
-            game.clear()
-      initialLoad = False
-      if game.play:
-        match player.location:
-          case "TOWN":
-            map.town(player=player)
-          case "SHOP":
-            map.shop(player=player)
-          case "MAYOR":
-            map.mayor(player=player)
-          case "CAVE":
-            map.cave(player=player)
-          case "BOSS":
-            combat = Combat(target="Dragon")
-            game.play = combat.battle(player=player)
-            menu.mainmenu = not game.play
-            if game.play:
-              player.location = "CAVE"
-            Save().save(player=player)
-            game.clear()
-          case _:
-            game.play = map.overworld(player=player, tile=tile)
-            menu.mainmenu = not game.play
+#     while game.play:
+#       Save().save(player=player)
+#       game.clear()
+#       tile = map.biomes[map.map[player["y"]][player["x"]]]
+#       if not player.safe or not initialLoad:
+#         if tile["e"]:
+#           selectEnemy = enemy_stats.items()[random.randint(a=0, b=len(enemy_stats)-1)]
+#           encounterCheck = random.randint(a=0, b=100)
+#           if encounterCheck < enemy_stats[selectEnemy]["spawn"]:
+#             player["combat"] = True
+#             combat = Combat(target=selectEnemy)
+#             game.play = combat.battle(player=player)
+#             menu.mainmenu = not game.play
+#             Save().save(player=player)
+#             game.clear()
+#       initialLoad = False
+#       if game.play:
+#         match player.location:
+#           case "TOWN":
+#             map.town(player=player)
+#           case "SHOP":
+#             map.shop(player=player)
+#           case "MAYOR":
+#             map.mayor(player=player)
+#           case "CAVE":
+#             map.cave(player=player)
+#           case "BOSS":
+#             combat = Combat(target="Dragon")
+#             game.play = combat.battle(player=player)
+#             menu.mainmenu = not game.play
+#             if game.play:
+#               player.location = "CAVE"
+#             Save().save(player=player)
+#             game.clear()
+#           case _:
+#             game.play = map.overworld(player=player, tile=tile)
+#             menu.mainmenu = not game.play
 
 if __name__ == "__main__":
   # runGame()
@@ -78,27 +78,43 @@ if __name__ == "__main__":
   room_max_enemy = 2
 
   game = Game()
+
+  # player = copy.deepcopy(Entity(
+  #   entityType='PLAYER',
+  #   char="@",
+  #   name="Player",
+  #   HP=50,
+  #   ATK=3,
+  #   inventory={
+  #     'potion':1,
+  #     'elixir':0
+  #   },
+  #   money=0,
+  #   blocks_movement=True
+  # ))
+
+  player = copy.deepcopy(entity_factory.player)
   
-  game.addEntity(entity={
-    'entityType': 'PLAYER',
-    'char': '@',
-    'colour': (255,255,255),
-    'name': 'Test',
-    'HP': 50,
-    'ATK': 3,
-    'inventory':{
-      'potions': 1,
-      'elixirs': 0,
-    },
-    'money': 0,
-    'x': 0,
-    'y': 0,
-    'location': 'overworld',
-    'safe': True,
-    'key': False,
-    'combat': False,
-    'blocks_movement':True
-  })
+  # game.addEntity(entity={
+  #   'entityType': 'PLAYER',
+  #   'char': '@',
+  #   'colour': (255,255,255),
+  #   'name': 'Test',
+  #   'HP': 50,
+  #   'ATK': 3,
+  #   'inventory':{
+  #     'potions': 1,
+  #     'elixirs': 0,
+  #   },
+  #   'money': 0,
+  #   'x': 0,
+  #   'y': 0,
+  #   'location': 'overworld',
+  #   'safe': True,
+  #   'key': False,
+  #   'combat': False,
+  #   'blocks_movement':True
+  # })
 
   # for enemy in enemy_stats.values():
   #   game.addEntity(entity={
@@ -135,24 +151,22 @@ if __name__ == "__main__":
   #   'location': 'overworld'
   # })
 
-  game.setPlayer(player = list(filter(lambda player: player['entityType'] == 'PLAYER', game.entities))[0])
+  # game.setPlayer(player = list(filter(lambda player: player['entityType'] == 'PLAYER', game.entities))[0])
 
-  event_handler = EventHandler()
+  engine = Engine(player=player)
 
   # game_map = GameMap(width=80, height=45)
 
-  game_map = genDungeon(
+  engine.game_map = genDungeon(
     w=map_width, 
     h=map_height, 
     min=room_size_min, 
     max=room_size_max, 
     room_limit=max_rooms, 
     max_enemy_per_room=room_max_enemy,
-    player=game.player, 
-    entities=game.entities
+    engine=engine,
   )
-
-  engine = Engine(event_handler=event_handler, player=game.player, game_map=game_map)
+  engine.update_fov()
   
   engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
   
@@ -160,4 +174,4 @@ if __name__ == "__main__":
   while True:
     engine.render()
 
-    engine.handle_event(events=tcod.event.wait())
+    engine.event_handler.handle_events()
