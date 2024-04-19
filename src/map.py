@@ -321,19 +321,15 @@ class GameMap:
     #     self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["mapfill"], order="F")
   
   @property
+  def gamemap(self) -> GameMap:
+    return self
+  @property
   def actors(self) -> Iterable[Actor]:
     yield from (
       entity
       for entity in self.entities
       if isinstance(entity, Actor) and entity.alive
     )
-  # @property
-  # def tiles(self) -> np.ndarray:
-  #   return np.full(
-  #     shape=(self.width, self.height), 
-  #     fill_value=self.tile_types["mapfill"], 
-  #     order="F"
-  #   )
   def get_blocking_entity(self, x:int, y:int) -> Optional[Entity]:
     for entity in self.entities:
       if (
@@ -417,7 +413,6 @@ class GameMap:
           continue
 
   def placeWall(self, x:int, y:int, dungeon: GameMap) -> None:
-    print(x,y)
     if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
       dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
     if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:

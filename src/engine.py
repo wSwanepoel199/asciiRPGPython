@@ -84,7 +84,8 @@ class Engine:
         y=5,
         string=msg,
       )
-    
+      if self.player.HP <= 0 and self.player.ai:
+        self.player.die()
     self.render_names_at_mouse(
       x=self.game_map.width+1,
       y=7

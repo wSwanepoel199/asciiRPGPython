@@ -104,7 +104,6 @@ def genDungeon(
     rooms.append(new_room)
   i = dungeon.y
   j = dungeon.x
-  print(w,h)
   while i < h-dungeon.y:
     if i+1 >= h-dungeon.y:
       break

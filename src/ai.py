@@ -11,13 +11,10 @@ if TYPE_CHECKING:
   from src.actions import Action
   from src.entity import Entity, Actor
   from src.engine import Engine
+  from src.map import GameMap
 
 class BaseAi(Action):
-  entity: Actor
-
-  @property
-  def engine(self) -> Engine:
-    return self.entity.gamemap.engine
+  # entity: Actor
 
   def perform(self) -> None:
     raise NotImplementedError
@@ -54,7 +51,7 @@ class BaseAi(Action):
   
 class HostileAi(BaseAi):
   def __init__(self, entity:Actor):
-    super().__init__(entity)
+    super().__init__(entity=entity)
     self.path: List[Tuple[int,int]] = []
   
   def perform(self) -> None:
@@ -66,9 +63,9 @@ class HostileAi(BaseAi):
 
     if self.engine.game_map.seeing[self.entity.x, self.entity.y]:
       if distance <= 1:
-        return MeleeAction(self.entity, dx, dy).perform()
+        return MeleeAction(entity=self.entity, dx=dx, dy=dy).perform()
 
-      self.path = self.get_path_to(target.x, target.y)
+      self.path = self.get_path_to(dest_x=target.x, dest_y=target.y)
 
     if self.path:
       dest_x, dest_y = self.path.pop(0)
@@ -76,4 +73,4 @@ class HostileAi(BaseAi):
         entity=self.entity, dx=dest_x - self.entity.x, dy=dest_y - self.entity.y,
       ).perform()
 
-    return WaitAction(self.entity).perform()
+    return WaitAction(entity=self.entity).perform()

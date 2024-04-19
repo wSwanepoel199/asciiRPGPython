@@ -8,6 +8,7 @@ from src.utils.colour import loadColours
 
 if TYPE_CHECKING:
     from src.map import GameMap
+    from src.engine import Engine
 
 T = TypeVar("T", bound="Entity")
 
@@ -20,10 +21,10 @@ T = TypeVar("T", bound="Entity")
 #   DRAGON = "D"
 
 class Entity:
-  gamemap: GameMap
+  parent: GameMap
   def __init__(
     self,
-    gamemap: Optional[GameMap] = None,
+    parent: Optional[GameMap] = None,
     entityType: str = "",
     char: str = "?",
     colour: Tuple[int,int,int] = (255,255,255),
@@ -58,9 +59,15 @@ class Entity:
     self.combat =combat
     self.blocks_movement = blocks_movement
     self.target: Optional[Entity] = None
-    if gamemap:
-      self.gamemap = gamemap
-      gamemap.entities.add(self)
+    if parent:
+      self.parent = parent
+      parent.entities.add(self)
+  @property
+  def gamemap(self) -> GameMap:
+    return self.parent.gamemap
+  @property
+  def engine(self) -> Engine:
+    return self.gamemap.engine
 
   def __str__(self) -> str:
     return f"{self.__dict__}"
@@ -83,7 +90,7 @@ class Entity:
     clone = copy.deepcopy(self)
     clone.x = x
     clone.y = y
-    clone.gamemap = gamemap
+    clone.parent = gamemap
     gamemap.entities.add(clone)
     return clone
 
@@ -92,9 +99,9 @@ class Entity:
     self.y = y
     if not gamemap:
       return
-    if hasattr(self,'gamemap'):
+    if hasattr(self, 'parent') and self.parent is self.gamemap:
       self.gamemap.entities.remove(self)
-    self.gamemap = gamemap
+    self.parent = gamemap
     gamemap.entities.add(self)
 
 class Actor(Entity):
