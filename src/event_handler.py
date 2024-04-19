@@ -97,6 +97,8 @@ class GameOverEventHandler(EventHandler):
 
     if key == tcod.event.KeySym.ESCAPE:
       action = EscapeAction(entity=self.engine.player)
+    # elif key == tcod.event.KeySym.SPACE:
+    #   action = WaitAction(entity=self.engine.player)
 
     # No valid key was pressed
     return action
