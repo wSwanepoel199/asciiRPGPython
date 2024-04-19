@@ -350,7 +350,14 @@ class GameMap:
       choicelist=[self.tiles["light"], self.tiles["dark"]],
       default=self.tile_types['shroud'],
     )
-
-    for entity in self.entities:
-      if self.seeing[entity.x, entity.y]:
+    player = list(filter(lambda entity: entity['entityType'] == 'PLAYER', self.entities))
+    actors = list(filter(lambda entity: entity['entityType'] == 'ACTOR', self.entities))
+    objects = list(filter(lambda entity: entity['entityType'] == 'OBJECT', self.entities))
+    items = list(filter(lambda entity: entity['entityType'] == 'ITEM', self.entities))
+    for entity in objects + items + actors + player:
+       if self.seeing[entity.x, entity.y]:
         console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
+    return
+    # for entity in self.entities:
+    #   if self.seeing[entity.x, entity.y]:
+    #     console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)

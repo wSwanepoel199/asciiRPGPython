@@ -2,6 +2,7 @@ from src.ai import HostileAi
 from src.entity import Actor
 
 player = Actor(
+  entityType="PLAYER",
   char="@",
   colour=(255, 255, 255),
   name="Player",
@@ -12,6 +13,7 @@ player = Actor(
 )
 
 goblin = Actor(
+  entityType="ACTOR",
   char="G",
   colour=(0, 200, 0),
   name="Goblin",
@@ -23,6 +25,7 @@ goblin = Actor(
 )
 
 orc = Actor(
+  entityType="ACTOR",
   char="0",
   colour=(200, 200, 200),
   name="Orc",
@@ -34,6 +37,7 @@ orc = Actor(
 )
 
 slime = Actor(
+  entityType="ACTOR",
   char="S",
   colour=(0, 133, 235),
   name="Slime",
@@ -45,6 +49,7 @@ slime = Actor(
 )
 
 dragon = Actor(
+  entityType="ACTOR",
   char="D",
   colour=(210,0,0),
   name="Dragon",

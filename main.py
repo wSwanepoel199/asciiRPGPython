@@ -62,14 +62,12 @@ initialLoad = True
 #           case _:
 #             game.play = map.overworld(player=player, tile=tile)
 #             menu.mainmenu = not game.play
-
-if __name__ == "__main__":
-  # runGame()
+def main():
   screen_width = 80
-  screen_height = 45
+  screen_height = 60
 
   map_width = 80
-  map_height = 45
+  map_height = 60
 
   room_size_min = 6
   room_size_max = 10
@@ -77,83 +75,11 @@ if __name__ == "__main__":
 
   room_max_enemy = 2
 
-  game = Game()
-
-  # player = copy.deepcopy(Entity(
-  #   entityType='PLAYER',
-  #   char="@",
-  #   name="Player",
-  #   HP=50,
-  #   ATK=3,
-  #   inventory={
-  #     'potion':1,
-  #     'elixir':0
-  #   },
-  #   money=0,
-  #   blocks_movement=True
-  # ))
-
   player = copy.deepcopy(entity_factory.player)
-  
-  # game.addEntity(entity={
-  #   'entityType': 'PLAYER',
-  #   'char': '@',
-  #   'colour': (255,255,255),
-  #   'name': 'Test',
-  #   'HP': 50,
-  #   'ATK': 3,
-  #   'inventory':{
-  #     'potions': 1,
-  #     'elixirs': 0,
-  #   },
-  #   'money': 0,
-  #   'x': 0,
-  #   'y': 0,
-  #   'location': 'overworld',
-  #   'safe': True,
-  #   'key': False,
-  #   'combat': False,
-  #   'blocks_movement':True
-  # })
-
-  # for enemy in enemy_stats.values():
-  #   game.addEntity(entity={
-  #     'entityType': 'ENEMY',
-  #     'char': enemy['char'],
-  #     'colour': enemy['colour'],
-  #     'name': enemy,
-  #     'HP': enemy["HP"],
-  #     'ATK': enemy["ATK"],
-  #     'inventory':{
-  #       'potions': 0,
-  #       'elixirs': 0,
-  #     },
-  #     'money': 0,
-  #     'x': 0,
-  #     'y': 0,
-  #     'location': 'overworld'
-  #   })
-
-  # game.addEntity(entity={
-  #   'entityType': 'NPC',
-  #   'char': '@',
-  #   'colour': (255,255,0),
-  #   'name': 'npc1',
-  #   'HP': 50,
-  #   'ATK': 3,
-  #   'inventory':{
-  #     'potions': 0,
-  #     'elixirs': 0,
-  #   },
-  #   'money': 0,
-  #   'x': int(screen_width/2)-5,
-  #   'y': int(screen_height/2),
-  #   'location': 'overworld'
-  # })
-
-  # game.setPlayer(player = list(filter(lambda player: player['entityType'] == 'PLAYER', game.entities))[0])
 
   engine = Engine(player=player)
+
+  engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
 
   # game_map = GameMap(width=80, height=45)
 
@@ -167,11 +93,11 @@ if __name__ == "__main__":
     engine=engine,
   )
   engine.update_fov()
-  
-  engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
-  
 
   while True:
     engine.render()
 
     engine.event_handler.handle_events()
+
+if __name__ == "__main__":
+  main()

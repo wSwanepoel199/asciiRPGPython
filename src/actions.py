@@ -4,10 +4,10 @@ from typing import Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
   from src.engine import Engine
-  from src.entity import Entity
+  from src.entity import Entity, Actor
 
 class Action:
-  def __init__(self, entity: Entity) -> None:
+  def __init__(self, entity: Actor) -> None:
     super().__init__()
     self.entity = entity
 
@@ -34,7 +34,7 @@ class EscapeAction(Action):
     raise SystemExit()
 
 class DirectionalAction(Action):
-  def __init__(self, entity: Entity, dx:int, dy:int) -> None:
+  def __init__(self, entity: Actor, dx:int, dy:int) -> None:
     super().__init__(entity=entity)
 
     self.dx = dx
@@ -47,17 +47,28 @@ class DirectionalAction(Action):
   @property
   def blocking_entity(self) -> Optional[Entity]:
     return self.engine.game_map.get_blocking_entity(*self.dest_xy)
-  
+  @property
+  def target_actor(self) -> Optional[Actor]:
+    return self.engine.game_map.get_actor_at_location(*self.dest_xy)
   def perform(self) -> None:
     raise NotImplementedError()
 
 class MeleeAction(DirectionalAction):
   def perform(self) -> None:
-    target = self.blocking_entity
+    target = self.target_actor
     if not target:
       return
     
     print(f"You kick the {target.name}, much to your annoyance!")
+    damage = self.entity.ATK - target.DEF
+    attack_desc = f"{self.entity.name.capitalize()} attacked {target.name}"
+    if damage > 0:
+      print(f"{attack_desc} for {damage} hit points.")
+      target.HP -= damage
+    else :
+      print(f"{attack_desc} but did no damage.")
+    print(f"{target.name} has {target.HP}/{target.MAX_HP} remaining.")
+
 
 class MovementAction(DirectionalAction):
   def perform(self) -> None:
@@ -74,7 +85,7 @@ class MovementAction(DirectionalAction):
 
 class BumpAction(DirectionalAction):
   def perform(self) -> None:
-    if self.blocking_entity:
+    if self.target_actor:
       return MeleeAction(entity=self.entity, dx=self.dx, dy=self.dy).perform()
     else:
       return MovementAction(entity=self.entity, dx=self.dx, dy=self.dy).perform()

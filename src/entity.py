@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from typing import  Optional, Tuple, TypeVar, TYPE_CHECKING, Any, Type
 from src.ai import BaseAi
-import src.factory.entity_factory as entity_factory
+from src.event_handler import GameOverEventHandler
 
 if TYPE_CHECKING:
     from src.map import GameMap
@@ -39,35 +39,12 @@ class Entity:
     key: bool=False,
     combat: bool=False,
     blocks_movement: bool= False,
-    args = {}
   ) -> None:
-    # arg = {
-    #   "entityType": "",
-    #   'char': '.',
-    #   'colour': (255,255,255),
-    #   "name": "",
-    #   "HP": 0,
-    #   "ATK": 0,
-    #   'inventory':{},
-    #   "money": 0,
-    #   "x": 0,
-    #   "y": 0,
-    #   "location": "overworld",
-    #   "safe": True,
-    #   "key": False,
-    #   "combat": False,
-    #   "blocks_movement": False
-    # }
-    # arg.update(args)
-
-    # for key, value in arg.items():
-    #   self[key] = value
     self.entityType = entityType
     self.char= char
     self.colour = colour
     self.name = name
     self.HP = HP
-    self.MAX_HP = self.HP
     self.ATK = ATK
     self.DEF = DEF
     self.inventory = inventory
@@ -83,7 +60,6 @@ class Entity:
     if gamemap:
       self.gamemap = gamemap
       gamemap.entities.add(self)
-
 
   def __str__(self) -> str:
     return f"{self.__dict__}"
@@ -137,9 +113,11 @@ class Actor(Entity):
       name: str= "<Unnamed>",
       ai_cls: Type[BaseAi],
     ) -> None:
+    self._HP=HP
+    self.MAX_HP=HP
     super().__init__(
       entityType=entityType,
-      HP=HP,
+      HP=self.HP,
       ATK=ATK,
       DEF=DEF,
       money=money,
@@ -151,10 +129,34 @@ class Actor(Entity):
       blocks_movement=True
     )
     self.ai: Optional[BaseAi] = ai_cls(self)
-  
+  @property
+  def HP(self) -> int:
+    return self._HP
+
+  @HP.setter
+  def HP(self, value: int) -> None:
+    self._HP = max(0, min(value, self.MAX_HP))
+    if self._HP == 0 and self.ai:
+      self.die()
   @property
   def alive(self)->bool:
     return bool(self.ai)
+  
+  def die(self) -> None:
+    if self.gamemap.engine.player is self:
+      death_message = "YOU DIED"
+      self.gamemap.engine.event_handler = GameOverEventHandler(engine=self.gamemap.engine)
+    else:
+      death_message = f"{self.name} is dead"
+    
+    self.char = "%"
+    self.entityType = "OBJECT"
+    self.colour = (191,0,0)
+    self.blocks_movement = False
+    self.ai = None
+    self.name = f"remains of {self.name}"
+
+    print(death_message)
 
 # enemy_stats = {
 #   "Goblin" : entity_factory.goblin,
