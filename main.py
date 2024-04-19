@@ -66,7 +66,7 @@ def main():
   screen_width = 80
   screen_height = 60
 
-  map_width = 80-25
+  map_width = 80
   map_height = 60
 
   room_size_min = 6
@@ -82,13 +82,17 @@ def main():
   engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
 
   # game_map = GameMap(width=80, height=45)
-
+  squareMapDimMin = min(map_width, map_height)
+  # squareMapDimMax = max(map_width, map_height)
+  # mapDiff = round(abs((map_width - map_height))/2)
   engine.game_map = genDungeon(
-    w=map_width, 
-    h=map_height, 
-    min=room_size_min, 
-    max=room_size_max, 
-    room_limit=max_rooms, 
+    x=0,
+    y=0,
+    w=squareMapDimMin,
+    h=squareMapDimMin,
+    min=room_size_min,
+    max=room_size_max,
+    room_limit=max_rooms,
     max_enemy_per_room=room_max_enemy,
     engine=engine,
   )
@@ -98,8 +102,8 @@ def main():
     engine.console.clear()
     # engine.render()
     engine.event_handler.on_render()
-    engine.context.present(engine.console)
-    engine.event_handler.handle_events()
+    engine.context.present(console=engine.console)
+    engine.event_handler.handle_events(engine.context)
 
 if __name__ == "__main__":
   main()

@@ -136,8 +136,8 @@ class Actor(Entity):
   @HP.setter
   def HP(self, value: int) -> None:
     self._HP = max(0, min(value, self.MAX_HP))
-    if self._HP == 0 and self.ai:
-      self.die()
+    # if self._HP <= 0 and self.ai:
+    #   self.die()
   @property
   def alive(self)->bool:
     return bool(self.ai)

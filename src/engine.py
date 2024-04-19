@@ -18,6 +18,7 @@ class Engine:
     self.context: tcod.context.Context = {}
     self.event_handler: EventHandler = MainGameEventHandler(engine=self)
     self.message_log = MessageLog()
+    self.mouse_location = (0, 0)
 
   def handle_enemy_turn(self) -> None:
     for entity in self.game_map.entities - {self.player}:
@@ -36,30 +37,16 @@ class Engine:
     self.game_map.seen |= self.game_map.seeing
 
   def render(self) -> None:
-
     self.game_map.render(console=self.console)
+    
     side_console = self.console.width - self.game_map.width
     self.genWindow(
       x=self.game_map.width,
       y=0,
       width=side_console,
-      height=self.game_map.height
+      height=self.console.height
     )
-    self.console.draw_rect(
-      x=self.game_map.width+1,
-      y=10,
-      width=side_console-2,
-      height=1,
-      ch=ord('─'),
-      fg=loadColours()['white']
-    )
-    self.message_log.render(
-      console=self.console,
-      x=self.game_map.width+1,
-      y=11,
-      width=side_console-2,
-      height=self.console.height-11-2
-    )
+
     if self.player.HP > 0:
       self.console.print(
         x=self.game_map.width+1,
@@ -73,7 +60,7 @@ class Engine:
         bar_text="HP: ",
         curr_val=self.player.HP,
         max_val=self.player.MAX_HP,
-        total_width=20,
+        total_width=side_console-4,
       )
       if self.player.target and self.player.target.alive:
         self.console.print(
@@ -88,7 +75,7 @@ class Engine:
           bar_text=f"{self.player.target.name} HP: ",
           curr_val=self.player.target.HP,
           max_val=self.player.target.MAX_HP,
-          total_width=20,
+          total_width=side_console-4,
         )
     else :
       msg= "YOU DIED!"
@@ -97,6 +84,44 @@ class Engine:
         y=5,
         string=msg,
       )
+    
+    self.render_names_at_mouse(
+      x=self.game_map.width+1,
+      y=7
+    )
+    self.console.draw_rect(
+      x=self.game_map.width+1,
+      y=round(self.console.height/3)*2,
+      width=side_console-2,
+      height=1,
+      ch=ord('─'),
+      fg=loadColours()['white']
+    )
+    self.console.put_char(
+      x=self.game_map.width,
+      y=round(self.console.height/3)*2,
+      ch=ord('├'),
+    )
+    self.console.put_char(
+      x=self.console.width-1,
+      y=round(self.console.height/3)*2,
+      ch=ord('┤'),
+    )
+    self.console.print_box(
+      x=self.game_map.width+1,
+      y=round(self.console.height/3)*2,
+      width=side_console-2,
+      height=1,
+      string="┤Recent Events├",
+      alignment=tcod.constants.CENTER
+    )
+    self.message_log.render(
+      console=self.console,
+      x=self.game_map.width+1,
+      y=round(self.console.height/3)*2+1,
+      width=side_console-2,
+      height=self.console.height-round(self.console.height/3)*2-2
+    )
 
   def createConsole(self, width:int, height:int, tileset_image:str, tileset_width:int, tileset_height:int ) -> None:
 
@@ -164,4 +189,25 @@ class Engine:
       width=width,
       height=height,
       fg=loadColours()['white'],
+    )
+
+  def get_names_at_location(self, x:int, y:int) -> str:
+    if not self.game_map.in_bounds(x, y):
+      return ""
+    names = ", ".join(
+      entity.name
+      for entity in self.game_map.entities
+      if entity.x == x and entity.y == y
+    )
+    return names.capitalize()
+  
+  def render_names_at_mouse(self, x:int, y:int) -> None:
+    mouse_x,mouse_y = self.mouse_location
+
+    names_at_mouse_local = self.get_names_at_location(x=mouse_x, y=mouse_y)
+
+    self.console.print(
+      x=x,
+      y=y,
+      string=names_at_mouse_local
     )

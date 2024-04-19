@@ -10,6 +10,7 @@ from src.game import Game
 from src.save import Save
 from src.entity import Actor
 import src.factory.entity_factory as entity_factory
+from src.utils.colour import loadColours
 
 if TYPE_CHECKING:
     from src.entity import Entity
@@ -287,11 +288,15 @@ class GameMap:
   def __init__(
       self, 
       engine: Engine,
+      x: int,
+      y: int,
       width: int, 
       height: int, 
       map_type: str = "openworld", 
       entities: Iterable[Entity] = ()
     ) -> None:
+    self.x = x
+    self.y = y
     self.engine = engine
     self.width = width
     self.height = height
@@ -308,11 +313,12 @@ class GameMap:
       order="F"
     )
     self.entities = set(entities)
-    match map_type:
-      # case "dungeon":
-      #   self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["wall"], order="F")
-      case _:
-        self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["mapfill"], order="F")
+    self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["mapfill"], order="F")
+    # match map_type:
+    #   # case "dungeon":
+    #   #   self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["wall"], order="F")
+    #   case _:
+    #     self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["mapfill"], order="F")
   
   @property
   def actors(self) -> Iterable[Actor]:
@@ -321,6 +327,13 @@ class GameMap:
       for entity in self.entities
       if isinstance(entity, Actor) and entity.alive
     )
+  # @property
+  # def tiles(self) -> np.ndarray:
+  #   return np.full(
+  #     shape=(self.width, self.height), 
+  #     fill_value=self.tile_types["mapfill"], 
+  #     order="F"
+  #   )
   def get_blocking_entity(self, x:int, y:int) -> Optional[Entity]:
     for entity in self.entities:
       if (
@@ -346,11 +359,23 @@ class GameMap:
     If a tile is in the "visible" array, then draw it with the "light" colors.
     If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
     Otherwise, the default is "SHROUD".
+
+    ╔ ╗ ╚ ╝ ╠ ╣ ║ ╩ ╬ ╦ ═
     """
+
     console.rgb[0:self.width, 0:self.height] = np.select(
       condlist=[self.seeing, self.seen],
       choicelist=[self.tiles["light"], self.tiles["dark"]],
       default=self.tile_types['shroud'],
+    )
+    console.draw_frame(
+      x=self.x,
+      y=self.y,
+      width=self.width,
+      height=self.height,
+      clear= False,
+      fg=loadColours()['white'],
+      decoration="╔═╗║ ║╚═╝"
     )
     player = list(filter(lambda entity: entity['entityType'] == 'PLAYER', self.entities))
     actors = list(filter(lambda entity: entity['entityType'] == 'ACTOR', self.entities))
@@ -392,6 +417,7 @@ class GameMap:
           continue
 
   def placeWall(self, x:int, y:int, dungeon: GameMap) -> None:
+    print(x,y)
     if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
       dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
     if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:

@@ -55,6 +55,8 @@ def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,
 
 def genDungeon(
     *,
+    x: int,
+    y: int,
     w: int,
     h: int,
     min: int,
@@ -67,20 +69,21 @@ def genDungeon(
   player = engine.player
   dungeon = GameMap(
     engine=engine, 
+    x=x,
+    y=y,
     width=w, 
     height=h, 
     map_type="dungeon", 
     entities=[player]
   )
-  
   rooms: List[RecRoom] = []
 
   for r in range(room_limit):
     room_width = random.randint(a=min, b=max)
     room_height = random.randint(a=min, b=max)
 
-    x = random.randint(a=0, b=dungeon.width - room_width - 1)
-    y = random.randint(a=0, b=dungeon.height - room_height - 1)
+    x = random.randint(a=0+dungeon.x, b=dungeon.width - room_width - 1)
+    y = random.randint(a=0+dungeon.y, b=dungeon.height - room_height - 1)
 
     new_room = RecRoom(x=x, y=y, w=room_width, h=room_height)
 
@@ -99,20 +102,21 @@ def genDungeon(
     dungeon.place_entities(room=new_room, dungeon=dungeon, maximum_monsters=max_enemy_per_room)
 
     rooms.append(new_room)
-  i = 0
-  j = 0
-  while i < h:
-    if i+1 >= h:
+  i = dungeon.y
+  j = dungeon.x
+  print(w,h)
+  while i < h-dungeon.y:
+    if i+1 >= h-dungeon.y:
       break
-    while j < w:
-      if dungeon.tiles[j,i] == dungeon.tile_types["mapfill"] or dungeon.tiles[j,i] == dungeon.tile_types["wall"]:
+    while j < w-dungeon.x:
+      if dungeon.tiles[j,i] == dungeon.tile_types["mapfill"] or dungeon.tiles[j,i] == dungeon.tile_types["wall"] or not dungeon.tiles[j,i]:
         j += 1
         continue
-      if j+1 >= w:
+      if j+1 >= w-dungeon.x:
         break
       dungeon.placeWall(x=j,y=i,dungeon=dungeon)
       j += 1
-    j = 0
+    j = dungeon.x
     i += 1
 
 
