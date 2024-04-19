@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-from typing import Iterable, Iterator, Optional, TYPE_CHECKING
+from typing import Iterable, Iterator, Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
-import tcod
+import tcod, random
 
 import src.tile_types as tile_types
 from src.game import Game
 from src.save import Save
 from src.entity import Actor
+import src.factory.entity_factory as entity_factory
 
 if TYPE_CHECKING:
     from src.entity import Entity
     from src.engine import Engine
+    from src.procgen import RecRoom
 
 class Map:
   def __init__(self, ) -> None:
@@ -357,7 +359,52 @@ class GameMap:
     for entity in objects + items + actors + player:
        if self.seeing[entity.x, entity.y]:
         console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
-    return
     # for entity in self.entities:
     #   if self.seeing[entity.x, entity.y]:
     #     console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
+  
+  def place_entities(
+    self, room: RecRoom, dungeon: GameMap, maximum_monsters: int,
+  ) -> None:
+    number_of_monsters = random.randint(a=0, b=maximum_monsters)
+    enemy_stats = {
+      "Goblin" : entity_factory.goblin,
+      "Orc" : entity_factory.orc,
+      "Slime" : entity_factory.slime,
+      "Dragon" : entity_factory.dragon,
+    }
+
+    for i in range(number_of_monsters):
+      x = random.randint(a=room.point1[0] + 1, b=room.point2[0] - 1)
+      y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
+      selectedEnemy = random.randint(a=0, b=len(enemy_stats)-1)
+      start = 0
+      for key, value in enemy_stats.items():
+        if start == selectedEnemy:
+          selectedEnemy = value
+          break
+        else:
+          start += 1
+      if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
+        if random.random() < 0.8 and not selectedEnemy.name == "Dragon":
+          selectedEnemy.spawn(dungeon, x, y)
+        else:
+          continue
+
+  def placeWall(self, x:int, y:int, dungeon: GameMap) -> None:
+    if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x,y-1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x,y-1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x-1,y-1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x-1,y-1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x-1,y] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x-1,y] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x-1,y+1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x,y+1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x,y+1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x+1,y+1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x+1,y+1] = dungeon.tile_types["wall"]

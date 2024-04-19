@@ -67,7 +67,7 @@ def main():
   screen_height = 60
 
   map_width = 80
-  map_height = 60
+  map_height = 60-3
 
   room_size_min = 6
   room_size_max = 10

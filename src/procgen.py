@@ -1,6 +1,5 @@
 from __future__ import annotations
 import random, tcod
-import src.factory.entity_factory as entity_factory
 from typing import Tuple, Iterator, Iterable, List, TYPE_CHECKING
 from src.map import GameMap
 if TYPE_CHECKING:
@@ -37,34 +36,6 @@ class RecRoom:
       and self.point2[1] >= other.point1[1]
     )
 
-def place_entities(
-  room: RecRoom, dungeon: GameMap, maximum_monsters: int,
-) -> None:
-  number_of_monsters = random.randint(a=0, b=maximum_monsters)
-  enemy_stats = {
-    "Goblin" : entity_factory.goblin,
-    "Orc" : entity_factory.orc,
-    "Slime" : entity_factory.slime,
-    "Dragon" : entity_factory.dragon,
-  }
-
-  for i in range(number_of_monsters):
-    x = random.randint(a=room.point1[0] + 1, b=room.point2[0] - 1)
-    y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
-    selectedEnemy = random.randint(a=0, b=len(enemy_stats)-1)
-    start = 0
-    for key, value in enemy_stats.items():
-      if start == selectedEnemy:
-        selectedEnemy = value
-        break
-      else:
-        start += 1
-    if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
-      if random.random() < 0.8 and not selectedEnemy.name == "Dragon":
-        selectedEnemy.spawn(dungeon, x, y)
-      else:
-        continue
-
 def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,int]]:
   """Return an L-shaped tunnel between these two points."""
   x1, y1 = start
@@ -81,24 +52,6 @@ def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,
     yield x, y
   for x,y in tcod.los.bresenham(start=(corner_x, corner_y), end=(x2, y2)).tolist():
     yield x, y
-
-def placeWall(x:int, y:int, dungeon: GameMap) -> None:
-  if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
-    dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
-  if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:
-    dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
-  if not dungeon.tiles[x,y-1] == dungeon.tile_types["floor"]:
-    dungeon.tiles[x,y-1] = dungeon.tile_types["wall"]
-  if not dungeon.tiles[x-1,y-1] == dungeon.tile_types["floor"]:
-    dungeon.tiles[x-1,y-1] = dungeon.tile_types["wall"]
-  if not dungeon.tiles[x-1,y] == dungeon.tile_types["floor"]:
-    dungeon.tiles[x-1,y] = dungeon.tile_types["wall"]
-  if not dungeon.tiles[x-1,y+1] == dungeon.tile_types["floor"]:
-    dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
-  if not dungeon.tiles[x,y+1] == dungeon.tile_types["floor"]:
-    dungeon.tiles[x,y+1] = dungeon.tile_types["wall"]
-  if not dungeon.tiles[x+1,y+1] == dungeon.tile_types["floor"]:
-    dungeon.tiles[x+1,y+1] = dungeon.tile_types["wall"]
 
 def genDungeon(
     *,
@@ -127,7 +80,7 @@ def genDungeon(
     room_height = random.randint(a=min, b=max)
 
     x = random.randint(a=0, b=dungeon.width - room_width - 1)
-    y = random.randint(a=1, b=dungeon.height - room_height - 2)
+    y = random.randint(a=3, b=dungeon.height - room_height - 1)
 
     new_room = RecRoom(x=x, y=y, w=room_width, h=room_height)
 
@@ -140,10 +93,11 @@ def genDungeon(
     if len(rooms) == 0:
       player.place(*new_room.center, gamemap=dungeon)
     else:
+      print(rooms[-1].center, new_room.center)
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
 
-    place_entities(room=new_room, dungeon=dungeon, maximum_monsters=max_enemy_per_room)
+    dungeon.place_entities(room=new_room, dungeon=dungeon, maximum_monsters=max_enemy_per_room)
 
     rooms.append(new_room)
   i = 0
@@ -157,7 +111,7 @@ def genDungeon(
         continue
       if j+1 >= w:
         break
-      placeWall(x=j,y=i,dungeon=dungeon)
+      dungeon.placeWall(x=j,y=i,dungeon=dungeon)
       j += 1
     j = 0
     i += 1

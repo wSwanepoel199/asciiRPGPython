@@ -55,11 +55,17 @@ class DirectionalAction(Action):
 
 class MeleeAction(DirectionalAction):
   def perform(self) -> None:
+
     target = self.target_actor
+    self.entity['target'] = target
     if not target:
       return
-    
-    print(f"You kick the {target.name}, much to your annoyance!")
+    msg=f"{self.entity.name.capitalize()} HP: {self.entity.HP}/{self.entity.MAX_HP}"
+    self.entity.gamemap.engine.console.print(
+      x=self.entity.gamemap.width-len(msg),
+      y=1,
+      string=msg
+    )
     damage = self.entity.ATK - target.DEF
     attack_desc = f"{self.entity.name.capitalize()} attacked {target.name}"
     if damage > 0:

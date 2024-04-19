@@ -56,7 +56,7 @@ class Entity:
     self.key=key
     self.combat =combat
     self.blocks_movement = blocks_movement
-
+    self.target: Optional[Entity] = None
     if gamemap:
       self.gamemap = gamemap
       gamemap.entities.add(self)

@@ -35,17 +35,26 @@ class Engine:
   def render(self) -> None:
     self.console.clear()
     self.game_map.render(console=self.console)
-    if self.player.HP>0:
+    if self.player.HP > 0:
+      msg = f"HP: {self.player.HP}/{self.player.MAX_HP}"
       self.console.print(
         x=1,
-        y=0,
-        string=f"HP: {self.player.HP}/{self.player.MAX_HP}",
+        y=1,
+        string=msg,
       )
+      if self.player.target and self.player.target.alive:
+        msg = f"{self.player.target.name} HP: {self.player.target.HP}/{self.player.target.MAX_HP}"
+        self.console.print(
+          x=self.player.gamemap.width - len(msg)-1,
+          y=1,
+          string=msg,
+        )
     else :
+      msg= "YOU DIED!"
       self.console.print(
-        x=1,
-        y=0,
-        string="YOU DIED!",
+        x=round((self.player.gamemap.width - len(msg))/2),
+        y=1,
+        string=msg,
       )
     self.context.present(console=self.console)
 
