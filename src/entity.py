@@ -4,6 +4,7 @@ import copy
 from typing import  Optional, Tuple, TypeVar, TYPE_CHECKING, Any, Type
 from src.ai import BaseAi
 from src.event_handler import GameOverEventHandler
+from src.utils.colour import loadColours
 
 if TYPE_CHECKING:
     from src.map import GameMap
@@ -142,12 +143,14 @@ class Actor(Entity):
     return bool(self.ai)
   
   def die(self) -> None:
+    colours = loadColours()
     if self.gamemap.engine.player is self:
       death_message = "YOU DIED"
       self.gamemap.engine.event_handler = GameOverEventHandler(engine=self.gamemap.engine)
+      death_message_colour = colours['player_dead']
     else:
-      death_message = f"{self.name} is dead"
-    
+      death_message = f"The {self.name} is dead"
+      death_message_colour = colours['enemy_dead']
     self.char = "%"
     self.entityType = "OBJECT"
     self.colour = (191,0,0)
@@ -156,6 +159,7 @@ class Actor(Entity):
     self.name = f"remains of {self.name}"
 
     print(death_message)
+    self.gamemap.engine.message_log.add_message(text=death_message, fg=death_message_colour)
 
 # enemy_stats = {
 #   "Goblin" : entity_factory.goblin,

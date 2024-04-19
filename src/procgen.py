@@ -80,7 +80,7 @@ def genDungeon(
     room_height = random.randint(a=min, b=max)
 
     x = random.randint(a=0, b=dungeon.width - room_width - 1)
-    y = random.randint(a=3, b=dungeon.height - room_height - 1)
+    y = random.randint(a=0, b=dungeon.height - room_height - 1)
 
     new_room = RecRoom(x=x, y=y, w=room_width, h=room_height)
 

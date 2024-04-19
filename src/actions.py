@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING
+from src.utils.colour import loadColours
 
 if TYPE_CHECKING:
   from src.engine import Engine
@@ -67,13 +68,22 @@ class MeleeAction(DirectionalAction):
       string=msg
     )
     damage = self.entity.ATK - target.DEF
-    attack_desc = f"{self.entity.name.capitalize()} attacked {target.name}"
+    colours = loadColours()
+    if self.entity is self.engine.player:
+      attack_desc = f"{self.entity.name.capitalize()} attacked the {target.name}"
+      attack_color = colours['player_atk']
+    else:
+      attack_desc = f"The {self.entity.name.capitalize()} attacked {target.name}"
+      attack_color = colours['enemy_atk']
     if damage > 0:
-      print(f"{attack_desc} for {damage} hit points.")
+      attack_message = f"{attack_desc} for {damage} hit points."
+      print(attack_desc)
       target.HP -= damage
     else :
-      print(f"{attack_desc} but did no damage.")
-    print(f"{target.name} has {target.HP}/{target.MAX_HP} remaining.")
+      attack_message = f"{attack_desc} but did no damage."
+      print(attack_message)
+    self.engine.message_log.add_message(text=attack_message, fg=attack_color)
+
 
 
 class MovementAction(DirectionalAction):

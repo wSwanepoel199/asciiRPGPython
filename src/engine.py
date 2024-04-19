@@ -1,7 +1,9 @@
 from __future__ import annotations
 from typing import Iterable, Any, TYPE_CHECKING
-import tcod
+import tcod, json, os
 from src.event_handler import MainGameEventHandler
+from src.utils.colour import loadColours
+from src.message import MessageLog
 
 if TYPE_CHECKING:
   from src.entity import Actor
@@ -15,6 +17,7 @@ class Engine:
     self.console: tcod.console.Console = {}
     self.context: tcod.context.Context = {}
     self.event_handler: EventHandler = MainGameEventHandler(engine=self)
+    self.message_log = MessageLog()
 
   def handle_enemy_turn(self) -> None:
     for entity in self.game_map.entities - {self.player}:
@@ -33,30 +36,67 @@ class Engine:
     self.game_map.seen |= self.game_map.seeing
 
   def render(self) -> None:
-    self.console.clear()
+
     self.game_map.render(console=self.console)
+    side_console = self.console.width - self.game_map.width
+    self.genWindow(
+      x=self.game_map.width,
+      y=0,
+      width=side_console,
+      height=self.game_map.height
+    )
+    self.console.draw_rect(
+      x=self.game_map.width+1,
+      y=10,
+      width=side_console-2,
+      height=1,
+      ch=ord('─'),
+      fg=loadColours()['white']
+    )
+    self.message_log.render(
+      console=self.console,
+      x=self.game_map.width+1,
+      y=11,
+      width=side_console-2,
+      height=self.console.height-11-2
+    )
     if self.player.HP > 0:
-      msg = f"HP: {self.player.HP}/{self.player.MAX_HP}"
       self.console.print(
-        x=1,
+        x=self.game_map.width+1,
         y=1,
-        string=msg,
+        string=f"{self.player.name}:"
+      )
+      msg = f"HP: {self.player.HP}/{self.player.MAX_HP}"
+      self.render_bar(
+        bar_x=self.game_map.width+2,
+        bar_y=2,
+        bar_text="HP: ",
+        curr_val=self.player.HP,
+        max_val=self.player.MAX_HP,
+        total_width=20,
       )
       if self.player.target and self.player.target.alive:
-        msg = f"{self.player.target.name} HP: {self.player.target.HP}/{self.player.target.MAX_HP}"
         self.console.print(
-          x=self.player.gamemap.width - len(msg)-1,
-          y=1,
-          string=msg,
+          x=self.game_map.width+1,
+          y=4,
+          string=f"{self.player.target.name}:"
+        )
+        msg = f"{self.player.target.name} HP: {self.player.target.HP}/{self.player.target.MAX_HP}"
+        self.render_bar(
+          bar_x=self.game_map.width+2,
+          bar_y=5,
+          bar_text=f"{self.player.target.name} HP: ",
+          curr_val=self.player.target.HP,
+          max_val=self.player.target.MAX_HP,
+          total_width=20,
         )
     else :
       msg= "YOU DIED!"
       self.console.print(
-        x=round((self.player.gamemap.width - len(msg))/2),
-        y=1,
+        x= self.game_map.width + round((side_console - len(msg)-1)/2) ,
+        y=5,
         string=msg,
       )
-    self.context.present(console=self.console)
 
   def createConsole(self, width:int, height:int, tileset_image:str, tileset_width:int, tileset_height:int ) -> None:
 
@@ -73,4 +113,55 @@ class Engine:
     tileset=tileset,
     title="Rogue but worse",
     vsync=True,
+    )
+  
+  def render_bar(self, bar_x:int = 0, bar_y:int = 0, bar_text: str = '', curr_val: int = 0, max_val:int = 0, total_width:int = 0, flip:bool = False) -> None:
+    colours = loadColours()
+    if(flip):
+      bar_width = total_width - int(float(curr_val) / max_val * total_width)
+      bar_bg = colours['bar_filled']
+      bar_fg = colours['bar_empty']
+    else:
+      bar_width = int(float(curr_val) / max_val * total_width)
+      bar_fg = colours['bar_filled']
+      bar_bg = colours['bar_empty']
+    self.console.draw_rect(
+      x=bar_x,
+      y=bar_y,
+      width=total_width,
+      height=1,
+      ch=1,
+      bg=bar_bg
+    )
+    if bar_width > 0:
+      self.console.draw_rect(
+        x=bar_x,
+        y=bar_y,
+        width=bar_width,
+        height=1,
+        ch=1,
+        bg=bar_fg
+      )
+    if flip:
+      msg = f"{curr_val}/{max_val}{bar_text}"
+      self.console.print(
+        x=self.game_map.width - len(msg) - 1,
+        y=bar_y,
+        string=msg,
+        fg=colours['white'],
+      )
+    else:
+      self.console.print(
+        x=bar_x,
+        y=bar_y,
+        string=f"{bar_text}{curr_val}/{max_val}",
+        fg=colours['white'],
+      )
+  def genWindow(self, x:int, y:int, width:int, height:int) -> None:
+    self.console.draw_frame(
+      x=x,
+      y=y,
+      width=width,
+      height=height,
+      fg=loadColours()['white'],
     )

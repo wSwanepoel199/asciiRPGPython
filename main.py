@@ -66,8 +66,8 @@ def main():
   screen_width = 80
   screen_height = 60
 
-  map_width = 80
-  map_height = 60-3
+  map_width = 80-25
+  map_height = 60
 
   room_size_min = 6
   room_size_max = 10
@@ -95,8 +95,10 @@ def main():
   engine.update_fov()
 
   while True:
-    engine.render()
-
+    engine.console.clear()
+    # engine.render()
+    engine.event_handler.on_render()
+    engine.context.present(engine.console)
     engine.event_handler.handle_events()
 
 if __name__ == "__main__":
