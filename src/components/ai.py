@@ -52,6 +52,10 @@ class HostileAi(BaseAi):
     self.path: List[Tuple[int,int]] = []
   
   def perform(self) -> None:
+    if(self.entity.fighter.HP <= 0):
+      self.entity.fighter.die()
+      return
+
     target = self.engine.player
     dx = target.x - self.entity.x
     dy = target.y - self.entity.y

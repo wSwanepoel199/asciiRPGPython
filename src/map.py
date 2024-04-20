@@ -410,7 +410,9 @@ class GameMap:
     }
 
     available_items = {
-      "Healing Potion" : item_factory.healing_potion
+      "Healing Potion" : item_factory.healing_potion,
+      "Cure Wounds Scroll": item_factory.cure_wounds_scroll,
+      "Lightning Bolt Scroll" : item_factory.lightning_bolt_scroll
     }
 
     for i in range(number_of_monsters):
@@ -427,7 +429,7 @@ class GameMap:
       y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
       entity = random.choice(list(available_items.values()))
       if not any(entity.x == x and entity.y == y for entity in self.entities):
-        if random.random() < 0.6:
+        if random.random() < 0.7:
           entity.spawn(gamemap=self, x=x, y=y)
 
   def placeWall(self, x:int, y:int, dungeon: GameMap) -> None:

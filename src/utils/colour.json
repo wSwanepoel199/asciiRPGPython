@@ -1,15 +1,18 @@
 {
   "white": [255, 255, 255],
   "black": [0, 0, 0],
+  "red": [255, 0, 0],
   "player_atk": [224, 224, 224],
-  "enemy_atk": [255, 192, 192],
   "player_dead": [255, 48, 48],
+  "health_recovery": [0, 255, 255],
+  "needs_target": [63, 255, 255],
+  "status_effect_applied": [63, 255, 63],
+  "enemy_atk": [255, 192, 192],
   "enemy_dead": [255, 158, 48],
   "welcome_text": [32, 158, 255],
   "bar_filled": [0, 96, 0],
   "bar_empty": [64, 16, 16],
   "invalid": [255, 255, 0],
   "impossible": [128, 128, 128],
-  "error": [255, 64, 64],
-  "health_recovery": [0, 255, 255]
+  "error": [255, 64, 64]
 }

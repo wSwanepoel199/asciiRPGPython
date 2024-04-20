@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import copy
+import copy, math
 from typing import  Optional, Tuple, TypeVar, TYPE_CHECKING, Any, Type, Union
 
 from src.components.inventory import Inventory
@@ -94,6 +94,9 @@ class Entity:
           self.gamemap.entities.remove(self)
     self.parent = gamemap
     gamemap.entities.add(self)
+  
+  def distance(self, x:int, y:int) -> float:
+    return math.sqrt((x-self.x)**2+(y-self.y)**2)
 
 class Actor(Entity):
   def __init__(

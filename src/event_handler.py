@@ -99,7 +99,7 @@ class InventoryEventHandler(AskUserEventHandler):
     if height == self.engine.console.height:
       decoration = '┌─┐│ │└─┘'
     else:
-      decoration = '┌─┐│ │├─┤'
+      decoration = '┌─┐│ ││ │'
     x = self.engine.game_map.width
     y = 0
     width = self.engine.side_console
@@ -122,27 +122,47 @@ class InventoryEventHandler(AskUserEventHandler):
       bg=(255, 255, 255),
       fg=(0, 0, 0)
     )
+
+
+    offset = 0
+    if number_of_items_in_inventory > 0:
+      for i, item in enumerate(self.engine.player.inventory.items):
+        item_key = chr(ord("a") + i)
+        lines = list(self.engine.message_log.wrap(
+          string=f"{item_key}-{item.name}", 
+          width=width-2
+        ))
+        for line in lines:
+          self.engine.console.print(
+            x=x + 1, 
+            y=y + i + offset + 2, 
+            string=line
+          )
+          offset += 1
+          if offset > height:
+            break
+    else:
+      self.engine.console.print(x=x + 1, y=y + 2, string="(Empty)")
+    if offset <1:
+      offset = 1
+    self.engine.draw_line(
+      x=x,
+      y=y+height+offset-2,
+      width=width,
+    )
     # draw pickup instruction
     self.engine.console.print(
       x=x+1,
-      y=y+height-1,
+      y=y+height+offset-2,
       string='p-pick up',
     )
     # draw drop instruction
     string = 'd-drop'
     self.engine.console.print(
       x=self.engine.console.width - len(string)-1,
-      y=y+height-1,
+      y=y+height+offset-2,
       string=string,
     )
-
-
-    if number_of_items_in_inventory > 0:
-      for i, item in enumerate(self.engine.player.inventory.items):
-        item_key = chr(ord("a") + i)
-        self.engine.console.print(x=x + 1, y=y + i + 2, string=f"{item_key}-{item.name}")
-    else:
-      self.engine.console.print(x=x + 1, y=y + 2, string="(Empty)")
 
   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[action.Action]:
     player = self.engine.player
