@@ -142,15 +142,33 @@ class InventoryEventHandler(AskUserEventHandler):
     super().on_render()
     # ─│┌┐└├┤┬┴┼┘
     number_of_items_in_inventory = len(self.engine.player.inventory.items)
-    height = number_of_items_in_inventory + 4
-
-    if height == self.engine.console.height:
-      decoration = '┌─┐│ │└─┘'
-    else:
-      decoration = '┌─┐│ ││ │'
+    height = min(5 - number_of_items_in_inventory, self.engine.console.height)
     x = self.engine.game_map.width
     y = 0
     width = self.engine.side_console
+    offset = 0
+    # calculate number of lines wrapped item names use
+    if number_of_items_in_inventory > 0:
+      lines = []
+      for i, item in enumerate(self.engine.player.inventory.items):
+        item_key = chr(ord("a") + i)
+        lines += list(self.engine.message_log.wrap(
+          string=f"{item_key}-{item.name}", 
+          width=width-2
+        ))
+        height += 1
+    else:
+      lines = list(self.engine.message_log.wrap(
+        string="Inventory is empty.",
+        width=width-2
+      ))
+    # adjust height based on number of lines
+    height += len(lines)
+    # set frame decoration based on height
+    if height == self.engine.console.height:
+      decoration = '┌─┐│ │└─┘'
+    else:
+      decoration = '┌─┐│ │├─┤'
     # draw inventory frame
     self.engine.console.draw_frame(
       x=x,
@@ -170,47 +188,30 @@ class InventoryEventHandler(AskUserEventHandler):
       bg=(255, 255, 255),
       fg=(0, 0, 0)
     )
-
-
-    offset = 0
-    if number_of_items_in_inventory > 0:
-      for i, item in enumerate(self.engine.player.inventory.items):
-        item_key = chr(ord("a") + i)
-        lines = list(self.engine.message_log.wrap(
-          string=f"{item_key}-{item.name}", 
-          width=width-2
-        ))
-        for line in lines:
-          self.engine.console.print(
-            x=x + 1, 
-            y=y + i + offset + 2, 
-            string=line
-          )
-          offset += 1
-          if offset > height:
-            break
-    else:
-      self.engine.console.print(x=x + 1, y=y + 2, string="(Empty)")
-    if offset <1:
-      offset = 1
-    self.engine.draw_line(
-      x=x,
-      y=y+height+offset-2,
-      width=width,
-    )
     # draw pickup instruction
     self.engine.console.print(
       x=x+1,
-      y=y+height+offset-2,
+      y=y+height-2,
       string='p-pick up',
     )
     # draw drop instruction
     string = 'd-drop'
     self.engine.console.print(
       x=self.engine.console.width - len(string)-1,
-      y=y+height+offset-2,
+      y=y+height-2,
       string=string,
     )
+
+    # print each line
+    for line in lines:
+      self.engine.console.print(
+        x=x + 1, 
+        y=1 + y + offset + 1, 
+        string=line
+      )
+      offset += 1
+      if offset > height:
+        break
 
   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[action.Action]:
     player = self.engine.player
