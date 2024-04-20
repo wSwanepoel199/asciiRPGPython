@@ -121,6 +121,8 @@ class MeleeAction(DirectionalAction):
       attack_message = f"{attack_desc} but did no damage."
       print(attack_message)
     self.engine.message_log.add_message(text=attack_message, fg=attack_color)
+    if target.fighter.HP <= 0 and target.entity_type == "PLAYER":
+      target.fighter.die()
 
 class MovementAction(DirectionalAction):
   def perform(self) -> None:

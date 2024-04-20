@@ -17,6 +17,54 @@ if TYPE_CHECKING:
   from src.engine import Engine
   from src.entity import Item
 
+MOVE_KEYS = {
+  # Arrow keys.
+  tcod.event.KeySym.UP: (0, -1),
+  tcod.event.KeySym.DOWN: (0, 1),
+  tcod.event.KeySym.LEFT: (-1, 0),
+  tcod.event.KeySym.RIGHT: (1, 0),
+  tcod.event.KeySym.HOME: (-1, -1),
+  tcod.event.KeySym.END: (-1, 1),
+  tcod.event.KeySym.PAGEUP: (1, -1),
+  tcod.event.KeySym.PAGEDOWN: (1, 1),
+  # Numpad keys.
+  tcod.event.KeySym.KP_1: (-1, 1),
+  tcod.event.KeySym.KP_2: (0, 1),
+  tcod.event.KeySym.KP_3: (1, 1),
+  tcod.event.KeySym.KP_4: (-1, 0),
+  tcod.event.KeySym.KP_6: (1, 0),
+  tcod.event.KeySym.KP_7: (-1, -1),
+  tcod.event.KeySym.KP_8: (0, -1),
+  tcod.event.KeySym.KP_9: (1, -1),
+  # Vi keys.
+  tcod.event.KeySym.h: (-1, 0),
+  tcod.event.KeySym.j: (0, 1),
+  tcod.event.KeySym.k: (0, -1),
+  tcod.event.KeySym.l: (1, 0),
+  tcod.event.KeySym.y: (-1, -1),
+  tcod.event.KeySym.u: (1, -1),
+  tcod.event.KeySym.b: (-1, 1),
+  tcod.event.KeySym.n: (1, 1),
+}
+
+WAIT_KEYS = {
+  tcod.event.KeySym.PERIOD,
+  tcod.event.KeySym.KP_5,
+  tcod.event.KeySym.CLEAR,
+}
+
+CONFIRM_KEYS = {
+  tcod.event.KeySym.RETURN,
+  tcod.event.KeySym.KP_ENTER,
+}
+
+CURSOR_Y_KEYS = {
+  tcod.event.KeySym.UP: -1,
+  tcod.event.KeySym.DOWN: 1,
+  tcod.event.KeySym.PAGEUP: -10,
+  tcod.event.KeySym.PAGEDOWN: 10,
+}
+
 class EventHandler(tcod.event.EventDispatch[action.Action]):
   def __init__(self, engine: Engine) -> None:
     self.engine = engine
@@ -194,41 +242,53 @@ class InventoryDropHandler(InventoryEventHandler):
   def on_item_selected(self, item: Item) -> Optional[action.Action]:
     return action.DropItem(entity=self.engine.player, item=item)
 
-MOVE_KEYS = {
-  # Arrow keys.
-  tcod.event.KeySym.UP: (0, -1),
-  tcod.event.KeySym.DOWN: (0, 1),
-  tcod.event.KeySym.LEFT: (-1, 0),
-  tcod.event.KeySym.RIGHT: (1, 0),
-  tcod.event.KeySym.HOME: (-1, -1),
-  tcod.event.KeySym.END: (-1, 1),
-  tcod.event.KeySym.PAGEUP: (1, -1),
-  tcod.event.KeySym.PAGEDOWN: (1, 1),
-  # Numpad keys.
-  tcod.event.KeySym.KP_1: (-1, 1),
-  tcod.event.KeySym.KP_2: (0, 1),
-  tcod.event.KeySym.KP_3: (1, 1),
-  tcod.event.KeySym.KP_4: (-1, 0),
-  tcod.event.KeySym.KP_6: (1, 0),
-  tcod.event.KeySym.KP_7: (-1, -1),
-  tcod.event.KeySym.KP_8: (0, -1),
-  tcod.event.KeySym.KP_9: (1, -1),
-  # Vi keys.
-  tcod.event.KeySym.h: (-1, 0),
-  tcod.event.KeySym.j: (0, 1),
-  tcod.event.KeySym.k: (0, -1),
-  tcod.event.KeySym.l: (1, 0),
-  tcod.event.KeySym.y: (-1, -1),
-  tcod.event.KeySym.u: (1, -1),
-  tcod.event.KeySym.b: (-1, 1),
-  tcod.event.KeySym.n: (1, 1),
-}
+class SelectIndexHandler(AskUserEventHandler):
+  def __init__(self, engine: Engine):
+    super().__init__(engine=engine)
+    player = self.engine.player
+    engine.mouse_location = (player.x, player.y)
+  
+  def on_render(self) -> None:
+    super().on_render()
+    x,y=self.engine.mouse_location
+    self.engine.console.rgb['fg'][x,y]=self.engine.colours['black']
+    self.engine.console.rgb['bg'][x,y]=self.engine.colours['white']
+  
+  def ev_keydown(self, event: tcod.event.KeyDown) ->  Optional[action.Action]:
+    key = event.sym
+    match key:
+      case _:
+        if key in MOVE_KEYS:
+          # modify movement based on mod key
+          mod = 1
+          if event.mod & tcod.event.KMOD_SHIFT:
+            mod *= 5
+          if event.mod & tcod.event.KMOD_CTRL:
+            mod *= 10
+          if event.mod & tcod.event.KMOD_ALT:
+            mod *= 20
+          x,y = self.engine.mouse_location
+          dx, dy = MOVE_KEYS[key]
+          x+=dx*mod
+          y+=dy*mod
+          # clamp x and y to map size
+          x=max(1, min(x, self.engine.game_map.width-2))
+          y=max(1, min(y, self.engine.game_map.height-2))
+          self.engine.mouse_location = x,y
+          return None
+        elif key in CONFIRM_KEYS:
+          return self.on_index_selected(*self.engine.mouse_location)
+    return super().ev_keydown(event=event)
 
-WAIT_KEYS = {
-  tcod.event.KeySym.PERIOD,
-  tcod.event.KeySym.KP_5,
-  tcod.event.KeySym.CLEAR,
-}
+  def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[action.Action]:
+    raise NotImplementedError()
+  
+  def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
+    raise NotImplementedError()
+
+class LookHandler(SelectIndexHandler):
+  def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
+    self.engine.event_handler = MainGameEventHandler(engine=self.engine)
 
 class MainGameEventHandler(EventHandler):
 
@@ -261,6 +321,8 @@ class MainGameEventHandler(EventHandler):
         performing_action = action.PickupAction(entity=player)
       case tcod.event.KeySym.d:
         self.engine.event_handler = InventoryDropHandler(engine=self.engine)
+      case tcod.event.KeySym.x:
+        self.engine.event_handler = LookHandler(engine=self.engine)
       case _:
         if key in MOVE_KEYS:
           dx, dy = MOVE_KEYS[key]
@@ -276,13 +338,6 @@ class GameOverEventHandler(EventHandler):
     if event.sym == tcod.event.KeySym.ESCAPE:
       # action.EscapeAction(entity=self.engine.player)
       raise SystemExit()
-
-CURSOR_Y_KEYS = {
-  tcod.event.KeySym.UP: -1,
-  tcod.event.KeySym.DOWN: 1,
-  tcod.event.KeySym.PAGEUP: -10,
-  tcod.event.KeySym.PAGEDOWN: 10,
-}
 
 class HistoryViewer(EventHandler):
   def __init__(self, engine:Engine):

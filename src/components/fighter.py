@@ -23,9 +23,7 @@ class Fighter(BaseComponent):
   @HP.setter
   def HP(self, value: int) -> None:
     self._HP = max(0, min(value, self.MAX_HP))
-    if self.HP <= 0 and self.parent.ai and self.parent.entity_type == "PLAYER":
-      self.die()
-    
+
   def die(self) -> list:
     if self.engine.player is self.parent:
       death_message = "YOU DIED"
