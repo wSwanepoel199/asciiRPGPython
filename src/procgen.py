@@ -63,6 +63,7 @@ def genDungeon(
     max: int,
     room_limit: int,
     max_enemy_per_room: int,
+    max_item_per_room: int,
     engine:Engine
     ) -> GameMap:
   """Generate a new dungeon map."""
@@ -82,8 +83,8 @@ def genDungeon(
     room_width = random.randint(a=min, b=max)
     room_height = random.randint(a=min, b=max)
 
-    x = random.randint(a=0+dungeon.x, b=dungeon.width - room_width - 1)
-    y = random.randint(a=0+dungeon.y, b=dungeon.height - room_height - 1)
+    x = random.randint(a=1+dungeon.x, b=dungeon.width - room_width - 2)
+    y = random.randint(a=1+dungeon.y, b=dungeon.height - room_height - 2)
 
     new_room = RecRoom(x=x, y=y, w=room_width, h=room_height)
 
@@ -99,7 +100,7 @@ def genDungeon(
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
 
-    dungeon.place_entities(room=new_room, dungeon=dungeon, maximum_monsters=max_enemy_per_room)
+    dungeon.place_entities(room=new_room, maximum_monsters=max_enemy_per_room, maximum_items=max_item_per_room)
 
     rooms.append(new_room)
   i = dungeon.y

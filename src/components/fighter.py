@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from src.components.base_component import BaseComponent
 from src.event_handler import GameOverEventHandler
-from src.utils.colour import loadColours
 
 if TYPE_CHECKING:
   from src.entity import Actor
@@ -34,12 +33,23 @@ class Fighter(BaseComponent):
       death_message = f"The {self.parent.name} has died"
       death_message_colour = self.engine.colours['enemy_dead']
     self.parent.char = "%"
-    self.parent.entityType = "OBJECT"
+    self.parent.entity_type = "OBJECT"
     self.parent.colour = (191,0,0)
     self.parent.blocks_movement = False
     self.parent.ai = None
-    self.parent.name = f"remains of {self.parent.name}"
+    self.parent.name = f"Remains of {self.parent.name}"
 
     print(death_message)
     return [death_message, death_message_colour]
-    # self.engine.message_log.add_message(text=death_message, fg=death_message_colour)
+  
+  def heal_damage(self, amount: int) -> int:
+    if self.HP == self.MAX_HP:
+      return 0
+    
+    if self.HP + amount >= self.MAX_HP:
+      amount = self.HP+amount - self.MAX_HP
+
+    self.HP += amount
+    return amount
+  def take_damage(self, amount: int) -> None:
+    self.HP -= amount

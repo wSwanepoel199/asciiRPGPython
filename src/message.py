@@ -1,10 +1,14 @@
-from typing import List, Iterable, Reversible, Tuple
+from __future__ import annotations
+from typing import List, Iterable, Reversible, Tuple, TYPE_CHECKING
 import textwrap, tcod
 
 from src.utils.colour import loadColours
 
+if TYPE_CHECKING:
+  from src.engine import Engine
+
 class Message:
-  def __init__(self, text: str, fg: Tuple[int, int, int]) -> None:
+  def __init__(self, text: str = "", fg: Tuple[int, int, int] = (255, 255, 255)) -> None:
     self.text_p = text
     self.fg = fg
     self.count = 1
@@ -15,13 +19,14 @@ class Message:
     return self.text_p
 
 class MessageLog:
-  def __init__(self) -> None:
+  def __init__(self, engine:Engine) -> None:
     self.messages: List[Message] = []
-  
+    self.engine = engine
+
   def add_message(
     self,
     text:str,
-    fg: Tuple[int, int, int] = loadColours()['white'],
+    fg: Tuple[int, int, int] = (255,255,255),
     *,
     stack: bool = False
   ) -> None:
@@ -50,8 +55,7 @@ class MessageLog:
   def wrap(string:str, width:int) -> Iterable[str]:
     for line in string.splitlines():
       yield from textwrap.wrap(
-        text=line, width=width, expand_tabs=True
-      )
+        text=line, width=width, expand_tabs=True)
   @classmethod
   def render_messages(
     cls,

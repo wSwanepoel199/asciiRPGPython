@@ -8,9 +8,9 @@ import tcod, random
 import src.tile_types as tile_types
 from src.game import Game
 from src.save import Save
-from src.entity import Actor
-import src.factory.entity_factory as entity_factory
-from src.utils.colour import loadColours
+from src.entity import Actor, Item
+import src.factory.actor_factory as actor_factory
+import src.factory.item_factory as item_factory
 
 if TYPE_CHECKING:
     from src.entity import Entity
@@ -330,6 +330,13 @@ class GameMap:
       for entity in self.entities
       if isinstance(entity, Actor) and entity.alive
     )
+  @property
+  def items(self) -> Iterable[Item]:
+    yield from (
+      entity
+      for entity in self.entities
+      if isinstance(entity, Item)
+    )
   def get_blocking_entity(self, x:int, y:int) -> Optional[Entity]:
     for entity in self.entities:
       if (
@@ -370,14 +377,14 @@ class GameMap:
       width=self.width,
       height=self.height,
       clear= False,
-      fg=loadColours()['white'],
+      fg=self.engine.colours['white'],
       decoration="╔═╗║ ║╚═╝"
     )
-    player = list(filter(lambda entity: entity['entityType'] == 'PLAYER', self.entities))
-    actors = list(filter(lambda entity: entity['entityType'] == 'ACTOR', self.entities))
-    objects = list(filter(lambda entity: entity['entityType'] == 'OBJECT', self.entities))
-    items = list(filter(lambda entity: entity['entityType'] == 'ITEM', self.entities))
-    
+    player = list(filter(lambda entity: entity['entity_type'] == 'PLAYER', self.entities))
+    actors = list(filter(lambda entity: entity['entity_type'] == 'ACTOR', self.entities))
+    objects = list(filter(lambda entity: entity['entity_type'] == 'OBJECT', self.entities))
+    items = list(filter(lambda entity: entity['entity_type'] == 'ITEM', self.entities))
+
     for entity in objects + items + actors + player:
        if self.seeing[entity.x, entity.y]:
         console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
@@ -386,32 +393,42 @@ class GameMap:
     #     console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
   
   def place_entities(
-    self, room: RecRoom, dungeon: GameMap, maximum_monsters: int,
+    self, 
+    room: RecRoom, 
+    # dungeon: GameMap, 
+    maximum_monsters: int,
+    maximum_items: int
   ) -> None:
     number_of_monsters = random.randint(a=0, b=maximum_monsters)
-    enemy_stats = {
-      "Goblin" : entity_factory.goblin,
-      "Orc" : entity_factory.orc,
-      "Slime" : entity_factory.slime,
-      "Dragon" : entity_factory.dragon,
+    number_of_items = random.randint(a=0, b=maximum_items)
+
+    available_enemies = {
+      "Goblin" : actor_factory.goblin,
+      "Orc" : actor_factory.orc,
+      "Slime" : actor_factory.slime,
+      # "Dragon" : actor_factory.dragon,
+    }
+
+    available_items = {
+      "Healing Potion" : item_factory.healing_potion
     }
 
     for i in range(number_of_monsters):
       x = random.randint(a=room.point1[0] + 1, b=room.point2[0] - 1)
       y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
-      selectedEnemy = random.randint(a=0, b=len(enemy_stats)-1)
-      start = 0
-      for key, value in enemy_stats.items():
-        if start == selectedEnemy:
-          selectedEnemy = value
-          break
-        else:
-          start += 1
-      if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
-        if random.random() < 0.8 and not selectedEnemy.name == "Dragon":
-          selectedEnemy.spawn(dungeon, x, y)
+      entity = random.choice(list(available_enemies.values()))
+      if not any(entity.x == x and entity.y == y for entity in self.actors):
+        if random.random() < 0.8 and not entity.name == "Dragon":
+          entity.spawn(gamemap=self, x=x, y=y)
         else:
           continue
+    for i in range(number_of_items):
+      x = random.randint(a=room.point1[0] + 1, b=room.point2[0] - 1)
+      y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
+      entity = random.choice(list(available_items.values()))
+      if not any(entity.x == x and entity.y == y for entity in self.entities):
+        if random.random() < 0.6:
+          entity.spawn(gamemap=self, x=x, y=y)
 
   def placeWall(self, x:int, y:int, dungeon: GameMap) -> None:
     if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:

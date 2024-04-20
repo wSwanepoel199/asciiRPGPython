@@ -1,9 +1,11 @@
 from __future__ import annotations
-from typing import Iterable, Any, TYPE_CHECKING
+from typing import Iterable, Any, TYPE_CHECKING, Optional
 import tcod
+import tcod.constants
 from src.event_handler import MainGameEventHandler
 from src.utils.colour import loadColours
-from src.message import MessageLog
+from src.message import MessageLog, Message
+import src.utils.exceptions as exceptions
 
 if TYPE_CHECKING:
   from src.entity import Actor
@@ -15,16 +17,24 @@ class Engine:
   def __init__(self, player: Actor) -> None:
     self.player = player
     self.colours = loadColours()
+    self.exceptions = exceptions
     self.console: tcod.console.Console = {}
     self.context: tcod.context.Context = {}
-    self.event_handler: EventHandler = MainGameEventHandler(engine=self)
-    self.message_log = MessageLog()
     self.mouse_location = (0, 0)
-
+    self.event_handler: EventHandler = MainGameEventHandler(engine=self)
+    self.message_log = MessageLog(engine=self)
+  @property
+  def side_console(self) -> int:
+    if self.console.width:
+      return self.console.width - self.game_map.width
   def handle_enemy_turn(self) -> None:
-    for entity in self.game_map.entities - {self.player}:
-      if entity.ai:
+    for entity in set(self.game_map.actors) - {self.player}:
+      if not entity.ai:
+        continue
+      try:
         entity.ai.perform()
+      except self.exceptions.Impossible:
+        pass
 
   def update_fov(self) -> None:
     """Recompute the visible area based on the players point of view."""
@@ -39,15 +49,16 @@ class Engine:
 
   def render(self) -> None:
     self.game_map.render(console=self.console)
-    
-    side_console = self.console.width - self.game_map.width
+
+    # Draw Side Window
     self.genWindow(
       x=self.game_map.width,
       y=0,
-      width=side_console,
+      width=self.side_console,
       height=self.console.height
     )
 
+    # Display Player HP
     if self.player.fighter.HP > 0:
       self.console.print(
         x=self.game_map.width+1,
@@ -61,67 +72,54 @@ class Engine:
         bar_text="HP: ",
         curr_val=self.player.fighter.HP,
         max_val=self.player.fighter.MAX_HP,
-        total_width=side_console-4,
+        total_width=self.side_console-4,
       )
-      if self.player.target and self.player.target.alive:
-        self.console.print(
-          x=self.game_map.width+1,
-          y=4,
-          string=f"{self.player.target.name}:"
-        )
-        msg = f"{self.player.target.name} HP: {self.player.target.fighter.HP}/{self.player.target.fighter.MAX_HP}"
-        self.render_bar(
-          bar_x=self.game_map.width+2,
-          bar_y=5,
-          bar_text=f"{self.player.target.name} HP: ",
-          curr_val=self.player.target.fighter.HP,
-          max_val=self.player.target.fighter.MAX_HP,
-          total_width=side_console-4,
-        )
-    else :
+    # Display Player Target HP
+    if self.player.target and self.player.target.alive and self.player.alive:
+      self.console.print(
+        x=self.game_map.width+1,
+        y=4,
+        string=f"{self.player.target.name}:"
+      )
+      msg = f"{self.player.target.name} HP: {self.player.target.fighter.HP}/{self.player.target.fighter.MAX_HP}"
+      self.render_bar(
+        bar_x=self.game_map.width+2,
+        bar_y=5,
+        bar_text=f"{self.player.target.name} HP: ",
+        curr_val=self.player.target.fighter.HP,
+        max_val=self.player.target.fighter.MAX_HP,
+        total_width=self.side_console-4,
+      )
+    # Display If Player is dead
+    if self.player.fighter.HP <= 0:
       msg= "YOU DIED!"
       self.console.print(
-        x= self.game_map.width + round(number=(side_console - len(msg)-1)/2) ,
+        x= self.game_map.width + round(number=(self.side_console - len(msg)-1)/2) ,
         y=5,
         string=msg,
       )
-      # if self.player.fighter.HP <= 0 and self.player.ai:
-      #   self.player.die()
+    # render names if entities under mouse
     self.render_names_at_mouse(
       x=self.game_map.width+1,
-      y=7
+      y=6,
+      width=self.side_console-1,
+      height=5
     )
-    self.console.draw_rect(
-      x=self.game_map.width+1,
-      y=round(self.console.height/3)*2,
-      width=side_console-2,
-      height=1,
-      ch=ord('─'),
-      fg=self.colours['white']
-    )
-    self.console.put_char(
+
+
+    # Event Log
+    self.draw_line(
       x=self.game_map.width,
-      y=round(self.console.height/3)*2,
-      ch=ord('├'),
-    )
-    self.console.put_char(
-      x=self.console.width-1,
       y=round(number=self.console.height/3)*2,
-      ch=ord('┤'),
-    )
-    self.console.print_box(
-      x=self.game_map.width+1,
-      y=round(number=self.console.height/3)*2,
-      width=side_console-2,
-      height=1,
-      string="┤Recent Events├",
+      width=self.side_console,
+      title="┤Events├",
       alignment=tcod.constants.CENTER
     )
     self.message_log.render(
       console=self.console,
       x=self.game_map.width+1,
       y=round(number=self.console.height/3)*2+1,
-      width=side_console-2,
+      width=self.side_console-2,
       height=self.console.height-round(number=self.console.height/3)*2-2
     )
 
@@ -193,23 +191,68 @@ class Engine:
       fg=self.colours['white'],
     )
 
+  def draw_line(
+    self, 
+    x:int, 
+    y:int, 
+    width:int, 
+    title:str = "",
+    alignment:int = tcod.constants.CENTER
+  ) -> None:
+    self.console.draw_rect(
+      x=x,
+      y=y,
+      width=width,
+      height=1,
+      ch=ord('─'),
+      fg=self.colours['white']
+    )
+    self.console.put_char(
+      x=x,
+      y=y,
+      ch=ord('├'),
+    )
+    self.console.put_char(
+      x=x+width-1,
+      y=y,
+      ch=ord('┤'),
+    )
+    self.console.print_box(
+      x=x+1,
+      y=y,
+      width=width-2,
+      height=1,
+      string=title,
+      alignment=alignment
+    )
+
   def get_names_at_location(self, x:int, y:int) -> str:
-    if not self.game_map.in_bounds(x, y):
+    if not self.game_map.in_bounds(x=x, y=y):
       return ""
     names = ", ".join(
       entity.name
       for entity in self.game_map.entities
       if entity.x == x and entity.y == y
     )
-    return names.capitalize()
+    return names
   
-  def render_names_at_mouse(self, x:int, y:int) -> None:
+  def render_names_at_mouse(self, x:int, y:int, width:int, height:int) -> None:
     mouse_x,mouse_y = self.mouse_location
 
     names_at_mouse_local = self.get_names_at_location(x=mouse_x, y=mouse_y)
-
-    self.console.print(
-      x=x,
-      y=y,
-      string=names_at_mouse_local
-    )
+    # self.console.width - self.game_map.width
+    offset = y
+    for line in list(self.message_log.wrap(
+      string=names_at_mouse_local, 
+      width=width
+    )):
+      if offset == height:
+        line = "..."
+      self.console.print(
+        x=x,
+        y=y+offset,
+        string=line
+      )
+      offset += 1
+      if offset > height:
+        return

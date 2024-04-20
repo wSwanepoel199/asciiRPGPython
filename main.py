@@ -1,6 +1,6 @@
 print(__name__)
 import random, tcod, copy
-import src.factory.entity_factory as entity_factory
+import src.factory.actor_factory as actor_factory
 from src.engine import Engine
 from src.map import Map, GameMap
 # from src.player import Player
@@ -74,8 +74,9 @@ def main():
   max_rooms = 30
 
   room_max_enemy = 2
+  room_max_item = 2
 
-  player = copy.deepcopy(entity_factory.player)
+  player = copy.deepcopy(actor_factory.player)
 
   engine = Engine(player=player)
 
@@ -94,6 +95,7 @@ def main():
     max=room_size_max,
     room_limit=max_rooms,
     max_enemy_per_room=room_max_enemy,
+    max_item_per_room=room_max_item,
     engine=engine,
   )
   engine.update_fov()

@@ -1,18 +1,20 @@
 from src.components.ai import HostileAi
 from src.components.fighter import Fighter
+from src.components.inventory import Inventory
 from src.entity import Actor
 
 player = Actor(
-  entityType="PLAYER",
+  entity_type="PLAYER",
   char="@",
   colour=(255, 255, 255),
   name="Player",
   ai_cls=HostileAi,
-  fighter=Fighter(HP=30, ATK=5, DEF=2)
+  fighter=Fighter(HP=30, ATK=5, DEF=2),
+  inventory=Inventory(capacity=16)
 )
 
 goblin = Actor(
-  entityType="ACTOR",
+  entity_type="ACTOR",
   char="G",
   colour=(0, 200, 0),
   name="Goblin",
@@ -22,7 +24,7 @@ goblin = Actor(
 )
 
 orc = Actor(
-  entityType="ACTOR",
+  entity_type="ACTOR",
   char="0",
   colour=(200, 200, 200),
   name="Orc",
@@ -32,7 +34,7 @@ orc = Actor(
 )
 
 slime = Actor(
-  entityType="ACTOR",
+  entity_type="ACTOR",
   char="S",
   colour=(0, 133, 235),
   name="Slime",
@@ -42,7 +44,7 @@ slime = Actor(
 )
 
 dragon = Actor(
-  entityType="ACTOR",
+  entity_type="ACTOR",
   char="D",
   colour=(210,0,0),
   name="Dragon",

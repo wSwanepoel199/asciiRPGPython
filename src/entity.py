@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import copy
-from typing import  Optional, Tuple, TypeVar, TYPE_CHECKING, Any, Type
-# from src.components.ai import BaseAi
+from typing import  Optional, Tuple, TypeVar, TYPE_CHECKING, Any, Type, Union
 
+from src.components.inventory import Inventory
 
 
 if TYPE_CHECKING:
     from src.components.ai import BaseAi
     from src.components.fighter import Fighter
+    from src.components.consumable import Consumable
     from src.map import GameMap
-    from src.engine import Engine
 
 T = TypeVar("T", bound="Entity")
 
@@ -23,15 +23,14 @@ T = TypeVar("T", bound="Entity")
 #   DRAGON = "D"
 
 class Entity:
-  parent: GameMap
+  parent: Union[GameMap, Inventory]
   def __init__(
     self,
     parent: Optional[GameMap] = None,
-    entityType: str = "",
+    entity_type: str = "",
     char: str = "?",
     colour: Tuple[int,int,int] = (255,255,255),
     name: str= "<Unnamed>",
-    inventory: dict = {},
     money: int= 0,
     x: int=0,
     y: int=0,
@@ -41,11 +40,10 @@ class Entity:
     combat: bool=False,
     blocks_movement: bool= False,
   ) -> None:
-    self.entityType = entityType
+    self.entity_type = entity_type
     self.char= char
     self.colour = colour
     self.name = name
-    self.inventory = inventory
     self.money=money
     self.x=x
     self.y=y
@@ -90,11 +88,10 @@ class Entity:
   def place(self, x:int, y:int, gamemap: Optional[GameMap] = None) -> None:
     self.x = x
     self.y = y
-    if not gamemap:
-      return
-    if hasattr(self, 'parent'):
-      if self.parent is self.gamemap:
-        self.gamemap.entities.remove(self)
+    if gamemap:
+      if hasattr(self, 'parent'):
+        if self.parent is self.gamemap:
+          self.gamemap.entities.remove(self)
     self.parent = gamemap
     gamemap.entities.add(self)
 
@@ -102,7 +99,7 @@ class Actor(Entity):
   def __init__(
       self, 
       *,
-      entityType: str = 'ACTOR',
+      entity_type: str = 'ACTOR',
       money:int= 0,
       x:int = 0,
       y:int = 0,
@@ -111,9 +108,10 @@ class Actor(Entity):
       name: str= "<Unnamed>",
       ai_cls: Type[BaseAi],
       fighter: Fighter,
+      inventory: Inventory = Inventory(capacity=0),
     ) -> None:
     super().__init__(
-      entityType=entityType,
+      entity_type=entity_type,
       money=money,
       x=x,
       y=y,
@@ -126,13 +124,33 @@ class Actor(Entity):
     self.fighter = fighter
     self.fighter.parent = self
 
+    self.inventory = inventory
+    self.inventory.parent = self
+
   @property
   def alive(self)->bool:
     return bool(self.ai)
 
-# enemy_stats = {
-#   "Goblin" : entity_factory.goblin,
-#   "Orc" : entity_factory.orc,
-#   "Slime" : entity_factory.slime,
-#   "Dragon" : entity_factory.dragon,
-# }
+class Item(Entity):
+  def __init__(
+    self,
+    *,
+    x:int=0,
+    y:int=0,
+    char:str="?",
+    colour: Tuple[int,int,int]=(255,255,255),
+    name: str= "<Unnamed>",
+    entity_type: str= "ITEM",
+    consumable: Consumable,
+  ):
+    super().__init__(
+      x=x,
+      y=y,
+      char=char,
+      colour=colour,
+      name=name,
+      blocks_movement=False,
+      entity_type=entity_type
+    )
+    self.consumable = consumable
+    self.consumable.parent = self

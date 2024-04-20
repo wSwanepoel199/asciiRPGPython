@@ -1,0 +1,3 @@
+
+class Impossible(Exception):
+  pass
