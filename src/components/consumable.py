@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
 import src.actions as actions
-
+import src.components.ai as ai
 from src.components.inventory import Inventory
 from src.components.base_component import BaseComponent
+from src.event_handler import SingleRangeAttackHandler
 
 if TYPE_CHECKING:
   from src.entity import Actor, Item
@@ -80,4 +81,42 @@ class LineDamageCosumable(Consumable):
       text=self.on_hit
     )
     target.fighter.take_damage(amount=self.damage)
+    self.consume()
+
+class ConfusionConsumable(Consumable):
+  def __init__(self, turns:int):
+    self.turns = turns
+  
+  def get_action(self, entity: Actor) -> Optional[actions.Action]:
+    self.engine.message_log.add_message(
+      text="Select a target location.", 
+      fg=self.engine.colours['needs_target']
+    )
+    self.engine.event_handler = SingleRangeAttackHandler(
+      engine=self.engine, 
+      callback=lambda xy: actions.ItemAction(entity=entity,item=self.parent, target_xy=xy)
+    )
+    return None
+  
+  def action(self, action: actions.ItemAction) -> None:
+    entity = action.entity
+    target = action.target_actor
+
+    if not self.engine.game_map.seeing[action.target_xy]:
+      raise self.engine.exceptions.Impossible("You can't target a location you can't see.")
+    if not target:
+      raise self.engine.exceptions.Impossible("You must target an enemy.")
+    if target is entity:
+      raise self.engine.exceptions.Impossible("You can't confuse yourself!")
+    
+    self.engine.message_log.add_message(
+      text=f"The eyes of the {target.name} go vacant, and it starts to stumble!",
+      fg=self.engine.colours['status_effect_applied']
+    )
+
+    target.ai = ai.ConfusedAi(
+      entity=target,
+      prev_ai=target.ai,
+      turns_remaining=self.turns
+    )
     self.consume()

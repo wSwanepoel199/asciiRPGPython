@@ -406,31 +406,46 @@ class GameMap:
       "Goblin" : actor_factory.goblin,
       "Orc" : actor_factory.orc,
       "Slime" : actor_factory.slime,
-      # "Dragon" : actor_factory.dragon,
+      "Dragon" : actor_factory.dragon,
     }
 
     available_items = {
       "Healing Potion" : item_factory.healing_potion,
       "Cure Wounds Scroll": item_factory.cure_wounds_scroll,
-      "Lightning Bolt Scroll" : item_factory.lightning_bolt_scroll
+      "Lightning Bolt Scroll" : item_factory.lightning_bolt_scroll,
+      "Confusion Scroll": item_factory.confusion_scroll
     }
 
     for i in range(number_of_monsters):
       x = random.randint(a=room.point1[0] + 1, b=room.point2[0] - 1)
       y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
-      entity = random.choice(list(available_enemies.values()))
+      # entity = random.choice(list(available_enemies.values()))
       if not any(entity.x == x and entity.y == y for entity in self.actors):
-        if random.random() < 0.8 and not entity.name == "Dragon":
-          entity.spawn(gamemap=self, x=x, y=y)
-        else:
-          continue
+        spawn_change = random.random()
+        # if random.random() < 0.8 and not entity.name == "Dragon":
+        if spawn_change < 0.8:
+          # entity.spawn(gamemap=self, x=x, y=y)
+          available_enemies["Goblin"].spawn(gamemap=self, x=x, y=y)
+        elif spawn_change < 0.5:
+          available_enemies["Slime"].spawn(gamemap=self, x=x, y=y)
+        elif spawn_change < 0.3:
+          available_enemies["Orc"].spawn(gamemap=self, x=x, y=y)
+        elif spawn_change < 0.1:
+          available_enemies["Dragon"].spawn(gamemap=self, x=x, y=y)
     for i in range(number_of_items):
       x = random.randint(a=room.point1[0] + 1, b=room.point2[0] - 1)
       y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
-      entity = random.choice(list(available_items.values()))
+      # entity = random.choice(list(available_items.values()))
       if not any(entity.x == x and entity.y == y for entity in self.entities):
-        if random.random() < 0.7:
-          entity.spawn(gamemap=self, x=x, y=y)
+        spawn_change = random.random()
+        if spawn_change < 0.8:
+          available_items["Healing Potion"].spawn(gamemap=self, x=x, y=y)
+        elif spawn_change < 0.7:
+          available_items["Cure Wounds Scroll"].spawn(gamemap=self, x=x, y=y)
+        elif spawn_change < 0.8:
+          available_items["Confusion Scroll"].spawn(gamemap=self, x=x, y=y)
+        elif spawn_change <0.4:
+          available_items["Lightning Bolt Scroll"].spawn(gamemap=self, x=x, y=y)
 
   def placeWall(self, x:int, y:int, dungeon: GameMap) -> None:
     if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:

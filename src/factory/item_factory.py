@@ -26,3 +26,11 @@ lightning_bolt_scroll = Item(
   name="Scroll of Lightning Bolt",
   consumable=consumable.LineDamageCosumable(damage=20, range=5, on_hit_message="A lightning bolt strikes out at the <target> dealing <damage> damage!")
 )
+
+confusion_scroll = Item(
+  entity_type='ITEM',
+  char='~',
+  colour=(207, 63, 255),
+  name="Scroll of Confusion",
+  consumable=consumable.ConfusionConsumable(turns=10)
+)

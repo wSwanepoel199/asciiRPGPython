@@ -102,7 +102,7 @@ class Engine:
     self.render_names_at_mouse(
       x=self.game_map.width+1,
       y=6,
-      width=self.side_console-1,
+      width=self.side_console-2,
       height=5
     )
 
