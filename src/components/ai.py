@@ -9,15 +9,12 @@ from src.actions import Action, MeleeAction, MovementAction, WaitAction
 
 if TYPE_CHECKING:
   from src.actions import Action
-  from src.entity import Entity, Actor
-  from src.engine import Engine
-  from src.map import GameMap
+  from src.entity import Actor
 
 class BaseAi(Action):
-  # entity: Actor
 
   def perform(self) -> None:
-    raise NotImplementedError
+    raise NotImplementedError()
 
   def get_path_to(self, dest_x: int, dest_y: int) -> List[Tuple[int, int]]:
     """
@@ -26,7 +23,7 @@ class BaseAi(Action):
     If there is no valid path then returns an empty list.
     """
     # Copy the walkable array.
-    cost = np.array(self.entity.gamemap.tiles["walkable"], dtype=np.int8)
+    cost = np.array(object=self.entity.gamemap.tiles["walkable"], dtype=np.int8)
 
     for entity in self.entity.gamemap.entities:
       # Check that an enitiy blocks movement and the cost isn't zero (blocking.)
@@ -39,12 +36,12 @@ class BaseAi(Action):
 
     # Create a graph from the cost array and pass that graph to a new pathfinder.
     graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
-    pathfinder = tcod.path.Pathfinder(graph)
+    pathfinder = tcod.path.Pathfinder(graph=graph)
 
-    pathfinder.add_root((self.entity.x, self.entity.y))  # Start position.
+    pathfinder.add_root(index=(self.entity.x, self.entity.y))  # Start position.
 
     # Compute the path to the destination and remove the starting point.
-    path: List[List[int]] = pathfinder.path_to((dest_x, dest_y))[1:].tolist()
+    path: List[List[int]] = pathfinder.path_to(index=(dest_x, dest_y))[1:].tolist()
 
     # Convert from List[List[int]] to List[Tuple[int, int]].
     return [(index[0], index[1]) for index in path]
@@ -61,7 +58,7 @@ class HostileAi(BaseAi):
 
     distance = max(abs(dx), abs(dy)) # Chebyshev distance.
 
-    if self.engine.game_map.seeing[self.entity.x, self.entity.y]:
+    if self.engine.game_map.seen[self.entity.x, self.entity.y]:
       if distance <= 1:
         return MeleeAction(entity=self.entity, dx=dx, dy=dy).perform()
 

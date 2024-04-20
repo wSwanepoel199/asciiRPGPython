@@ -97,13 +97,17 @@ def main():
     engine=engine,
   )
   engine.update_fov()
+  engine.message_log.add_message(
+    text="Hello and welcome, adventurer, to yet another dungeon!",
+    fg=engine.colours['welcome_text']
+  )
 
   while True:
     engine.console.clear()
     # engine.render()
     engine.event_handler.on_render()
     engine.context.present(console=engine.console)
-    engine.event_handler.handle_events(engine.context)
+    engine.event_handler.handle_events(context=engine.context)
 
 if __name__ == "__main__":
   main()

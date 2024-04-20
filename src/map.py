@@ -377,6 +377,7 @@ class GameMap:
     actors = list(filter(lambda entity: entity['entityType'] == 'ACTOR', self.entities))
     objects = list(filter(lambda entity: entity['entityType'] == 'OBJECT', self.entities))
     items = list(filter(lambda entity: entity['entityType'] == 'ITEM', self.entities))
+    
     for entity in objects + items + actors + player:
        if self.seeing[entity.x, entity.y]:
         console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)

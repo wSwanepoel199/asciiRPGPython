@@ -50,7 +50,8 @@ class MessageLog:
   def wrap(string:str, width:int) -> Iterable[str]:
     for line in string.splitlines():
       yield from textwrap.wrap(
-        text=line, width=width, expand_tabs=True)
+        text=line, width=width, expand_tabs=True
+      )
   @classmethod
   def render_messages(
     cls,

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING
-from src.utils.colour import loadColours
 
 if TYPE_CHECKING:
   from src.engine import Engine
@@ -61,30 +60,24 @@ class MeleeAction(DirectionalAction):
     self.entity['target'] = target
     if not target:
       return
-    msg=f"{self.entity.name.capitalize()} HP: {self.entity.HP}/{self.entity.MAX_HP}"
-    self.entity.gamemap.engine.console.print(
-      x=self.entity.gamemap.width-len(msg),
-      y=1,
-      string=msg
-    )
-    damage = self.entity.ATK - target.DEF
-    colours = loadColours()
+    damage = self.entity.fighter.ATK - target.fighter.DEF
     if self.entity is self.engine.player:
       attack_desc = f"{self.entity.name.capitalize()} attacked the {target.name}"
-      attack_color = colours['player_atk']
+      attack_color = self.engine.colours['player_atk']
     else:
       attack_desc = f"The {self.entity.name.capitalize()} attacked {target.name}"
-      attack_color = colours['enemy_atk']
+      attack_color = self.engine.colours['enemy_atk']
     if damage > 0:
+      target.fighter.HP -= damage
       attack_message = f"{attack_desc} for {damage} hit points."
       print(attack_desc)
-      target.HP -= damage
     else :
       attack_message = f"{attack_desc} but did no damage."
       print(attack_message)
     self.engine.message_log.add_message(text=attack_message, fg=attack_color)
-    if self.entity.HP <= 0 and self.entity.ai:
-      self.entity.die()
+    if target.fighter.HP <= 0 and target.ai:
+      dead = target.fighter.die()
+      self.engine.message_log.add_message(text=dead[0], fg=dead[1])
 
 
 
