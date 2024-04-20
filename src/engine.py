@@ -241,13 +241,11 @@ class Engine:
 
     names_at_mouse_local = self.get_names_at_location(x=mouse_x, y=mouse_y)
     # self.console.width - self.game_map.width
-    offset = y
+    offset = 0
     for line in list(self.message_log.wrap(
       string=names_at_mouse_local, 
       width=width
     )):
-      if offset == height:
-        line = "..."
       self.console.print(
         x=x,
         y=y+offset,
