@@ -4,9 +4,9 @@ from typing import Optional, TYPE_CHECKING
 
 import src.actions as actions
 import src.components.ai as ai
+import src.event_handler as event_handler
 from src.components.inventory import Inventory
 from src.components.base_component import BaseComponent
-from src.event_handler import SingleRangeAttackHandler
 
 if TYPE_CHECKING:
   from src.entity import Actor, Item
@@ -15,7 +15,7 @@ class Consumable(BaseComponent):
   parent: Item
 
   def get_action(self, entity: Actor) -> Optional[actions.Action]:
-    return actions.ItemAction(entity, self.parent)
+    return actions.ItemAction(entity=entity, item=self.parent)
   
   def action(self, action: actions.ItemAction) -> None:
     raise NotImplementedError()
@@ -49,7 +49,7 @@ class HealingConsumable(Consumable):
     self.consume()
      
 
-class LineDamageCosumable(Consumable):
+class LineDamageConsumable(Consumable):
   def __init__(self, damage: int, range:int, on_hit_message: str = ""):
     self.damage = damage
     self.range = range
@@ -81,6 +81,45 @@ class LineDamageCosumable(Consumable):
       text=self.on_hit
     )
     target.fighter.take_damage(amount=self.damage)
+    entity.target = target
+    self.consume()
+
+class TeleportConsumable(Consumable):
+  # def __init__(self) -> None:
+  
+  def get_action(self, entity: Actor) -> Optional[actions.Action]:
+    self.engine.message_log.add_message(
+      text="Select a target location.", 
+      fg=self.engine.colours['needs_target']
+    )
+    self.engine.event_handler = event_handler.SingleTargetSelectHandler(
+      engine=self.engine, 
+      callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
+    )
+    return None
+
+  def action(self, action: actions.ItemAction) -> None:
+    entity = action.entity
+    target = action.target_actor
+
+    if not target:
+      target = action.item
+    if target.entity_type == "ACTOR":
+      raise self.engine.exceptions.Impossible("Another creature has blocked the Teleport.")
+    if target is entity:
+      raise self.engine.exceptions.Impossible("You can't teleport onto yourself!")
+    if not entity.gamemap.tiles[action.target_xy]["walkable"]:
+      raise self.engine.exceptions.Impossible("You can't teleport to a location you can't walk on!")
+    dx = action.target_xy[0] - entity.x
+    dy = action.target_xy[1] - entity.y
+    distance = max(abs(dx), abs(dy))
+    if distance > 10:
+      raise self.engine.exceptions.Impossible("You can't teleport more than 10 tiles away!")
+    self.engine.message_log.add_message(
+      text=f"You feel your very being evaporate as you are teleported!",
+      fg=self.engine.colours['status_effect_applied']
+    )
+    entity.x, entity.y = action.target_xy
     self.consume()
 
 class ConfusionConsumable(Consumable):
@@ -92,7 +131,7 @@ class ConfusionConsumable(Consumable):
       text="Select a target location.", 
       fg=self.engine.colours['needs_target']
     )
-    self.engine.event_handler = SingleRangeAttackHandler(
+    self.engine.event_handler = event_handler.SingleTargetSelectHandler(
       engine=self.engine, 
       callback=lambda xy: actions.ItemAction(entity=entity,item=self.parent, target_xy=xy)
     )
@@ -119,4 +158,38 @@ class ConfusionConsumable(Consumable):
       prev_ai=target.ai,
       turns_remaining=self.turns
     )
+    self.consume()
+
+class FireballDamageConsumable(Consumable):
+  def __init__(self, damage: int, radius: int):
+    self.damage = damage
+    self.radius = radius
+  
+  def get_action(self, entity: Actor) -> Optional[actions.Action]:
+    self.engine.message_log.add_message(
+      text="Select a target location.", 
+      fg=self.engine.colours['needs_target']
+    )
+    self.engine.event_handler = event_handler.AreaRangedSelectHandler(
+      engine=self.engine, 
+      radius=self.radius,
+      callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
+    )
+    return None
+  
+  def action(self, action: actions.ItemAction) -> None:
+    target_xy = action.target_xy
+
+    if not self.engine.game_map.seeing[target_xy]:
+      raise self.engine.exceptions.Impossible("You can't target a location you can't see.")
+    targets_hit = False
+    for actor in self.engine.game_map.actors:
+      if actor.distance(*target_xy) <= self.radius:
+        self.engine.message_log.add_message(
+          text=f"The {actor.name} is engulfed in a fiery explosion, taking {self.damage} damage!",
+        )
+        actor.fighter.take_damage(amount=self.damage)
+        targets_hit = True
+    if not targets_hit:
+      raise self.engine.exceptions.Impossible("There are no targets in the radius.")
     self.consume()

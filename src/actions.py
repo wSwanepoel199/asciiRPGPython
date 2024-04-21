@@ -56,7 +56,7 @@ class ItemAction(Action):
   def __init__(
     self, 
     entity: Actor,
-    item:Item,
+    item: Item,
     target_xy: Optional[Tuple[int, int]] = None
   ) -> None:
     super().__init__(entity=entity)

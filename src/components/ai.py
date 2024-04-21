@@ -51,6 +51,8 @@ class HostileAi(BaseAi):
   def __init__(self, entity:Actor):
     super().__init__(entity=entity)
     self.path: List[Tuple[int,int]] = []
+    self.memory = 0
+    self.last_seen = (self.entity.x, self.entity.y)
   
   def perform(self) -> None:
     if(self.entity.fighter.HP <= 0):
@@ -58,16 +60,27 @@ class HostileAi(BaseAi):
       return
 
     target = self.engine.player
-    dx = target.x - self.entity.x
-    dy = target.y - self.entity.y
+    dx = 0
+    dy = 0
+    if self.engine.game_map.seeing[self.entity.x, self.entity.y]:
+      dx = target.x - self.entity.x
+      dy = target.y - self.entity.y
+    elif self.engine.game_map.seen[self.entity.x, self.entity.y] and self.memory > 0:
+      self.memory -= 1
+      dx = self.last_seen[0] - self.entity.x
+      dy = self.last_seen[1] - self.entity.y
 
     distance = max(abs(dx), abs(dy)) # Chebyshev distance.
 
-    if self.engine.game_map.seen[self.entity.x, self.entity.y]:
+    if self.engine.game_map.seeing[self.entity.x, self.entity.y]:
       if distance <= 1:
         return MeleeAction(entity=self.entity, dx=dx, dy=dy).perform()
-
-      self.path = self.get_path_to(dest_x=target.x, dest_y=target.y)
+      if distance <= 5:
+        self.last_seen = (target.x, target.y)
+        self.memory = 5
+        self.path = self.get_path_to(dest_x=target.x, dest_y=target.y)
+    else :
+      self.path = self.get_path_to(dest_x=self.last_seen[0], dest_y=self.last_seen[1])
 
     if self.path:
       dest_x, dest_y = self.path.pop(0)

@@ -82,6 +82,8 @@ def main():
 
   engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
 
+  # engine.addTileset(tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
+
   # game_map = GameMap(width=80, height=45)
   squareMapDimMin = min(map_width, map_height)
   # squareMapDimMax = max(map_width, map_height)

@@ -24,7 +24,7 @@ lightning_bolt_scroll = Item(
   char='~',
   colour=(0, 221, 255),
   name="Scroll of Lightning Bolt",
-  consumable=consumable.LineDamageCosumable(damage=20, range=5, on_hit_message="A lightning bolt strikes out at the <target> dealing <damage> damage!")
+  consumable=consumable.LineDamageConsumable(damage=20, range=5, on_hit_message="A lightning bolt strikes out at the <target> dealing <damage> damage!")
 )
 
 confusion_scroll = Item(
@@ -33,4 +33,20 @@ confusion_scroll = Item(
   colour=(207, 63, 255),
   name="Scroll of Confusion",
   consumable=consumable.ConfusionConsumable(turns=10)
+)
+
+teleport_scroll = Item(
+  entity_type='ITEM',
+  char='~',
+  colour=(145, 66, 173),
+  name="Scroll of Teleportation",
+  consumable=consumable.TeleportConsumable()
+)
+
+fireball_scroll = Item(
+  entity_type='ITEM',
+  char='~',
+  colour=(255, 0, 0),
+  name="Scroll of Fireball",
+  consumable=consumable.FireballDamageConsumable(damage=12, radius=3)
 )

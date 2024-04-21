@@ -140,6 +140,14 @@ class Engine:
     vsync=True,
     )
   
+  def addTileset(self, tileset_image:str, tileset_width:int, tileset_height:int) -> None:
+    tileset = tcod.tileset.load_tilesheet(
+    path=tileset_image,
+    columns=tileset_width, rows=tileset_height,
+    charmap=tcod.tileset.CHARMAP_TCOD
+    )
+    self.context.change_tileset(tileset=tileset)
+
   def render_bar(self, bar_x:int = 0, bar_y:int = 0, bar_text: str = '', curr_val: int = 0, max_val:int = 0, total_width:int = 0, flip:bool = False) -> None:
     if(flip):
       bar_width = total_width - int(float(curr_val) / max_val * total_width)

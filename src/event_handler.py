@@ -132,6 +132,7 @@ class AskUserEventHandler(EventHandler):
     return self.on_exit()
 
   def on_exit(self) -> Optional[action.Action]:
+    self.engine.mouse_location = (0, 0)
     self.engine.event_handler = MainGameEventHandler(engine=self.engine)
     return None
   
@@ -278,7 +279,9 @@ class SelectIndexHandler(AskUserEventHandler):
           self.engine.mouse_location = x,y
           return None
         elif key in CONFIRM_KEYS:
-          return self.on_index_selected(*self.engine.mouse_location)
+          xy = self.engine.mouse_location
+          self.engine.mouse_location = (0,0)
+          return self.on_index_selected(*xy)
     return super().ev_keydown(event=event)
 
   def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[action.Action]:
@@ -291,7 +294,7 @@ class LookHandler(SelectIndexHandler):
   def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
     self.engine.event_handler = MainGameEventHandler(engine=self.engine)
 
-class SingleRangeAttackHandler(SelectIndexHandler):
+class SingleTargetSelectHandler(SelectIndexHandler):
   def __init__(
     self, 
     engine: Engine, 
@@ -299,6 +302,32 @@ class SingleRangeAttackHandler(SelectIndexHandler):
   ):
     super().__init__(engine=engine)
     self.callback = callback
+  def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
+    return self.callback((x,y))
+
+class AreaRangedSelectHandler(SelectIndexHandler):
+  def __init__(
+    self, 
+    engine: action.Engine,
+    radius: int,
+    callback: Callable[[Tuple[int,int]], Optional[action.Action]]
+  ):
+    super().__init__(engine=engine)
+    self.radius = radius
+    self.callback = callback
+  def on_render(self) -> None:
+    super().on_render()
+    
+    x,y = self.engine.mouse_location
+
+    self.engine.console.draw_frame(
+      x=x - self.radius - 1,
+      y=y - self.radius - 1,
+      width=self.radius ** 2,
+      height=self.radius ** 2,
+      fg=self.engine.colours['red'],
+      clear=False
+    )
   def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
     return self.callback((x,y))
 
