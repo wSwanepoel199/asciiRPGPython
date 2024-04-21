@@ -10,19 +10,20 @@ import src.utils.exceptions as exceptions
 if TYPE_CHECKING:
   from src.entity import Actor
   from src.map import GameMap
-  from src.event_handler import EventHandler
+  from src.event_handler import BaseEventHandler
 
 class Engine:
   game_map: GameMap
-  def __init__(self, player: Actor) -> None:
-    self.player = player
+  def __init__(self, width: int, height: int, tileset_image: str, tileset_width: int, tileset_height: int) -> None:
+    self.player = None
     self.colours = loadColours()
     self.exceptions = exceptions
     self.console: tcod.console.Console = {}
     self.context: tcod.context.Context = {}
     self.mouse_location = (0, 0)
-    self.event_handler: EventHandler = MainGameEventHandler(engine=self)
+    self.event_handler: BaseEventHandler = MainGameEventHandler(engine=self)
     self.message_log = MessageLog(engine=self)
+    self.createConsole(width=width, height=height, tileset_image=tileset_image, tileset_width=tileset_width, tileset_height=tileset_height)
   @property
   def side_console(self) -> int:
     if self.console.width:

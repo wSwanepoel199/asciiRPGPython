@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from src.components.base_component import BaseComponent
-from src.event_handler import GameOverEventHandler
 
 if TYPE_CHECKING:
   from src.entity import Actor
@@ -28,7 +27,6 @@ class Fighter(BaseComponent):
     if self.engine.player is self.parent:
       death_message = "YOU DIED"
       death_message_colour = self.engine.colours['player_dead']
-      self.engine.event_handler = GameOverEventHandler(engine=self.engine)
     else:
       death_message = f"The {self.parent.name} has died"
       death_message_colour = self.engine.colours['enemy_dead']
@@ -39,7 +37,6 @@ class Fighter(BaseComponent):
     self.parent.ai = None
     self.parent.name = f"Remains of {self.parent.name}"
 
-    print(death_message)
     self.engine.message_log.add_message(text=death_message, fg=death_message_colour)
   
   def heal_damage(self, amount: int) -> int:

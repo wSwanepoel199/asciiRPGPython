@@ -1,14 +1,17 @@
 print(__name__)
-import random, tcod, copy
-import src.factory.actor_factory as actor_factory
-from src.engine import Engine
-from src.map import Map, GameMap
+import copy
+# from src.map import Map, GameMap
 # from src.player import Player
-from src.entity import Entity
-from src.combat import Combat
-from src.menu import Menu
-from src.save import Save
-from src.game import Game
+# from src.entity import Entity
+# from src.combat import Combat
+# from src.menu import Menu
+# from src.save import Save
+# from src.game import Game
+import src.game_setup as game_setup
+import src.factory.actor_factory as actor_factory
+import src.utils.exceptions as exceptions
+import src.event_handler as event_handler
+from src.engine import Engine
 from src.procgen import genDungeon
 
 initialLoad = True
@@ -66,52 +69,53 @@ def main():
   screen_width = 80
   screen_height = 60
 
-  map_width = 80
-  map_height = 60
+  # engine: Engine = game_setup.new_game(
+  #   map_w=screen_width,
+  #   map_h=screen_height,
+  #   map_max_rooms=30,
+  #   room_max_size=10,
+  #   room_min_size=6,
+  #   max_enemies=3,
+  #   max_items=3
+  # )
 
-  room_size_min = 6
-  room_size_max = 10
-  max_rooms = 30
-
-  room_max_enemy = 2
-  room_max_item = 2
-
-  player = copy.deepcopy(actor_factory.player)
-
-  engine = Engine(player=player)
-
-  engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
+  # engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
 
   # engine.addTileset(tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
 
-  # game_map = GameMap(width=80, height=45)
-  squareMapDimMin = min(map_width, map_height)
-  # squareMapDimMax = max(map_width, map_height)
-  # mapDiff = round(abs((map_width - map_height))/2)
-  engine.game_map = genDungeon(
-    x=0,
-    y=0,
-    w=squareMapDimMin,
-    h=squareMapDimMin,
-    min=room_size_min,
-    max=room_size_max,
-    room_limit=max_rooms,
-    max_enemy_per_room=room_max_enemy,
-    max_item_per_room=room_max_item,
+  # engine: event_handler.BaseEventHandler = game_setup.MainMenu(
+  #   screen_width=screen_width, 
+  #   screen_height=screen_height
+  # )
+  # engine = game_setup.MainMenu().engine
+  engine = Engine(
+    width=screen_width, 
+    height=screen_height,
+    tileset_image="./src/assets/dejavu10x10_gs_tc.png",
+    tileset_width=32,
+    tileset_height=8
+  )
+  engine.event_handler = game_setup.MainMenu(
     engine=engine,
+    width=screen_width,
+    height=screen_height,
+    tileset_image="./src/assets/dejavu10x10_gs_tc.png",
+    tileset_width=32,
+    tileset_height=8
   )
-  engine.update_fov()
-  engine.message_log.add_message(
-    text="Hello and welcome, adventurer, to yet another dungeon!",
-    fg=engine.colours['welcome_text']
-  )
-
-  while True:
-    engine.console.clear()
-    # engine.render()
-    engine.event_handler.on_render()
-    engine.context.present(console=engine.console)
-    engine.event_handler.handle_events(context=engine.context)
+  try:
+    while True:
+      engine.console.clear()
+      # engine.render()
+      engine.event_handler.on_render()
+      engine.context.present(console=engine.console)
+      engine.event_handler = engine.event_handler.handle_events(engine.context)
+  except exceptions.QuitWithoutSaving:
+    raise
+  except SystemExit:
+    raise
+  except BaseException:
+    raise
 
 if __name__ == "__main__":
   main()

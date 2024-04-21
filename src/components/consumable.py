@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class Consumable(BaseComponent):
   parent: Item
 
-  def get_action(self, entity: Actor) -> Optional[actions.Action]:
+  def get_action(self, entity: Actor) -> Optional[event_handler.ActionOrHandler]:
     return actions.ItemAction(entity=entity, item=self.parent)
   
   def action(self, action: actions.ItemAction) -> None:
@@ -87,16 +87,15 @@ class LineDamageConsumable(Consumable):
 class TeleportConsumable(Consumable):
   # def __init__(self) -> None:
   
-  def get_action(self, entity: Actor) -> Optional[actions.Action]:
+  def get_action(self, entity: Actor) -> event_handler.SingleTargetSelectHandler:
     self.engine.message_log.add_message(
       text="Select a target location.", 
       fg=self.engine.colours['needs_target']
     )
-    self.engine.event_handler = event_handler.SingleTargetSelectHandler(
+    return event_handler.SingleTargetSelectHandler(
       engine=self.engine, 
       callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
     )
-    return None
 
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
@@ -126,16 +125,15 @@ class ConfusionConsumable(Consumable):
   def __init__(self, turns:int):
     self.turns = turns
   
-  def get_action(self, entity: Actor) -> Optional[actions.Action]:
+  def get_action(self, entity: Actor) -> event_handler.SingleTargetSelectHandler:
     self.engine.message_log.add_message(
       text="Select a target location.", 
       fg=self.engine.colours['needs_target']
     )
-    self.engine.event_handler = event_handler.SingleTargetSelectHandler(
+    return event_handler.SingleTargetSelectHandler(
       engine=self.engine, 
       callback=lambda xy: actions.ItemAction(entity=entity,item=self.parent, target_xy=xy)
     )
-    return None
   
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
@@ -165,17 +163,16 @@ class FireballDamageConsumable(Consumable):
     self.damage = damage
     self.radius = radius
   
-  def get_action(self, entity: Actor) -> Optional[actions.Action]:
+  def get_action(self, entity: Actor) -> event_handler.AreaRangedSelectHandler:
     self.engine.message_log.add_message(
       text="Select a target location.", 
       fg=self.engine.colours['needs_target']
     )
-    self.engine.event_handler = event_handler.AreaRangedSelectHandler(
+    return event_handler.AreaRangedSelectHandler(
       engine=self.engine, 
       radius=self.radius,
       callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
     )
-    return None
   
   def action(self, action: actions.ItemAction) -> None:
     target_xy = action.target_xy

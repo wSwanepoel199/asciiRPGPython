@@ -55,23 +55,21 @@ def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,
 
 def genDungeon(
     *,
-    x: int,
-    y: int,
     w: int,
     h: int,
     min: int,
     max: int,
-    room_limit: int,
-    max_enemy_per_room: int,
-    max_item_per_room: int,
+    limit: int,
+    enemy_limit: int,
+    item_limit: int,
     engine:Engine
     ) -> GameMap:
   """Generate a new dungeon map."""
   player = engine.player
   dungeon = GameMap(
     engine=engine, 
-    x=x,
-    y=y,
+    x=0,
+    y=0,
     width=w, 
     height=h, 
     map_type="dungeon", 
@@ -79,7 +77,7 @@ def genDungeon(
   )
   rooms: List[RecRoom] = []
 
-  for r in range(room_limit):
+  for r in range(limit):
     room_width = random.randint(a=min, b=max)
     room_height = random.randint(a=min, b=max)
 
@@ -100,7 +98,7 @@ def genDungeon(
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
 
-    dungeon.place_entities(room=new_room, maximum_monsters=max_enemy_per_room, maximum_items=max_item_per_room)
+    dungeon.place_entities(room=new_room, maximum_monsters=enemy_limit, maximum_items=item_limit)
 
     rooms.append(new_room)
   i = dungeon.y
