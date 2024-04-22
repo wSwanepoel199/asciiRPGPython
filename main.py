@@ -1,5 +1,5 @@
 print(__name__)
-import copy
+import copy, tcod
 # from src.map import Map, GameMap
 # from src.player import Player
 # from src.entity import Entity
@@ -66,8 +66,31 @@ initialLoad = True
 #             game.play = map.overworld(player=player, tile=tile)
 #             menu.mainmenu = not game.play
 def main():
-  screen_width = 80
-  screen_height = 60
+  # screen_width = 80
+  # screen_height = 60
+  # resolution = [4,3]
+  resolution = [16,9]
+  width = 160
+  height = width // resolution[0] * resolution[1]
+
+  engine = Engine()
+
+  tileset = tcod.tileset.load_tilesheet(
+    path="./src/assets/dejavu10x10_gs_tc.png",
+    columns=32, rows=8,
+    charmap=tcod.tileset.CHARMAP_TCOD
+  )
+
+  engine.genConsole(width=width, height=height)
+  engine.title = "Rogue But Worse"
+  engine.genContext(
+    width=engine.console.width, 
+    height=engine.console.height,
+    tileset=tileset,
+    title=engine.title,
+    vsync=True
+  )
+  engine.event_handler = game_setup.MainMenu(engine=engine)
 
   # engine: Engine = game_setup.new_game(
   #   map_w=screen_width,
@@ -88,28 +111,10 @@ def main():
   #   screen_height=screen_height
   # )
   # engine = game_setup.MainMenu().engine
-  engine = Engine(
-    width=screen_width, 
-    height=screen_height,
-    tileset_image="./src/assets/dejavu10x10_gs_tc.png",
-    tileset_width=32,
-    tileset_height=8
-  )
-  engine.event_handler = game_setup.MainMenu(
-    engine=engine,
-    width=screen_width,
-    height=screen_height,
-    tileset_image="./src/assets/dejavu10x10_gs_tc.png",
-    tileset_width=32,
-    tileset_height=8
-  )
+  
   try:
     while True:
-      engine.console.clear()
-      # engine.render()
-      engine.event_handler.on_render()
-      engine.context.present(console=engine.console)
-      engine.event_handler = engine.event_handler.handle_events(engine.context)
+      engine.gameLoop()
   except exceptions.QuitWithoutSaving:
     raise
   except SystemExit:

@@ -1,29 +1,28 @@
 from __future__ import annotations
 from typing import Iterable, Any, TYPE_CHECKING, Optional
-import tcod
+import tcod, traceback
 import tcod.constants
-from src.event_handler import MainGameEventHandler
 from src.utils.colour import loadColours
-from src.message import MessageLog, Message
+from src.message import MessageLog
 import src.utils.exceptions as exceptions
+import src.event_handler as event_handler
 
 if TYPE_CHECKING:
   from src.entity import Actor
   from src.map import GameMap
-  from src.event_handler import BaseEventHandler
 
 class Engine:
   game_map: GameMap
-  def __init__(self, width: int, height: int, tileset_image: str, tileset_width: int, tileset_height: int) -> None:
-    self.player = None
+  def __init__(self, player: Actor = None) -> None:
+    self.player = player
+    self.title = None
     self.colours = loadColours()
     self.exceptions = exceptions
+    self.event_handler: event_handler.BaseEventHandler = None
     self.console: tcod.console.Console = {}
     self.context: tcod.context.Context = {}
     self.mouse_location = (0, 0)
-    self.event_handler: BaseEventHandler = MainGameEventHandler(engine=self)
     self.message_log = MessageLog(engine=self)
-    self.createConsole(width=width, height=height, tileset_image=tileset_image, tileset_width=tileset_width, tileset_height=tileset_height)
   @property
   def side_console(self) -> int:
     if self.console.width:
@@ -48,7 +47,9 @@ class Engine:
     # If a tile is "seeing" it should be added to "seen".
     self.game_map.seen |= self.game_map.seeing
 
-  def render(self) -> None:
+  def render(self, console: tcod.console.Console) -> None:
+    self.console = console
+
     self.game_map.render(console=self.console)
 
     # Draw Side Window
@@ -59,38 +60,65 @@ class Engine:
       height=self.console.height
     )
 
+    if self.side_console > 20:
+      bar_width = 20
+    else:
+      bar_width = self.side_console-4
+    
+    y = 1
+
     # Display Player HP
     if self.player.fighter.HP > 0:
       self.console.print(
         x=self.game_map.width+1,
-        y=1,
-        string=f"{self.player.name}:"
+        y=y,
+        string=f"{self.player.name} HP:"
       )
-      msg = f"HP: {self.player.fighter.HP}/{self.player.fighter.MAX_HP}"
+      y+=1
       self.render_bar(
         bar_x=self.game_map.width+2,
-        bar_y=2,
-        bar_text="HP: ",
+        bar_y=y,
         curr_val=self.player.fighter.HP,
         max_val=self.player.fighter.MAX_HP,
-        total_width=self.side_console-4,
+        total_width=bar_width,
       )
+      y +=1
     # Display Player Target HP
     if self.player.target and self.player.target.alive and self.player.alive:
-      self.console.print(
-        x=self.game_map.width+1,
-        y=4,
-        string=f"{self.player.target.name}:"
-      )
-      msg = f"{self.player.target.name} HP: {self.player.target.fighter.HP}/{self.player.target.fighter.MAX_HP}"
-      self.render_bar(
-        bar_x=self.game_map.width+2,
-        bar_y=5,
-        bar_text=f"{self.player.target.name} HP: ",
-        curr_val=self.player.target.fighter.HP,
-        max_val=self.player.target.fighter.MAX_HP,
-        total_width=self.side_console-4,
-      )
+      target_name= f"{self.player.target.name} HP: "
+      if self.side_console <= 50:
+        x = self.game_map.width
+        self.console.print(
+          x=x+1,
+          y=y,
+          string=target_name
+        )
+        y+=1
+        self.render_bar(
+          bar_x=x+2,
+          bar_y=y,
+          curr_val=self.player.target.fighter.HP,
+          max_val=self.player.target.fighter.MAX_HP,
+          total_width=bar_width,
+        )
+        y+=1
+      else:
+        y = 1
+        x = self.console.width
+        self.console.print(
+          x=x-len(target_name)-1,
+          y=y,
+          string=target_name
+        )
+        y+=1
+        self.render_bar(
+          bar_x=x-bar_width-2,
+          bar_y=y,
+          curr_val=self.player.target.fighter.HP,
+          max_val=self.player.target.fighter.MAX_HP,
+          total_width=bar_width,
+        )
+        y+=1
     # Display If Player is dead
     if self.player.fighter.HP <= 0:
       msg= "YOU DIED!"
@@ -100,9 +128,10 @@ class Engine:
         string=msg,
       )
     # render names if entities under mouse
+    y+=1
     self.render_names_at_mouse(
       x=self.game_map.width+1,
-      y=6,
+      y=y,
       width=self.side_console-2,
       height=5
     )
@@ -123,23 +152,44 @@ class Engine:
       width=self.side_console-2,
       height=self.console.height-round(number=self.console.height/3)*2-2
     )
+  def gameLoop(self) -> None:
+    self.console.clear()
+    self.event_handler.on_render(console=self.console)
+    self.context.present(console=self.console)
 
-  def createConsole(self, width:int, height:int, tileset_image:str, tileset_width:int, tileset_height:int ) -> None:
-
-    tileset = tcod.tileset.load_tilesheet(
-    path=tileset_image,
-    columns=tileset_width, rows=tileset_height,
-    charmap=tcod.tileset.CHARMAP_TCOD
-    )
-    
-    self.console = tcod.console.Console(width=width, height=height, order="F")
-    self.context = tcod.context.new_terminal(
-    columns=width,
-    rows=height,
-    tileset=tileset,
-    title="Rogue but worse",
-    vsync=True,
-    )
+    try:
+      for event in tcod.event.wait():
+        self.context.convert_event(event=event)
+        self.event_handler = self.event_handler.handle_events(event=event)
+    except Exception:
+      traceback.print_exc()
+      self.message_log.add_message(
+        text=traceback.format_exc(), 
+        fg=self.colours['error']
+      )
+  def genContext(self, width:int, height:int, tileset: tcod.tileset.Tileset, title:str, vsync:bool, context: Optional[tcod.context.Context] = None) -> None:
+    if context:
+      self.context = context
+    else:
+      self.context = tcod.context.new_terminal(
+        columns=width,
+        rows=height,
+        tileset=tileset,
+        title=title,
+        vsync=vsync,
+      )
+  def genConsole(self, console: Optional[tcod.console.Console] = None, width:int=0, height:int=0 ) -> None:
+    if console:
+      self.console = console
+    else:
+      self.console = tcod.console.Console(width=width, height=height, order="F")
+    # self.context = tcod.context.new_terminal(
+    # columns=width,
+    # rows=height,
+    # tileset=tileset,
+    # title="Rogue but worse",
+    # vsync=True,
+    # )
   
   def addTileset(self, tileset_image:str, tileset_width:int, tileset_height:int) -> None:
     tileset = tcod.tileset.load_tilesheet(

@@ -72,59 +72,32 @@ ActionOrHandler = Union[action.Action, "BaseEventHandler"]
 class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
   def __init__(self, engine: Engine) -> None:
     self.engine = engine
-  def handle_events(self, context:  tcod.context.Context) -> BaseEventHandler:
-    # state = self.dispatch(event=event)
-    # if isinstance(state, BaseEventHandler):
-    #   return state
-    # assert not isinstance(state, action.Action), f"{self!r} can not handle actions."
-    # return self
+  def handle_events(self, event:  tcod.event.Event) -> BaseEventHandler:
+    state = self.dispatch(event=event)
+    if isinstance(state, BaseEventHandler):
+      return state
+    assert not isinstance(state, action.Action), f"{self!r} can not handle actions."
+    return self
 
-    try:
-      for event in tcod.event.wait():
-        context.convert_event(event=event)
-
-        state = self.dispatch(event=event)
-        if isinstance(state, BaseEventHandler):
-          return state
-        assert not isinstance(state, action.Action), f"{self!r} can not handle actions."
-        return self
-      
-    except Exception: 
-      traceback.print_exc()
-      self.engine.message_log.add_message(
-        text=traceback.format_exc(), 
-        fg=self.engine.colours['error']
-      )
-
-  def on_render(self) -> None:
+  def on_render(self, console: tcod.console.Console = None) -> None:
     raise NotImplementedError()
 
   def ev_quit(self, event: tcod.event.Quit) -> Optional[action.Action]:
     raise SystemExit()
 
 class EventHandler(BaseEventHandler):
-
-  def handle_events(self, context: tcod.context.Context) -> BaseEventHandler:
-    try:
-      for event in tcod.event.wait():
-        context.convert_event(event=event)
-
-      action_or_state = self.dispatch(event=event)
-      if isinstance(action_or_state, BaseEventHandler):
-        return action_or_state
-      if self.handle_action(action=action_or_state):
-        # A valid action was performed
-        if not self.engine.player.alive:
-          return GameOverEventHandler(engine=self.engine)
-        return MainGameEventHandler(engine=self.engine)
-      return self
-      
-    except Exception: 
-      traceback.print_exc()
-      self.engine.message_log.add_message(
-        text=traceback.format_exc(), 
-        fg=self.engine.colours['error']
-      )
+  def __init__(self, engine: Engine) -> None:
+    self.engine = engine
+  def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+    action_or_state = self.dispatch(event=event)
+    if isinstance(action_or_state, BaseEventHandler):
+      return action_or_state
+    if self.handle_action(action=action_or_state):
+      # A valid action was performed
+      if not self.engine.player.alive:
+        return GameOverEventHandler(engine=self.engine)
+      return MainGameEventHandler(engine=self.engine)
+    return self
   
   def handle_action(self, action: Optional[action.Action]) -> bool:
     if action is None:
@@ -147,8 +120,10 @@ class EventHandler(BaseEventHandler):
     if self.engine.game_map.in_bounds(x=event.tile.x, y=event.tile.y):
       self.engine.mouse_location = event.tile.x, event.tile.y
 
-  def on_render(self) -> None:
-    self.engine.render()
+  def on_render(self, console: tcod.console.Console = None) -> None:
+    if console is None:
+      console = self.engine.console
+    self.engine.render(console=console)
 
 class AskUserEventHandler(EventHandler):
   
@@ -174,11 +149,14 @@ class AskUserEventHandler(EventHandler):
 class InventoryEventHandler(AskUserEventHandler):
   TITLE = " INVENTORY "
 
-  def on_render(self) -> None:
-    super().on_render()
+  def on_render(self, console: tcod.console.Console = None) -> None:
+    if console is None:
+      console = self.engine.console
+
+    super().on_render(console=console)
     # ─│┌┐└├┤┬┴┼┘
     number_of_items_in_inventory = len(self.engine.player.inventory.items)
-    height = min(5 - number_of_items_in_inventory, self.engine.console.height)
+    height = 0
     x = self.engine.game_map.width
     y = 0
     width = self.engine.side_console
@@ -188,18 +166,24 @@ class InventoryEventHandler(AskUserEventHandler):
       lines = []
       for i, item in enumerate(self.engine.player.inventory.items):
         item_key = chr(ord("a") + i)
-        lines += list(self.engine.message_log.wrap(
-          string=f"{item_key}-{item.name}", 
+        item = list(self.engine.message_log.wrap(
+          string=f"[{item_key}]-{item.name}",
           width=width-2
         ))
-        height += 1
+        lines += item + ['‎']
+        height += len(item)
+        
+        # height += len(lines)
+        if i > 0:
+          height +=1
     else:
       lines = list(self.engine.message_log.wrap(
         string="Inventory is empty.",
         width=width-2
       ))
+      height += len(lines)
     # adjust height based on number of lines
-    height += len(lines)
+    height = min(4+height, self.engine.console.height)
     # set frame decoration based on height
     if height == self.engine.console.height:
       decoration = '┌─┐│ │└─┘'
@@ -227,17 +211,16 @@ class InventoryEventHandler(AskUserEventHandler):
     # draw pickup instruction
     self.engine.console.print(
       x=x+1,
-      y=y+height-2,
+      y=y+height-1,
       string='p-pick up',
     )
     # draw drop instruction
     string = 'd-drop'
     self.engine.console.print(
       x=self.engine.console.width - len(string)-1,
-      y=y+height-2,
+      y=y+height-1,
       string=string,
     )
-
     # print each line
     for line in lines:
       self.engine.console.print(
@@ -285,7 +268,9 @@ class SelectIndexHandler(AskUserEventHandler):
     player = self.engine.player
     engine.mouse_location = (player.x, player.y)
   
-  def on_render(self) -> None:
+  def on_render(self, console: tcod.console.Console = None) -> None:
+    if console is None:
+      console = self.engine.console
     super().on_render()
     x,y=self.engine.mouse_location
     self.engine.console.rgb['fg'][x,y]=self.engine.colours['black']
@@ -315,7 +300,6 @@ class SelectIndexHandler(AskUserEventHandler):
           return None
         elif key in CONFIRM_KEYS:
           xy = self.engine.mouse_location
-          self.engine.mouse_location = (0,0)
           return self.on_index_selected(*xy)
     return super().ev_keydown(event=event)
 
@@ -387,8 +371,10 @@ class HistoryViewer(EventHandler):
     self.log_length = len(engine.message_log.messages)
     self.cursor = self.log_length - 1
   
-  def on_render(self) -> None:
-    super().on_render()
+  def on_render(self, console: tcod.console.Console = None) -> None:
+    if console is None:
+      console = self.engine.console
+    super().on_render(console=console)
 
     log_console = tcod.console.Console(width=self.engine.console.width - 6, height=self.engine.console.height - 6)
 
@@ -464,8 +450,11 @@ class AreaRangedSelectHandler(SelectIndexHandler):
     super().__init__(engine=engine)
     self.radius = radius
     self.callback = callback
-  def on_render(self) -> None:
-    super().on_render()
+  def on_render(self, console: tcod.console.Console = None) -> None:
+    if console is None:
+      console = self.engine.console
+
+    super().on_render(console=console)
     
     x,y = self.engine.mouse_location
 
