@@ -87,7 +87,7 @@ class MainMenu(event_handler.BaseEventHandler):
       menu_width = 10
       
     for i, text in enumerate(
-      ["[N]ew game","\n[C]ontinue","\n[Q]uit"]
+      ["[N]ew game","[C]ontinue","[Q]uit"]
       ):
       console.print(
         x=console.width // 2,

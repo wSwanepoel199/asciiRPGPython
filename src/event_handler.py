@@ -284,7 +284,7 @@ class SelectIndexHandler(AskUserEventHandler):
   def on_render(self, console: tcod.console.Console = None) -> None:
     if console is None:
       console = self.engine.console
-    super().on_render()
+    super().on_render(console=console)
     x,y=self.engine.mouse_location
     self.engine.console.rgb['fg'][x,y]=self.engine.colours['black']
     self.engine.console.rgb['bg'][x,y]=self.engine.colours['white']
@@ -372,12 +372,13 @@ class MainGameEventHandler(EventHandler):
 
 class GameOverEventHandler(EventHandler):
   def on_quit(self) -> None:
+    """Handle exiting out of a finished game."""
     if os.path.exists(path="savegame.sav"):
       os.remove(path="savegame.sav")
     raise self.engine.exceptions.QuitWithoutSaving()
 
   def ev_quit(self, event: tcod.event.Quit) -> None:
-    self.ev_quit()
+    self.on_quit()
   def ev_keydown(self, event: tcod.event.KeyDown) -> None:
     if event.sym == tcod.event.KeySym.ESCAPE:
       # action.EscapeAction(entity=self.engine.player)
