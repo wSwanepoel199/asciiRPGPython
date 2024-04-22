@@ -17,9 +17,8 @@ class Message:
     return self.text_p
 
 class MessageLog:
-  def __init__(self, engine:Engine) -> None:
+  def __init__(self) -> None:
     self.messages: List[Message] = []
-    self.engine = engine
 
   def add_message(
     self,

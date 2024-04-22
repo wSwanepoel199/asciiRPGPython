@@ -1,5 +1,5 @@
 print(__name__)
-import tcod
+import tcod, traceback
 # from src.map import Map, GameMap
 # from src.player import Player
 # from src.entity import Entity
@@ -7,6 +7,7 @@ import tcod
 # from src.menu import Menu
 # from src.save import Save
 # from src.game import Game
+import src.event_handler as event_handler
 import src.game_setup as game_setup
 import src.utils.exceptions as exceptions
 from src.engine import Engine
@@ -63,39 +64,61 @@ initialLoad = True
 #           case _:
 #             game.play = map.overworld(player=player, tile=tile)
 #             menu.mainmenu = not game.play
-def main():
-  # resolution = [4,3]
-  resolution = [16,9]
-  width = 160
-  height = width // resolution[0] * resolution[1]
 
-  engine = Engine()
+def save_game(handler: event_handler.BaseEventHandler, filename: str) -> None:
+  if isinstance(handler, event_handler.EventHandler):
+    handler.engine.save_as(filename=filename)
+    print("Game saved.")
+
+def main():
+  resolution = [4,2.5]
+  # resolution = [16,9]
+  width = 160
+  height = round(width // resolution[0] * resolution[1])
+
+  # engine = 
 
   tileset = tcod.tileset.load_tilesheet(
     path="./src/assets/dejavu10x10_gs_tc.png",
     columns=32, rows=8,
     charmap=tcod.tileset.CHARMAP_TCOD
   )
+  title = "Rogue But Worse"
 
-  engine.genConsole(width=width, height=height)
-  engine.title = "Rogue But Worse"
-  engine.genContext(
-    width=engine.console.width, 
-    height=engine.console.height,
+  console: tcod.console.Console = Engine().genConsole(width=width, height=height)
+  context: tcod.context.Context = Engine().genContext(
+    width=console.width, 
+    height=console.height,
     tileset=tileset,
-    title=engine.title,
+    title=title,
     vsync=True
   )
-  engine.event_handler = game_setup.MainMenu(engine=engine)
+  handler: event_handler.BaseEventHandler = game_setup.MainMenu()
   
   try:
     while True:
-      engine.gameLoop()
+      console.clear()
+      handler.on_render(console=console)
+      context.present(console=console)
+
+      try:
+        for event in tcod.event.wait():
+          context.convert_event(event=event)
+          handler = handler.handle_events(event=event)
+      except Exception:
+        traceback.print_exc()
+        if isinstance(handler, event_handler.EventHandler):
+          handler.engine.message_log.add_message(
+            text=traceback.format_exc(), 
+            fg=handler.engine.colours['error']
+          )
   except exceptions.QuitWithoutSaving:
     raise
   except SystemExit:
+    save_game(handler=handler, filename="savegame.sav")
     raise
   except BaseException:
+    save_game(handler=handler, filename="savegame.sav")
     raise
 
 if __name__ == "__main__":

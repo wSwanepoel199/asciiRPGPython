@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
-import tcod, traceback
+import tcod, traceback, lzma, pickle
 import tcod.constants
 from src.utils.colour import loadColours
 from src.message import MessageLog
@@ -16,17 +16,18 @@ class Engine:
   def __init__(self, player: Actor = None) -> None:
     self.player = player
     self.title = None
-    self.colours = loadColours()
-    self.exceptions = exceptions
-    self.event_handler: event_handler.BaseEventHandler = None
-    self.console: tcod.console.Console = {}
-    self.context: tcod.context.Context = {}
     self.mouse_location = (0, 0)
-    self.message_log = MessageLog(engine=self)
+    self.message_log = MessageLog()
   @property
   def side_console(self) -> int:
     if self.console.width:
       return self.console.width - self.game_map.width
+  @property
+  def colours(self) -> dict:
+    return loadColours()
+  @property
+  def exceptions(self) -> exceptions:
+    return exceptions
   def handle_enemy_turn(self) -> None:
     for entity in set(self.game_map.actors) - {self.player}:
       if not entity.ai:
@@ -46,6 +47,11 @@ class Engine:
 
     # If a tile is "seeing" it should be added to "seen".
     self.game_map.seen |= self.game_map.seeing
+
+  def save_as(self, filename: str) -> None:
+    save_data = lzma.compress(data=pickle.dumps(obj=self))
+    with open(file=filename, mode="wb") as f:
+      f.write(save_data)
 
   def render(self, console: tcod.console.Console) -> None:
     self.console = console
@@ -154,22 +160,7 @@ class Engine:
       width=self.side_console-2,
       height=self.console.height-round(number=self.console.height/3)*2-2
     )
-  def gameLoop(self) -> None:
-    self.console.clear()
-    self.event_handler.on_render(console=self.console)
-    self.context.present(console=self.console)
-
-    try:
-      for event in tcod.event.wait():
-        self.context.convert_event(event=event)
-        self.event_handler = self.event_handler.handle_events(event=event)
-    except Exception:
-      traceback.print_exc()
-      self.message_log.add_message(
-        text=traceback.format_exc(), 
-        fg=self.colours['error']
-      )
-  def genContext(self, width:int, height:int, tileset: tcod.tileset.Tileset, title:str, vsync:bool, context: Optional[tcod.context.Context] = None) -> None:
+  def genContext(self, width:int, height:int, tileset: tcod.tileset.Tileset, title:str, vsync:bool, context: Optional[tcod.context.Context] = None) -> tcod.context.Context:
     if context:
       self.context = context
     else:
@@ -180,11 +171,14 @@ class Engine:
         title=title,
         vsync=vsync,
       )
-  def genConsole(self, console: Optional[tcod.console.Console] = None, width:int=0, height:int=0 ) -> None:
+    return self.context
+  def genConsole(self, console: Optional[tcod.console.Console] = None, width:int=0, height:int=0 ) -> tcod.console.Console:
     if console:
       self.console = console
     else:
       self.console = tcod.console.Console(width=width, height=height, order="F")
+    
+    return self.console
     # self.context = tcod.context.new_terminal(
     # columns=width,
     # rows=height,

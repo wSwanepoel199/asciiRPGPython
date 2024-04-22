@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING, Callable, Tuple, Union
 
-import tcod
+import tcod, os
 import tcod.constants
 
 import src.actions as action
@@ -62,20 +62,43 @@ CURSOR_Y_KEYS = {
 ActionOrHandler = Union[action.Action, "BaseEventHandler"]
 
 class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
-  def __init__(self, engine: Engine) -> None:
-    self.engine = engine
-  def handle_events(self, event:  tcod.event.Event) -> BaseEventHandler:
+  def __init__(self):
+    self.console = None,
+    self.colours = None
+  def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
     state = self.dispatch(event=event)
     if isinstance(state, BaseEventHandler):
       return state
     assert not isinstance(state, action.Action), f"{self!r} can not handle actions."
     return self
 
-  def on_render(self, console: tcod.console.Console = None) -> None:
+  def on_render(self, console: tcod.console.Console) -> None:
     raise NotImplementedError()
 
   def ev_quit(self, event: tcod.event.Quit) -> Optional[action.Action]:
     raise SystemExit()
+
+class PopupMessage(BaseEventHandler):
+  def __init__(self, parent: BaseEventHandler, text:str) -> None:
+    self.parent = parent
+    self.text = text
+  
+  def on_render(self, console: tcod.console.Console) -> None:
+    self.parent.on_render(console=console)
+    console.rgb["fg"]
+    console.rgb['bg']
+
+    console.print(
+      x=console.width//2,
+      y=console.height//2,
+      string=self.text,
+      fg=self.parent.colours['white'],
+      bg=self.parent.colours['black'],
+      alignment=tcod.constants.CENTER
+    )
+  
+  def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[BaseEventHandler]:
+    return self.parent
 
 class EventHandler(BaseEventHandler):
   def __init__(self, engine: Engine) -> None:
@@ -112,9 +135,7 @@ class EventHandler(BaseEventHandler):
     if self.engine.game_map.in_bounds(x=event.tile.x, y=event.tile.y):
       self.engine.mouse_location = event.tile.x, event.tile.y
 
-  def on_render(self, console: tcod.console.Console = None) -> None:
-    if console is None:
-      console = self.engine.console
+  def on_render(self, console: tcod.console.Console) -> None:
     self.engine.render(console=console)
 
 class AskUserEventHandler(EventHandler):
@@ -350,11 +371,17 @@ class MainGameEventHandler(EventHandler):
     return performing_action
 
 class GameOverEventHandler(EventHandler):
+  def on_quit(self) -> None:
+    if os.path.exists(path="savegame.sav"):
+      os.remove(path="savegame.sav")
+    raise self.engine.exceptions.QuitWithoutSaving()
 
+  def ev_quit(self, event: tcod.event.Quit) -> None:
+    self.ev_quit()
   def ev_keydown(self, event: tcod.event.KeyDown) -> None:
     if event.sym == tcod.event.KeySym.ESCAPE:
       # action.EscapeAction(entity=self.engine.player)
-      raise SystemExit()
+      self.on_quit()
 
 class HistoryViewer(EventHandler):
   
