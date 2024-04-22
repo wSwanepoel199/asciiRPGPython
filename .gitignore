@@ -1,3 +1,6 @@
 saves/
 */**/__pycache__
 .vscode
+
+# # game saves
+# *.sav
