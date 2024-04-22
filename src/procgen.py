@@ -1,9 +1,8 @@
 from __future__ import annotations
 import random, tcod
-from typing import Tuple, Iterator, Iterable, List, TYPE_CHECKING
+from typing import Tuple, Iterator, List, TYPE_CHECKING
 from src.map import GameMap
 if TYPE_CHECKING:
-  from src.entity import Entity
   from src.engine import Engine
 
 class RecRoom:

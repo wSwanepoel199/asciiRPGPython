@@ -2,8 +2,6 @@ from __future__ import annotations
 from typing import List, Iterable, Reversible, Tuple, TYPE_CHECKING
 import textwrap, tcod
 
-from src.utils.colour import loadColours
-
 if TYPE_CHECKING:
   from src.engine import Engine
 

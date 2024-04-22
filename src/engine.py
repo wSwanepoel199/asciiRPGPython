@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterable, Any, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional
 import tcod, traceback
 import tcod.constants
 from src.utils.colour import loadColours
@@ -87,6 +87,7 @@ class Engine:
     if self.player.target and self.player.target.alive and self.player.alive:
       target_name= f"{self.player.target.name} HP: "
       if self.side_console <= 50:
+        y +=1
         x = self.game_map.width
         self.console.print(
           x=x+1,
@@ -127,14 +128,15 @@ class Engine:
         y=5,
         string=msg,
       )
-    # render names if entities under mouse
-    y+=1
-    self.render_names_at_mouse(
-      x=self.game_map.width+1,
-      y=y,
-      width=self.side_console-2,
-      height=5
-    )
+    else:
+      # render names if entities under mouse
+      y+=1
+      self.render_names_at_mouse(
+        x=self.game_map.width+1,
+        y=y,
+        width=self.side_console-2,
+        height=5
+      )
 
 
     # Event Log

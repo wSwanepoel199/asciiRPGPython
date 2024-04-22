@@ -2,18 +2,10 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING, Callable, Tuple, Union
 
-import tcod, traceback
-
+import tcod
 import tcod.constants
 
 import src.actions as action
-# from src.actions import (
-#   Action, 
-#   EscapeAction, 
-#   BumpAction, 
-#   WaitAction,
-#   PickupAction
-# )
 
 if TYPE_CHECKING:
   from src.engine import Engine

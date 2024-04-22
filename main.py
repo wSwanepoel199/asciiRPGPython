@@ -1,5 +1,5 @@
 print(__name__)
-import copy, tcod
+import tcod
 # from src.map import Map, GameMap
 # from src.player import Player
 # from src.entity import Entity
@@ -8,9 +8,7 @@ import copy, tcod
 # from src.save import Save
 # from src.game import Game
 import src.game_setup as game_setup
-import src.factory.actor_factory as actor_factory
 import src.utils.exceptions as exceptions
-import src.event_handler as event_handler
 from src.engine import Engine
 from src.procgen import genDungeon
 
@@ -66,8 +64,6 @@ initialLoad = True
 #             game.play = map.overworld(player=player, tile=tile)
 #             menu.mainmenu = not game.play
 def main():
-  # screen_width = 80
-  # screen_height = 60
   # resolution = [4,3]
   resolution = [16,9]
   width = 160
@@ -91,26 +87,6 @@ def main():
     vsync=True
   )
   engine.event_handler = game_setup.MainMenu(engine=engine)
-
-  # engine: Engine = game_setup.new_game(
-  #   map_w=screen_width,
-  #   map_h=screen_height,
-  #   map_max_rooms=30,
-  #   room_max_size=10,
-  #   room_min_size=6,
-  #   max_enemies=3,
-  #   max_items=3
-  # )
-
-  # engine.createConsole(width=screen_width, height=screen_height, tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
-
-  # engine.addTileset(tileset_image="./src/assets/dejavu10x10_gs_tc.png", tileset_width=32, tileset_height=8)
-
-  # engine: event_handler.BaseEventHandler = game_setup.MainMenu(
-  #   screen_width=screen_width, 
-  #   screen_height=screen_height
-  # )
-  # engine = game_setup.MainMenu().engine
   
   try:
     while True:

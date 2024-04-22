@@ -12,7 +12,7 @@ from src.procgen import genDungeon
 
 def new_game(engine: Engine, map_w:int ,map_h:int, map_max_rooms:int, room_min_size:int, room_max_size:int, max_enemies:int, max_items:int) -> None:
   """Start a new game."""
-  map_width = map_w-(map_w // 3)
+  map_width = map_w-(map_w // 4)
   map_height = map_h
   squareMapDimMin = min(map_width, map_height)
 
@@ -29,8 +29,8 @@ def new_game(engine: Engine, map_w:int ,map_h:int, map_max_rooms:int, room_min_s
     limit=max_rooms,
     min=room_size_min,
     max=room_size_max,
-    w=map_width,
-    h=map_height,
+    w=squareMapDimMin,
+    h=squareMapDimMin,
     enemy_limit=room_max_enemy,
     item_limit=room_max_item,
     engine=engine
