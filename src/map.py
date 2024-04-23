@@ -283,15 +283,17 @@ class Map:
         case _:
           pass
       input("> ")
-
+# Moved map sizing to use columns and rows and map render sizing to use width and height, need to switch map generation to feed both
 class GameMap:
   def __init__(
       self, 
       engine: Engine,
       x: int,
       y: int,
-      width: int, 
-      height: int, 
+      width:int,
+      height: int,
+      columns: int, 
+      rows: int, 
       map_type: str = "openworld", 
       entities: Iterable[Entity] = ()
     ) -> None:
@@ -300,20 +302,24 @@ class GameMap:
     self.engine = engine
     self.width = width
     self.height = height
+    self.columns = columns
+    self.rows = rows
+    self.offset = (width - columns)//2
     self.map_type = map_type
     self.tile_types = tile_types.tile_types
     self.seeing = np.full(
-      shape=(width, height), 
+      shape=(columns, rows), 
       fill_value=False, 
       order="F"
     )
     self.seen = np.full(
-      shape=(width, height), 
+      shape=(columns, rows), 
       fill_value=False, 
       order="F"
     )
     self.entities = set(entities)
-    self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["mapfill"], order="F")
+    self.tiles = np.full(shape=(columns, rows), fill_value=self.tile_types["mapfill"], order="F")
+    self.console = None
     # match map_type:
     #   # case "dungeon":
     #   #   self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["wall"], order="F")
@@ -337,6 +343,9 @@ class GameMap:
       for entity in self.entities
       if isinstance(entity, Item)
     )
+  @property
+  def player(self) -> Actor:
+    return self.engine.player
   def get_blocking_entity(self, x:int, y:int) -> Optional[Entity]:
     for entity in self.entities:
       if (
@@ -353,7 +362,7 @@ class GameMap:
     return None
   def in_bounds(self, x: int, y: int) -> bool:
     """Return True if x and y are inside the bounds of the map."""
-    return 0 <= x < self.width and 0 <= y < self.height
+    return 0 <= x < self.columns and 0 <= y < self.rows
   
   def render(self, console:tcod.console.Console) -> None:
     """
@@ -365,21 +374,18 @@ class GameMap:
 
     ╔ ╗ ╚ ╝ ╠ ╣ ║ ╩ ╬ ╦ ═
     """
+    self.console = tcod.console.Console(
+      width=self.columns,
+      height=self.rows,
+      order="F"
+    )
 
-    console.rgb[0:self.width, 0:self.height] = np.select(
+    self.console.rgb[0:self.columns, 0:self.rows] = np.select(
       condlist=[self.seeing, self.seen],
       choicelist=[self.tiles["light"], self.tiles["dark"]],
       default=self.tile_types['shroud'],
     )
-    console.draw_frame(
-      x=self.x,
-      y=self.y,
-      width=self.width,
-      height=self.height,
-      clear= False,
-      fg=self.engine.colours['white'],
-      decoration="╔═╗║ ║╚═╝"
-    )
+
     player = list(filter(lambda entity: entity['entity_type'] == 'PLAYER', self.entities))
     actors = list(filter(lambda entity: entity['entity_type'] == 'ACTOR', self.entities))
     objects = list(filter(lambda entity: entity['entity_type'] == 'OBJECT', self.entities))
@@ -387,10 +393,30 @@ class GameMap:
 
     for entity in objects + items + actors + player:
        if self.seeing[entity.x, entity.y]:
-        console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
+        self.console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
     # for entity in self.entities:
     #   if self.seeing[entity.x, entity.y]:
     #     console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
+    
+    self.console.blit(
+      dest=console,
+      dest_x=0+self.offset,
+      dest_y=0+1,
+      # src_x=self.x,
+      # src_y=self.y,
+      width=self.columns,
+      height=self.rows
+    )
+    console.draw_frame(
+      x=0,
+      y=0,
+      width=self.width,
+      height=self.height,
+      clear= False,
+      fg=self.engine.colours['white'],
+      decoration="╔═╗║ ║╚═╝"
+    )
+
   
   def place_entities(
     self, 

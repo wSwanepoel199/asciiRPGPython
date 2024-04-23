@@ -56,12 +56,12 @@ class LineDamageConsumable(Consumable):
     self.range = range
     self.on_hit = on_hit_message
 
-  def get_action(self, entity: Actor) -> event_handler.SingleTargetSelectHandler:
+  def get_action(self, entity: Actor) -> event_handler.LineTargetSelectHandler:
     self.engine.message_log.add_message(
       text="Select a target location.", 
       fg=self.engine.colours['needs_target']
     )
-    return event_handler.SingleTargetSelectHandler(
+    return event_handler.LineTargetSelectHandler(
       engine=self.engine, 
       item=self.parent,
       callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)

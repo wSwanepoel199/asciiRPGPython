@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Tuple
 import tcod, traceback, lzma, pickle
 import tcod.constants
+import tcod.render
 from src.utils.colour import loadColours
 from src.message import MessageLog
 import src.utils.exceptions as exceptions
@@ -16,12 +17,15 @@ class Engine:
   def __init__(self, player: Actor = None) -> None:
     self.player = player
     self.title = None
-    self.mouse_location = (0, 0)
+    self.mouse_location = (0,0)
+    self.event_handler: Optional[event_handler.EventHandler] = None
     self.message_log = MessageLog()
   @property
   def side_console(self) -> int:
     if self.console.width:
-      return self.console.width - self.game_map.width
+      return self.console.width-self.game_map.width
+    else:
+      return 20
   @property
   def colours(self) -> dict:
     return loadColours()
@@ -54,21 +58,21 @@ class Engine:
         entity.fighter.die()
 
   def save_as(self, filename: str) -> None:
+    if not isinstance(self.event_handler, event_handler.GameOverEventHandler):
+      self.event_handler = event_handler.MainGameEventHandler(engine=self)
     save_data = lzma.compress(data=pickle.dumps(obj=self))
     with open(file=filename, mode="wb") as f:
       f.write(save_data)
 
   def render(self, console: tcod.console.Console) -> None:
     self.console = console
-
-    self.game_map.render(console=self.console)
-
+    self.game_map.render(console=console)
     # Draw Side Window
     self.genWindow(
       x=self.game_map.width,
       y=0,
       width=self.side_console,
-      height=self.console.height
+      height=console.height
     )
 
     if self.side_console > 20:
@@ -80,7 +84,7 @@ class Engine:
 
     # Display Player HP
     if self.player.fighter.HP > 0:
-      self.console.print(
+      console.print(
         x=self.game_map.width+1,
         y=y,
         string=f"{self.player.name} HP:"
@@ -100,7 +104,7 @@ class Engine:
       if self.side_console <= 50:
         y +=1
         x = self.game_map.width
-        self.console.print(
+        console.print(
           x=x+1,
           y=y,
           string=target_name
@@ -116,8 +120,8 @@ class Engine:
         y+=1
       else:
         y = 1
-        x = self.console.width
-        self.console.print(
+        x = console.width
+        console.print(
           x=x-len(target_name)-1,
           y=y,
           string=target_name
@@ -134,7 +138,7 @@ class Engine:
     # Display If Player is dead
     if self.player.fighter.HP <= 0:
       msg= "YOU DIED!"
-      self.console.print(
+      console.print(
         x= self.game_map.width + round(number=(self.side_console - len(msg)-1)/2) ,
         y=5,
         string=msg,
@@ -159,22 +163,34 @@ class Engine:
       alignment=tcod.constants.CENTER
     )
     self.message_log.render(
-      console=self.console,
+      console=console,
       x=self.game_map.width+1,
       y=round(number=self.console.height/3)*2+1,
       width=self.side_console-2,
       height=self.console.height-round(number=self.console.height/3)*2-2
     )
-  def genContext(self, width:int, height:int, tileset: tcod.tileset.Tileset, title:str, vsync:bool, context: Optional[tcod.context.Context] = None) -> tcod.context.Context:
+  def genContext(
+      self, 
+      width:int, 
+      height:int, 
+      tileset: tcod.tileset.Tileset, 
+      title:str, 
+      columns:Optional[int] = None,
+      rows: Optional[int] = None,
+      vsync: Optional[bool] = None, 
+      context: Optional[tcod.context.Context] = None,
+      console: Optional[tcod.console.Console] = None,
+    ) -> tcod.context.Context:
     if context:
       self.context = context
     else:
-      self.context = tcod.context.new_terminal(
-        columns=width,
-        rows=height,
+      self.context = tcod.context.new(
+        width=width,
+        height=height,
+        # columns=columns,
+        # rows=rows,
         tileset=tileset,
         title=title,
-        vsync=vsync,
       )
     return self.context
   def genConsole(self, console: Optional[tcod.console.Console] = None, width:int=0, height:int=0 ) -> tcod.console.Console:
@@ -307,3 +323,13 @@ class Engine:
       offset += 1
       if offset > height:
         return
+  
+  def toggle_fullscreen(self, context: tcod.context.Context) -> None:
+    window = context.sdl_window
+
+    if not window:
+      return
+    if window.fullscreen:
+      window.fullscreen = False
+    else:
+      window.fullscreen = tcod.sdl.video.WindowFlags.FULLSCREEN_DESKTOP

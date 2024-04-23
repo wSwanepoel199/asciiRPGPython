@@ -11,10 +11,11 @@ from src.engine import Engine
 from src.procgen import genDungeon
 from src.utils.colour import loadColours
 
-def new_game(title:str, map_w:int ,map_h:int, map_max_rooms:int, room_min_size:int, room_max_size:int, max_enemies:int, max_items:int) -> None:
+def new_game(title:str, width:int, height:int, map_max_rooms:int, room_min_size:int, room_max_size:int, max_enemies:int, max_items:int) -> None:
   """Start a new game."""
-  map_width = map_w-(map_w // 4)
-  map_height = map_h
+  width = width-min((width // 4), 55)
+  map_width = width
+  map_height = height-2
   squareMapDimMin = min(map_width, map_height)
 
   room_size_min = room_min_size
@@ -27,13 +28,17 @@ def new_game(title:str, map_w:int ,map_h:int, map_max_rooms:int, room_min_size:i
   player = copy.deepcopy(actor_factory.player)
   
   engine = Engine(player=player)
+
   engine.title = title
+
   engine.game_map = genDungeon(
-    limit=max_rooms,
-    min=room_size_min,
-    max=room_size_max,
-    w=squareMapDimMin,
-    h=squareMapDimMin,
+    room_limit=max_rooms,
+    min_room_size=room_size_min,
+    max_room_size=room_size_max,
+    width= width,
+    height= height,
+    columns=squareMapDimMin,
+    rows=squareMapDimMin,
     enemy_limit=room_max_enemy,
     item_limit=room_max_item,
     engine=engine
@@ -104,17 +109,16 @@ class MainMenu(event_handler.BaseEventHandler):
   ) -> Optional[event_handler.BaseEventHandler]:
     match event.sym:
       case tcod.event.KeySym.n:
-        self.engine = new_game(
+        return event_handler.MainGameEventHandler(engine=new_game(
           title="Rogue But Worse",
-          map_w=self.console.width, 
-          map_h=self.console.height, 
+          width=self.console.width,
+          height=self.console.height,
           map_max_rooms=30, 
           room_min_size=6, 
           room_max_size=10, 
           max_enemies=2, 
           max_items=2,
-        )
-        return event_handler.MainGameEventHandler(engine=self.engine)
+        ))
       case tcod.event.KeySym.c:
         try:
           return event_handler.MainGameEventHandler(engine=load_game(filename="savegame.sav"))

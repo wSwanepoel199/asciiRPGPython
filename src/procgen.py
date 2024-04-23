@@ -64,34 +64,39 @@ available_items = {
 
 def genDungeon(
     *,
-    w: int,
-    h: int,
-    min: int,
-    max: int,
-    limit: int,
+    width: int,
+    height: int,
+    columns: int,
+    rows: int,
+    min_room_size: int,
+    max_room_size: int,
+    room_limit: int,
     enemy_limit: int,
     item_limit: int,
     engine:Engine
     ) -> GameMap:
   """Generate a new dungeon map."""
   player = engine.player
+
   dungeon = GameMap(
     engine=engine, 
     x=0,
     y=0,
-    width=w, 
-    height=h, 
+    width=width, 
+    height=height, 
+    columns=columns,
+    rows=rows,
     map_type="dungeon", 
     entities=[player]
   )
   rooms: List[RecRoom] = []
 
-  for r in range(limit):
-    room_width = random.randint(a=min, b=max)
-    room_height = random.randint(a=min, b=max)
+  for r in range(room_limit):
+    room_width = random.randint(a=min_room_size, b=max_room_size)
+    room_height = random.randint(a=min_room_size, b=max_room_size)
 
-    x = random.randint(a=1+dungeon.x, b=dungeon.width - room_width - 2)
-    y = random.randint(a=1+dungeon.y, b=dungeon.height - room_height - 2)
+    x = random.randint(a=1+dungeon.x, b=dungeon.columns - room_width - 2)
+    y = random.randint(a=1+dungeon.y, b=dungeon.rows - room_height - 2)
 
     new_room = RecRoom(x=x, y=y, w=room_width, h=room_height)
 
@@ -110,20 +115,20 @@ def genDungeon(
     else:
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
-
-    dungeon.place_entities(room=new_room, maximum_monsters=enemy_limit, maximum_items=item_limit)
+      dungeon.place_entities(room=new_room, maximum_monsters=enemy_limit, maximum_items=item_limit)
 
     rooms.append(new_room)
+
   i = dungeon.y
   j = dungeon.x
-  while i < h-dungeon.y:
-    if i+1 >= h-dungeon.y:
+  while i < rows-dungeon.y:
+    if i+1 >= rows-dungeon.y:
       break
-    while j < w-dungeon.x:
+    while j < columns-dungeon.x:
       if dungeon.tiles[j,i] == dungeon.tile_types["mapfill"] or dungeon.tiles[j,i] == dungeon.tile_types["wall"] or not dungeon.tiles[j,i]:
         j += 1
         continue
-      if j+1 >= w-dungeon.x:
+      if j+1 >= columns-dungeon.x:
         break
       dungeon.placeWall(x=j,y=i,dungeon=dungeon)
       j += 1

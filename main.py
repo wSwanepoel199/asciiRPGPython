@@ -72,12 +72,13 @@ def save_game(handler: event_handler.BaseEventHandler, filename: str) -> None:
     print("Game saved.")
 
 def main():
-  resolution = [4,2.5]
-  # resolution = [16,9]
-  width = 160
-  height = round(width // resolution[0] * resolution[1])
-
-  # engine = 
+  resolution169 = [16,9]
+  resolution425 = [4,2.5]
+  width = 1600
+  height = round(width // resolution169[0] * resolution169[1])
+  columns = 80
+  rows= round(columns // resolution425[0] * resolution425[1])
+  
 
   tileset = tcod.tileset.load_tilesheet(
     # path="./src/assets/dejavu10x10_gs_tc.png",
@@ -87,22 +88,33 @@ def main():
   )
   title = "Rogue But Worse"
 
-  console: tcod.console.Console = Engine().genConsole(width=width, height=height)
   context: tcod.context.Context = Engine().genContext(
-    width=console.width, 
-    height=console.height,
+    width= width,
+    height= height,
+    columns= columns,
+    rows= rows,
     tileset=tileset,
     title=title,
-    vsync=True
+    vsync=True,
   )
+  # context.recommended_console_size()
+
   handler: event_handler.BaseEventHandler = game_setup.MainMenu()
   
+  console: tcod.console.Console = Engine().genConsole(
+    console=context.new_console(
+    magnification=1,
+    order="F"
+  ))
+
   try:
     while True:
       console.clear()
-      handler.on_render(console=console)
-      context.present(console=console)
+      if isinstance(handler, event_handler.EventHandler):
+        handler.engine.event_handler = handler
 
+      handler.on_render(console=console)
+      context.present(console=console, integer_scaling=1)
       try:
         for event in tcod.event.wait():
           context.convert_event(event=event)
@@ -117,12 +129,12 @@ def main():
   except exceptions.QuitWithoutSaving:
     context.close()
     pass
-  except SystemExit:
+  except SystemExit as exc:
     save_game(handler=handler, filename="savegame.sav")
-    pass
+    raise
   except BaseException:
     save_game(handler=handler, filename="savegame.sav")
-    pass
+    raise
 
 if __name__ == "__main__":
   main()
