@@ -11,7 +11,6 @@ import src.event_handler as event_handler
 import src.game_setup as game_setup
 import src.utils.exceptions as exceptions
 from src.engine import Engine
-from src.procgen import genDungeon
 
 initialLoad = True
 
@@ -66,6 +65,7 @@ initialLoad = True
 #             menu.mainmenu = not game.play
 
 def save_game(handler: event_handler.BaseEventHandler, filename: str) -> None:
+  """If the current event handler has an active Engine then save it."""
   if isinstance(handler, event_handler.EventHandler):
     handler.engine.save_as(filename=filename)
     print("Game saved.")
@@ -113,13 +113,14 @@ def main():
             fg=handler.engine.colours['error']
           )
   except exceptions.QuitWithoutSaving:
-    raise
+    context.close()
+    pass
   except SystemExit:
     save_game(handler=handler, filename="savegame.sav")
-    raise
+    pass
   except BaseException:
     save_game(handler=handler, filename="savegame.sav")
-    raise
+    pass
 
 if __name__ == "__main__":
   main()

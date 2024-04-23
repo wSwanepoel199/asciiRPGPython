@@ -179,13 +179,6 @@ class Engine:
       self.console = tcod.console.Console(width=width, height=height, order="F")
     
     return self.console
-    # self.context = tcod.context.new_terminal(
-    # columns=width,
-    # rows=height,
-    # tileset=tileset,
-    # title="Rogue but worse",
-    # vsync=True,
-    # )
   
   def addTileset(self, tileset_image:str, tileset_width:int, tileset_height:int) -> None:
     tileset = tcod.tileset.load_tilesheet(

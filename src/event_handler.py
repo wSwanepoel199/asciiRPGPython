@@ -69,7 +69,7 @@ class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
     state = self.dispatch(event=event)
     if isinstance(state, BaseEventHandler):
       return state
-    assert not isinstance(state, action.Action), f"{self!r} can not handle actions."
+    assert( not isinstance(state, action.Action), f"{self!r} can not handle actions.")
     return self
 
   def on_render(self, console: tcod.console.Console) -> None:
@@ -375,7 +375,7 @@ class GameOverEventHandler(EventHandler):
     """Handle exiting out of a finished game."""
     if os.path.exists(path="savegame.sav"):
       os.remove(path="savegame.sav")
-    raise self.engine.exceptions.QuitWithoutSaving()
+    raise self.engine.exceptions.QuitWithoutSaving("Game exited without saving.")
 
   def ev_quit(self, event: tcod.event.Quit) -> None:
     self.on_quit()
