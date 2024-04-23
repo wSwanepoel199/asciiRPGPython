@@ -1,3 +1,4 @@
+import src.utils.constants as constants
 from src.components.ai import HostileAi
 from src.components.fighter import Fighter
 from src.components.inventory import Inventory
@@ -5,7 +6,7 @@ from src.entity import Actor
 
 player = Actor(
   entity_type="PLAYER",
-  char="@",
+  char=constants.player_char,
   colour=(255, 255, 255),
   name="Player",
   ai_cls=HostileAi,

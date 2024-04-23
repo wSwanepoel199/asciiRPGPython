@@ -1,5 +1,6 @@
 from typing import Tuple
 import numpy as np # type: ignore
+import src.utils.constants as constants
 
 graphic_dt = np.dtype(
   dtype=[
@@ -33,8 +34,8 @@ tile_types = {
   'floor': new_tile(
     walkable=True, 
     transparent=True, 
-    dark=(ord("."), (100, 100, 100), (10, 10, 10)), 
-    light=(ord("."), (255, 255, 255), (0, 0, 0))),
+    dark=(ord(constants.floor_char), (100, 100, 100), (10, 10, 10)), 
+    light=(ord(constants.floor_char), (255, 255, 255), (0, 0, 0))),
   'wall': new_tile(
     walkable=False, 
     transparent=False, 

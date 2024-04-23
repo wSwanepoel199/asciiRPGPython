@@ -1,4 +1,5 @@
 print(__name__)
+# ‎ 
 import tcod, traceback
 # from src.map import Map, GameMap
 # from src.player import Player
@@ -79,9 +80,10 @@ def main():
   # engine = 
 
   tileset = tcod.tileset.load_tilesheet(
-    path="./src/assets/dejavu10x10_gs_tc.png",
-    columns=32, rows=8,
-    charmap=tcod.tileset.CHARMAP_TCOD
+    # path="./src/assets/dejavu10x10_gs_tc.png",
+    path="./src/assets/rexpaint_cp437_10x10.png",
+    columns=16, rows=16,
+    charmap=tcod.tileset.CHARMAP_CP437
   )
   title = "Rogue But Worse"
 
