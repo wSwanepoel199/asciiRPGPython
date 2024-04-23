@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
+import tcod
 
 import src.actions as actions
 import src.components.ai as ai
@@ -54,38 +55,52 @@ class LineDamageConsumable(Consumable):
     self.damage = damage
     self.range = range
     self.on_hit = on_hit_message
+
+  def get_action(self, entity: Actor) -> event_handler.SingleTargetSelectHandler:
+    self.engine.message_log.add_message(
+      text="Select a target location.", 
+      fg=self.engine.colours['needs_target']
+    )
+    return event_handler.SingleTargetSelectHandler(
+      engine=self.engine, 
+      item=self.parent,
+      callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
+    )
   
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
-    target = None
-    closest_distance = self.range + 1.0
+    target = action.target_xy
 
-    for actor in self.engine.game_map.actors:
-      if actor is not entity and self.parent.gamemap.seeing[actor.x, actor.y]:
-        distance = entity.distance(x=actor.x, y=actor.y)
+    if entity.distance(*target) > self.range:
+      raise self.engine.exceptions.Impossible("Location is too far away.")
+    targets_hit = False
+    for (x,y) in tcod.los.bresenham(start=(entity.x, entity.y), end=target).tolist():
+      point = (x,y)
+      target_actor = self.engine.game_map.get_actor_at_location(*point)
+      if not target_actor or target_actor is entity:
+        continue
+      if not self.engine.game_map.tiles[point]["transparent"]:
+        raise self.engine.exceptions.Impossible("Can't fire at target through a wall.")
+      # if self.on_hit:
+      #   self.on_hit = self.on_hit.split("<target>")
+      #   self.on_hit = self.on_hit[0] + target_actor.name + self.on_hit[1]
+      #   self.on_hit = self.on_hit.split('<damage>')
+      #   self.on_hit = self.on_hit[0] + str(self.damage) + self.on_hit[1]
+      # else:
+      self.on_hit = f"A lighting bolt strikes the {target_actor.name} with a loud thunder, for {self.damage} damage!"
+      self.engine.message_log.add_message(
+        text=self.on_hit
+      )
+      target_actor.fighter.take_damage(amount=self.damage)
+      targets_hit = True
 
-        if distance < closest_distance:
-          target = actor
-          closest_distance = distance
-    
-    if not target:
-      raise self.engine.exceptions.Impossible("No enemies in range.")
-    if self.on_hit:
-      self.on_hit = self.on_hit.split("<target>")
-      self.on_hit = self.on_hit[0] + target.name + self.on_hit[1]
-      self.on_hit = self.on_hit.split('<damage>')
-      self.on_hit = self.on_hit[0] + str(self.damage) + self.on_hit[1]
-    else:
-      self.on_hit = f"A lighting bolt strikes the {target.name} with a loud thunder, for {self.damage} damage!"
-    self.engine.message_log.add_message(
-      text=self.on_hit
-    )
-    target.fighter.take_damage(amount=self.damage)
-    entity.target = target
+    if not targets_hit:
+      raise self.engine.exceptions.Impossible("There are no targets in the radius.")
     self.consume()
 
 class TeleportConsumable(Consumable):
-  # def __init__(self) -> None:
+  def __init__(self, range: int) -> None:
+    self.range = range
   
   def get_action(self, entity: Actor) -> event_handler.SingleTargetSelectHandler:
     self.engine.message_log.add_message(
@@ -94,12 +109,14 @@ class TeleportConsumable(Consumable):
     )
     return event_handler.SingleTargetSelectHandler(
       engine=self.engine, 
+      item=self.parent,
       callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
     )
 
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
     target = action.target_actor
+    xy = action.target_xy
 
     if not target:
       target = action.item
@@ -107,12 +124,11 @@ class TeleportConsumable(Consumable):
       raise self.engine.exceptions.Impossible("Another creature has blocked the Teleport.")
     if target is entity:
       raise self.engine.exceptions.Impossible("You can't teleport onto yourself!")
-    if not entity.gamemap.tiles[action.target_xy]["walkable"]:
+      
+    if not self.engine.game_map.tiles[action.target_xy]["walkable"]:
       raise self.engine.exceptions.Impossible("You can't teleport to a location you can't walk on!")
-    dx = action.target_xy[0] - entity.x
-    dy = action.target_xy[1] - entity.y
-    distance = max(abs(dx), abs(dy))
-    if distance > 10:
+
+    if entity.distance(*xy) > self.range:
       raise self.engine.exceptions.Impossible("You can't teleport more than 10 tiles away!")
     self.engine.message_log.add_message(
       text=f"You feel your very being evaporate as you are teleported!",
@@ -122,8 +138,9 @@ class TeleportConsumable(Consumable):
     self.consume()
 
 class ConfusionConsumable(Consumable):
-  def __init__(self, turns:int):
+  def __init__(self, turns:int, range:int) -> None:
     self.turns = turns
+    self.range = range
   
   def get_action(self, entity: Actor) -> event_handler.SingleTargetSelectHandler:
     self.engine.message_log.add_message(
@@ -131,26 +148,30 @@ class ConfusionConsumable(Consumable):
       fg=self.engine.colours['needs_target']
     )
     return event_handler.SingleTargetSelectHandler(
-      engine=self.engine, 
+      engine=self.engine,
+      item=self.parent,
       callback=lambda xy: actions.ItemAction(entity=entity,item=self.parent, target_xy=xy)
     )
   
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
     target = action.target_actor
+    xy = action.target_xy
 
     if not self.engine.game_map.seeing[action.target_xy]:
       raise self.engine.exceptions.Impossible("You can't target a location you can't see.")
     if not target:
-      raise self.engine.exceptions.Impossible("You must target an enemy.")
+      raise self.engine.exceptions.Impossible("There was no target selected.")
     if target is entity:
       raise self.engine.exceptions.Impossible("You can't confuse yourself!")
+
+    if entity.distance(*xy) > self.range:
+      raise self.engine.exceptions.Impossible("There are no targets in the radius.")
     
     self.engine.message_log.add_message(
       text=f"The eyes of the {target.name} go vacant, and it starts to stumble!",
       fg=self.engine.colours['status_effect_applied']
     )
-
     target.ai = ai.ConfusedAi(
       entity=target,
       prev_ai=target.ai,
@@ -170,7 +191,7 @@ class FireballDamageConsumable(Consumable):
     )
     return event_handler.AreaRangedSelectHandler(
       engine=self.engine, 
-      radius=self.radius,
+      item=self.parent,
       callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
     )
   

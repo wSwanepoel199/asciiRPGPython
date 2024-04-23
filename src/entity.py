@@ -96,7 +96,10 @@ class Entity:
     gamemap.entities.add(self)
   
   def distance(self, x:int, y:int) -> float:
-    return math.sqrt((x-self.x)**2+(y-self.y)**2)
+    dx = x - self.x
+    dy = y - self.y
+    return max(abs(dx), abs(dy))
+    # return math.sqrt((x-self.x)**2+(y-self.y)**2)
 
 class Actor(Entity):
   def __init__(

@@ -48,6 +48,11 @@ class Engine:
     # If a tile is "seeing" it should be added to "seen".
     self.game_map.seen |= self.game_map.seeing
 
+  def handle_deaths(self) -> None:
+    for entity in self.game_map.actors:
+      if entity.ai and entity.fighter.HP <= 0:
+        entity.fighter.die()
+
   def save_as(self, filename: str) -> None:
     save_data = lzma.compress(data=pickle.dumps(obj=self))
     with open(file=filename, mode="wb") as f:

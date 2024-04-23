@@ -41,5 +41,9 @@ tile_types = {
     transparent=False, 
     dark=(ord("#"), (100, 100, 100), (10, 10, 10)), 
     light=(ord("#"), (255, 255, 255), (0, 0, 0))),
-  "mapfill": new_tile(walkable=True, transparent=True, dark=(ord(" "), (255, 255, 255), (0, 0, 1)), light=(ord(" "), (255, 255, 255), (0, 0, 1))),
+  "mapfill": new_tile(
+    walkable=False, 
+    transparent=True, 
+    dark=(ord(" "), (255, 255, 255), (0, 0, 1)), 
+    light=(ord(" "), (255, 255, 255), (0, 0, 1))),
 }

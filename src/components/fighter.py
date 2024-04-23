@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 from src.components.base_component import BaseComponent
 
@@ -23,13 +23,14 @@ class Fighter(BaseComponent):
   def HP(self, value: int) -> None:
     self._HP = max(0, min(value, self.MAX_HP))
 
-  def die(self) -> list:
+  def die(self) -> None:
     if self.engine.player is self.parent:
       death_message = "YOU DIED"
       death_message_colour = self.engine.colours['player_dead']
     else:
       death_message = f"The {self.parent.name} has died"
       death_message_colour = self.engine.colours['enemy_dead']
+
     self.parent.char = "%"
     self.parent.entity_type = "OBJECT"
     self.parent.colour = (191,0,0)

@@ -64,12 +64,12 @@ ActionOrHandler = Union[action.Action, "BaseEventHandler"]
 class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
   def __init__(self):
     self.console = None,
-    self.colours = None
+    self.colours = None,
   def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
     state = self.dispatch(event=event)
     if isinstance(state, BaseEventHandler):
       return state
-    assert( not isinstance(state, action.Action), f"{self!r} can not handle actions.")
+    assert not isinstance(state, action.Action), f"{self!r} can not handle actions."
     return self
 
   def on_render(self, console: tcod.console.Console) -> None:
@@ -119,15 +119,18 @@ class EventHandler(BaseEventHandler):
       return False
     try:
       action.perform()
+      self.engine.handle_deaths()
     except self.engine.exceptions.Impossible as exc:
       self.engine.message_log.add_message(
         text=exc.args[0],
         fg=self.engine.colours['impossible']
       )
       return False
-    
+
     self.engine.handle_enemy_turn()
     self.engine.update_fov()
+    self.engine.handle_deaths()
+
     return True
 
 
@@ -451,12 +454,41 @@ class HistoryViewer(EventHandler):
 
 class SingleTargetSelectHandler(SelectIndexHandler):
   def __init__(
-    self, 
-    engine: Engine, 
-    callback: Callable[[Tuple[int,int]], Optional[action.Action]]
+    self,
+    engine: Engine,
+    callback: Callable[[Tuple[int,int]], Optional[action.Action]],
+    item: Item,
   ):
     super().__init__(engine=engine)
+    self.item = item
     self.callback = callback
+
+  def on_render(self, console: tcod.console.Console = None) -> None:
+    if console is None:
+      console = self.engine.console
+    super().on_render(console=console)
+    if self.item.consumable.range:
+      radius = self.item.consumable.range
+    else:
+      radius = 8
+
+    x = self.engine.player.x
+    y = self.engine.player.y
+
+    if self.item:
+      colour = self.item.colour
+    else:
+      colour = self.engine.colours['red']
+
+    self.engine.console.draw_frame(
+      x=x - radius - 1,
+      y=y - radius - 1,
+      width= radius * 2 + 3,
+      height= radius * 2 + 3,
+      fg=colour,
+      clear=False
+    )
+
   def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
     return self.callback((x,y))
 
@@ -464,25 +496,29 @@ class AreaRangedSelectHandler(SelectIndexHandler):
   def __init__(
     self, 
     engine: action.Engine,
-    radius: int,
+    item: Item,
     callback: Callable[[Tuple[int,int]], Optional[action.Action]]
   ):
     super().__init__(engine=engine)
-    self.radius = radius
+    self.item = item
     self.callback = callback
   def on_render(self, console: tcod.console.Console = None) -> None:
     if console is None:
       console = self.engine.console
-
     super().on_render(console=console)
-    
+
+    if self.item.consumable.radius:
+      radius = self.item.consumable.radius
+    else:
+      radius = 8
+
     x,y = self.engine.mouse_location
 
     self.engine.console.draw_frame(
-      x=x - self.radius - 1,
-      y=y - self.radius - 1,
-      width=self.radius ** 2,
-      height=self.radius ** 2,
+      x=x - radius - 1,
+      y=y - radius - 1,
+      width=radius * 2 + 3,
+      height=radius * 2 + 3,
       fg=self.engine.colours['red'],
       clear=False
     )

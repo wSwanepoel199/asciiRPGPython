@@ -1,5 +1,6 @@
 from __future__ import annotations
 import random, tcod
+import src.factory.item_factory as item_factory
 from typing import Tuple, Iterator, List, TYPE_CHECKING
 from src.map import GameMap
 if TYPE_CHECKING:
@@ -52,6 +53,15 @@ def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,
   for x,y in tcod.los.bresenham(start=(corner_x, corner_y), end=(x2, y2)).tolist():
     yield x, y
 
+available_items = {
+  "Healing Potion" : item_factory.healing_potion,
+  "Cure Wounds Scroll": item_factory.cure_wounds_scroll,
+  "Lightning Bolt Scroll" : item_factory.lightning_bolt_scroll,
+  "Confusion Scroll": item_factory.confusion_scroll,
+  "Teleport Scroll": item_factory.teleport_scroll,
+  "Fireball Scroll": item_factory.fireball_scroll
+}
+
 def genDungeon(
     *,
     w: int,
@@ -93,6 +103,10 @@ def genDungeon(
 
     if len(rooms) == 0:
       player.place(*new_room.center, gamemap=dungeon)
+      x = new_room.center[0]
+      y = new_room.center[1]
+      for item in available_items.values():
+        item.spawn(gamemap=dungeon, x=x, y=y)
     else:
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]

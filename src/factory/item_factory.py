@@ -32,7 +32,7 @@ confusion_scroll = Item(
   char=constants.scroll_char,
   colour=(207, 63, 255),
   name="Scroll of Confusion",
-  consumable=consumable.ConfusionConsumable(turns=10)
+  consumable=consumable.ConfusionConsumable(turns=10, range=4)
 )
 
 teleport_scroll = Item(
@@ -40,7 +40,7 @@ teleport_scroll = Item(
   char=constants.scroll_char,
   colour=(224, 63, 224),
   name="Scroll of Teleportation",
-  consumable=consumable.TeleportConsumable()
+  consumable=consumable.TeleportConsumable(range=10)
 )
 
 fireball_scroll = Item(

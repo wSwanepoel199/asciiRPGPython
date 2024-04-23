@@ -13,6 +13,11 @@ if TYPE_CHECKING:
   from src.entity import Actor
 
 class BaseAi(Action):
+  def __init__(self, entity: Actor):
+    super().__init__(entity=entity)
+    # if(self.entity.fighter.HP <= 0):
+    #   self.entity.fighter.die()
+    #   return
 
   def perform(self) -> None:
     raise NotImplementedError()
@@ -53,11 +58,9 @@ class HostileAi(BaseAi):
     self.path: List[Tuple[int,int]] = []
     self.memory = 0
     self.last_seen = (self.entity.x, self.entity.y)
-  
+
   def perform(self) -> None:
-    if(self.entity.fighter.HP <= 0):
-      self.entity.fighter.die()
-      return
+
 
     target = self.engine.player
     dx = 0
