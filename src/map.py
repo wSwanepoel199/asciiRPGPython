@@ -292,33 +292,33 @@ class GameMap:
       y: int,
       width:int,
       height: int,
-      columns: int, 
-      rows: int, 
+      # columns: int, 
+      # rows: int, 
       map_type: str = "openworld", 
       entities: Iterable[Entity] = ()
     ) -> None:
     self.x = x
     self.y = y
     self.engine = engine
-    self.width = width
+    self.width = width-min((width // 4), 55)
     self.height = height
-    self.columns = columns
-    self.rows = rows
-    self.offset = (width - columns)//2
+    # self.columns = self.width
+    # self.rows = rows
+    self.offset = (width - self.columns)//2
     self.map_type = map_type
     self.tile_types = tile_types.tile_types
     self.seeing = np.full(
-      shape=(columns, rows), 
+      shape=(self.columns, self.rows), 
       fill_value=False, 
       order="F"
     )
     self.seen = np.full(
-      shape=(columns, rows), 
+      shape=(self.columns, self.rows), 
       fill_value=False, 
       order="F"
     )
     self.entities = set(entities)
-    self.tiles = np.full(shape=(columns, rows), fill_value=self.tile_types["mapfill"], order="F")
+    self.tiles = np.full(shape=(self.columns, self.rows), fill_value=self.tile_types["mapfill"], order="F")
     self.console = None
     # match map_type:
     #   # case "dungeon":
@@ -346,6 +346,12 @@ class GameMap:
   @property
   def player(self) -> Actor:
     return self.engine.player
+  @property
+  def columns(self) -> int:
+    return min(self.width, self.height-2)
+  @property
+  def rows(self) -> int:
+    return min(self.width, self.height-2)
   def get_blocking_entity(self, x:int, y:int) -> Optional[Entity]:
     for entity in self.entities:
       if (
@@ -374,11 +380,18 @@ class GameMap:
 
     ╔ ╗ ╚ ╝ ╠ ╣ ║ ╩ ╬ ╦ ═
     """
-    self.console = tcod.console.Console(
-      width=self.columns,
-      height=self.rows,
-      order="F"
-    )
+    if not self.console:
+      self.console = self.engine.context.new_console(
+        min_columns=self.columns,
+        min_rows=self.rows,
+        order="F",
+        magnification=1
+      )
+    # tcod.console.Console(
+    #   width=self.columns,
+    #   height=self.rows,
+    #   order="F"
+    # )
 
     self.console.rgb[0:self.columns, 0:self.rows] = np.select(
       condlist=[self.seeing, self.seen],

@@ -50,6 +50,8 @@ class MessageLog:
     )
   @staticmethod
   def wrap(string:str, width:int) -> Iterable[str]:
+    if width < 1:
+      return
     for line in string.splitlines():
       yield from textwrap.wrap(
         text=line, width=width, expand_tabs=True)

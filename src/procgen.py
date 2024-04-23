@@ -84,8 +84,8 @@ def genDungeon(
     y=0,
     width=width, 
     height=height, 
-    columns=columns,
-    rows=rows,
+    # columns=columns,
+    # rows=rows,
     map_type="dungeon", 
     entities=[player]
   )
@@ -121,14 +121,14 @@ def genDungeon(
 
   i = dungeon.y
   j = dungeon.x
-  while i < rows-dungeon.y:
-    if i+1 >= rows-dungeon.y:
+  while i < dungeon.rows-dungeon.y:
+    if i+1 >= dungeon.rows-dungeon.y:
       break
-    while j < columns-dungeon.x:
+    while j < dungeon.columns-dungeon.x:
       if dungeon.tiles[j,i] == dungeon.tile_types["mapfill"] or dungeon.tiles[j,i] == dungeon.tile_types["wall"] or not dungeon.tiles[j,i]:
         j += 1
         continue
-      if j+1 >= columns-dungeon.x:
+      if j+1 >= dungeon.columns-dungeon.x:
         break
       dungeon.placeWall(x=j,y=i,dungeon=dungeon)
       j += 1

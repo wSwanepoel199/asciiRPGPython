@@ -4,6 +4,7 @@ from typing import Optional, TYPE_CHECKING, Callable, Tuple, Union
 
 import tcod, os
 import tcod.constants
+from tcod.event import WindowResized
 
 import src.actions as action
 
@@ -72,6 +73,9 @@ class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
     assert not isinstance(state, action.Action), f"{self!r} can not handle actions."
     return self
 
+  def ev_windowresized(self, event: tcod.event.WindowResized) -> None:
+    return self
+
   def on_render(self, console: tcod.console.Console) -> None:
     raise NotImplementedError()
 
@@ -137,6 +141,13 @@ class EventHandler(BaseEventHandler):
   def ev_mousemotion(self, event: tcod.event.MouseMotion) -> None:
     if self.engine.game_map.in_bounds(x=event.tile.x, y=event.tile.y):
       self.engine.mouse_location = event.tile.x, event.tile.y
+
+  def ev_windowresized(self, event: tcod.event.WindowResized) -> None:
+    print("Resized")
+    print(self.engine.console.width, self.engine.console.height, self.engine.game_map.width, self.engine.game_map.height)
+    
+    self.engine.game_map.console = None
+    self.on_render(console=self.engine.console)
 
   def on_render(self, console: tcod.console.Console) -> None:
     self.engine.game_map.render(console=console)

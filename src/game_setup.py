@@ -13,7 +13,6 @@ from src.utils.colour import loadColours
 
 def new_game(title:str, width:int, height:int, map_max_rooms:int, room_min_size:int, room_max_size:int, max_enemies:int, max_items:int) -> None:
   """Start a new game."""
-  width = width-min((width // 4), 55)
   map_width = width
   map_height = height-2
   squareMapDimMin = min(map_width, map_height)

@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Tuple
 import tcod, traceback, lzma, pickle
 import tcod.constants
-import tcod.render
 from src.utils.colour import loadColours
 from src.message import MessageLog
 import src.utils.exceptions as exceptions
@@ -60,6 +59,8 @@ class Engine:
   def save_as(self, filename: str) -> None:
     if not isinstance(self.event_handler, event_handler.GameOverEventHandler):
       self.event_handler = event_handler.MainGameEventHandler(engine=self)
+    if self.context:
+      self.context = None
     save_data = lzma.compress(data=pickle.dumps(obj=self))
     with open(file=filename, mode="wb") as f:
       f.write(save_data)
@@ -191,6 +192,7 @@ class Engine:
         # rows=rows,
         tileset=tileset,
         title=title,
+        sdl_window_flags=tcod.context.SDL_WINDOW_RESIZABLE,
       )
     return self.context
   def genConsole(self, console: Optional[tcod.console.Console] = None, width:int=0, height:int=0 ) -> tcod.console.Console:
@@ -325,11 +327,11 @@ class Engine:
         return
   
   def toggle_fullscreen(self, context: tcod.context.Context) -> None:
+    """Toggle a context window between fullscreen and windowed modes."""
     window = context.sdl_window
-
     if not window:
-      return
+        return
     if window.fullscreen:
-      window.fullscreen = False
+        window.fullscreen = False
     else:
-      window.fullscreen = tcod.sdl.video.WindowFlags.FULLSCREEN_DESKTOP
+        window.fullscreen = tcod.context.SDL_WINDOW_FULLSCREEN_DESKTOP

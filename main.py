@@ -76,13 +76,16 @@ def main():
   resolution425 = [4,2.5]
   width = 1600
   height = round(width // resolution169[0] * resolution169[1])
-  columns = 80
+  columns = 800
   rows= round(columns // resolution425[0] * resolution425[1])
   
 
   tileset = tcod.tileset.load_tilesheet(
     # path="./src/assets/dejavu10x10_gs_tc.png",
-    path="./src/assets/rexpaint_cp437_10x10.png",
+    # path="./src/assets/rexpaint_cp437_10x10.png",
+    path="./src/assets/Cheepicus_15x15.png",
+    # path="./src/assets/Aesomatica_16x16.png",
+    # path="./src/assets/Runeset_24x24.png",
     columns=16, rows=16,
     charmap=tcod.tileset.CHARMAP_CP437
   )
@@ -101,20 +104,24 @@ def main():
 
   handler: event_handler.BaseEventHandler = game_setup.MainMenu()
   
-  console: tcod.console.Console = Engine().genConsole(
-    console=context.new_console(
-    magnification=1,
-    order="F"
-  ))
+  
 
   try:
     while True:
+      console: tcod.console.Console = Engine().genConsole(
+        console=context.new_console(
+        magnification=1,
+        order="F"
+      ))
+      console.print_box(0, 0, console.width, console.height, "Hello world")
       console.clear()
       if isinstance(handler, event_handler.EventHandler):
         handler.engine.event_handler = handler
+        handler.engine.context = context
+        handler.engine.console = console
 
       handler.on_render(console=console)
-      context.present(console=console, integer_scaling=1)
+      context.present(console=console, integer_scaling=True)
       try:
         for event in tcod.event.wait():
           context.convert_event(event=event)
