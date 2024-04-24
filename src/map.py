@@ -374,19 +374,20 @@ class GameMap:
 
     ╔ ╗ ╚ ╝ ╠ ╣ ║ ╩ ╬ ╦ ═
     """
-    if not self.console:
-      self.console = tcod.console.Console(
-        width=self.width,
-        height=self.height,
-        order="F"
-      )
-    # tcod.console.Console(
-    #   width=self.columns,
-    #   height=self.rows,
+    # self.console = console
+    # if not self.console:
+    # self.console = self.engine.context.new_console(
+    #   min_columns=self.columns,
+    #   min_rows=self.rows,
     #   order="F"
     # )
-    self.xoffset = (self.console.width - self.columns)//2
-    self.yoffset = (self.console.height - self.rows)//2
+    self.console = tcod.console.Console(
+      width=self.columns,
+      height=self.rows,
+      order="F"
+    )
+    self.xoffset = (console.width - self.engine.side_console - self.console.width)//2
+    self.yoffset = (console.height - self.console.height)//2
     
     self.console.rgb[0:self.columns, 0:self.rows] = np.select(
       condlist=[self.seeing, self.seen],
@@ -407,16 +408,16 @@ class GameMap:
       dest=console,
       dest_x=0+self.xoffset,
       dest_y=0+self.yoffset,
-      # src_x=self.x,
-      # src_y=self.y,
+      src_x=0,
+      src_y=0,
       width=self.console.width,
       height=self.console.height
     )
     console.draw_frame(
       x=0,
       y=0,
-      width=self.console.width,
-      height=self.console.height,
+      width=console.width-self.engine.side_console,
+      height=console.height,
       clear= False,
       fg=self.engine.colours['white'],
       decoration="╔═╗║ ║╚═╝"

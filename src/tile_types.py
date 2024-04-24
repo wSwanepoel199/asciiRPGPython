@@ -29,8 +29,9 @@ def new_tile(
   """Helper Function for defining individual tile types."""
   return np.array(object=(walkable, transparent, dark, light), dtype=tile_dt)
 # 'shroud': np.array(object=(ord(" "), (255, 255, 255), (0, 0, 0)), dtype=graphic_dt),
+# 'shroud': np.array(object=(ord(" "), (200, 200, 200), (100, 100, 100)), dtype=graphic_dt),
 tile_types = {
-  'shroud': np.array(object=(ord(" "), (200, 200, 200), (100, 100, 100)), dtype=graphic_dt),
+  'shroud': np.array(object=(ord(" "), (255, 255, 255), (0, 0, 0)), dtype=graphic_dt),
   'floor': new_tile(
     walkable=True, 
     transparent=True, 
