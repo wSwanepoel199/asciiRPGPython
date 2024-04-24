@@ -292,18 +292,18 @@ class GameMap:
       y: int,
       width:int,
       height: int,
-      # columns: int, 
-      # rows: int, 
+      columns: int, 
+      rows: int, 
       map_type: str = "openworld", 
       entities: Iterable[Entity] = ()
     ) -> None:
     self.x = x
     self.y = y
     self.engine = engine
-    self.width = width-min((width // 4), 55)
+    self.width = width
     self.height = height
-    # self.columns = self.width
-    # self.rows = rows
+    self.columns = columns
+    self.rows = rows
     self.offset = (width - self.columns)//2
     self.map_type = map_type
     self.tile_types = tile_types.tile_types
@@ -346,12 +346,6 @@ class GameMap:
   @property
   def player(self) -> Actor:
     return self.engine.player
-  @property
-  def columns(self) -> int:
-    return min(self.width, self.height-2)
-  @property
-  def rows(self) -> int:
-    return min(self.width, self.height-2)
   def get_blocking_entity(self, x:int, y:int) -> Optional[Entity]:
     for entity in self.entities:
       if (
@@ -381,18 +375,18 @@ class GameMap:
     ╔ ╗ ╚ ╝ ╠ ╣ ║ ╩ ╬ ╦ ═
     """
     if not self.console:
-      self.console = self.engine.context.new_console(
-        min_columns=self.columns,
-        min_rows=self.rows,
-        order="F",
-        magnification=1
+      self.console = tcod.console.Console(
+        width=self.width,
+        height=self.height,
+        order="F"
       )
     # tcod.console.Console(
     #   width=self.columns,
     #   height=self.rows,
     #   order="F"
     # )
-
+    self.xoffset = (self.console.width - self.columns)//2
+    self.yoffset = (self.console.height - self.rows)//2
     self.console.rgb[0:self.columns, 0:self.rows] = np.select(
       condlist=[self.seeing, self.seen],
       choicelist=[self.tiles["light"], self.tiles["dark"]],
@@ -414,17 +408,17 @@ class GameMap:
     self.console.blit(
       dest=console,
       dest_x=0+self.offset,
-      dest_y=0+1,
+      dest_y=0+self.yoffset,
       # src_x=self.x,
       # src_y=self.y,
-      width=self.columns,
-      height=self.rows
+      width=self.console.width,
+      height=self.console.height
     )
     console.draw_frame(
       x=0,
       y=0,
-      width=self.width,
-      height=self.height,
+      width=self.console.width,
+      height=self.console.height,
       clear= False,
       fg=self.engine.colours['white'],
       decoration="╔═╗║ ║╚═╝"

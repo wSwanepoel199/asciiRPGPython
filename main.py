@@ -76,7 +76,7 @@ def main():
   resolution425 = [4,2.5]
   width = 1600
   height = round(width // resolution169[0] * resolution169[1])
-  columns = 800
+  columns = 80
   rows= round(columns // resolution425[0] * resolution425[1])
   
 
@@ -90,58 +90,71 @@ def main():
     charmap=tcod.tileset.CHARMAP_CP437
   )
   title = "Rogue But Worse"
-
-  context: tcod.context.Context = Engine().genContext(
-    width= width,
-    height= height,
-    columns= columns,
-    rows= rows,
-    tileset=tileset,
-    title=title,
-    vsync=True,
-  )
+  tcod.tileset.procedural_block_elements(tileset=tileset)
+  # context: tcod.context.Context = Engine().genContext(
+  #   width= width,
+  #   height= height,
+  #   columns= columns,
+  #   rows= rows,
+  #   tileset=tileset,
+  #   title=title,
+  #   vsync=True,
+  # )
   # context.recommended_console_size()
 
-  handler: event_handler.BaseEventHandler = game_setup.MainMenu()
-  
-  
 
-  try:
-    while True:
-      console: tcod.console.Console = Engine().genConsole(
-        console=context.new_console(
-        magnification=1,
-        order="F"
-      ))
-      console.print_box(0, 0, console.width, console.height, "Hello world")
-      console.clear()
-      if isinstance(handler, event_handler.EventHandler):
-        handler.engine.event_handler = handler
-        handler.engine.context = context
-        handler.engine.console = console
-
-      handler.on_render(console=console)
-      context.present(console=console, integer_scaling=True)
-      try:
-        for event in tcod.event.wait():
-          context.convert_event(event=event)
-          handler = handler.handle_events(event=event)
-      except Exception:
-        traceback.print_exc()
+  with tcod.context.new(
+    width=width,
+    height=height,
+    tileset=tileset,
+    title=title,
+  ) as context:
+    consoleSize = context.recommended_console_size()
+    handler: event_handler.BaseEventHandler = game_setup.MainMenu(columns=consoleSize[0], rows=consoleSize[1])
+    try:
+      while True:
+        console = context.new_console(
+          min_columns=columns, 
+          min_rows=rows, 
+          order="F"
+        )
+        console.clear()
         if isinstance(handler, event_handler.EventHandler):
-          handler.engine.message_log.add_message(
-            text=traceback.format_exc(), 
-            fg=handler.engine.colours['error']
+          handler.engine.event_handler = handler
+          handler.engine.context = context
+          handler.engine.console = console
+          handler.engine.game_map.width = console.width-min((console.width // 4), 55)
+          handler.engine.game_map.height = console.height
+          handler.engine.game_map.console = tcod.console.Console(
+            width=handler.engine.game_map.width,
+            height=handler.engine.game_map.height,
+            order='F'
           )
-  except exceptions.QuitWithoutSaving:
-    context.close()
-    pass
-  except SystemExit as exc:
-    save_game(handler=handler, filename="savegame.sav")
-    raise
-  except BaseException:
-    save_game(handler=handler, filename="savegame.sav")
-    raise
+          # handler.engine.game_map.width = console.width
+          # handler.engine.game_map.height = console.height-2
+
+        handler.on_render(console=console)
+        context.present(console=console, integer_scaling=True)
+        try:
+          for event in tcod.event.wait():
+            context.convert_event(event=event)
+            handler = handler.handle_events(event=event)
+        except Exception:
+          traceback.print_exc()
+          if isinstance(handler, event_handler.EventHandler):
+            handler.engine.message_log.add_message(
+              text=traceback.format_exc(), 
+              fg=handler.engine.colours['error']
+            )
+    except exceptions.QuitWithoutSaving:
+      context.close()
+      pass
+    except SystemExit as exc:
+      save_game(handler=handler, filename="savegame.sav")
+      raise
+    except BaseException:
+      save_game(handler=handler, filename="savegame.sav")
+      raise
 
 if __name__ == "__main__":
   main()

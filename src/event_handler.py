@@ -143,11 +143,11 @@ class EventHandler(BaseEventHandler):
       self.engine.mouse_location = event.tile.x, event.tile.y
 
   def ev_windowresized(self, event: tcod.event.WindowResized) -> None:
-    print("Resized")
-    print(self.engine.console.width, self.engine.console.height, self.engine.game_map.width, self.engine.game_map.height)
-    
-    self.engine.game_map.console = None
-    self.on_render(console=self.engine.console)
+    # print("Resized")
+    # print(self.engine.console.width, self.engine.console.height, self.engine.game_map.width, self.engine.game_map.height)
+    return self
+
+    # self.on_render(console=self.engine.console)
 
   def on_render(self, console: tcod.console.Console) -> None:
     self.engine.game_map.render(console=console)
@@ -302,13 +302,19 @@ class SelectIndexHandler(AskUserEventHandler):
     if console is None:
       console = self.engine.console
     super().on_render(console=console)
-    console = self.engine.game_map.console
-    x,y=self.engine.mouse_location
+    # console = tcod.console.Console(
+    #   width=self.engine.game_map.width,
+    #   height=self.engine.game_map.height,
+    #   order="F"
+    # )
+    # console = self.engine.game_map.console
+    x=self.engine.mouse_location[0]+ self.engine.game_map.xoffset
+    y=self.engine.mouse_location[1]+ self.engine.game_map.yoffset
     dist = self.engine.player.distance(*self.engine.mouse_location)
     if self.child and self.child.radius:
       radius = self.child.radius
-      playerX = self.engine.player.x
-      playerY = self.engine.player.y
+      playerX = self.engine.player.x + self.engine.game_map.xoffset
+      playerY = self.engine.player.y + self.engine.game_map.yoffset
       if playerX-radius > x or x > playerX+radius or playerY-radius > y or y > playerY+radius:
         console.rgb['fg'][x,y]=self.engine.colours['black']
         console.rgb['bg'][x,y]=self.engine.colours['red']
@@ -318,15 +324,15 @@ class SelectIndexHandler(AskUserEventHandler):
     console.rgb['fg'][x,y]=self.engine.colours['black']
     console.rgb['bg'][x,y]=self.engine.colours['white']
 
-    console.blit(
-      dest=self.engine.console,
-      dest_x=x+self.engine.game_map.offset,
-      dest_y=y+1,
-      src_x=x,
-      src_y=y,
-      width=dist,
-      height=dist,
-    )
+    # console.blit(
+    #   dest=self.engine.console,
+    #   dest_x=x+self.engine.game_map.xoffset,
+    #   dest_y=y+self.engine.game_map.yoffset,
+    #   src_x=x,
+    #   src_y=y,
+    #   width=1,
+    #   height=1,
+    # )
   
   def ev_keydown(self, event: tcod.event.KeyDown) ->  Optional[ActionOrHandler]:
     key = event.sym
@@ -499,19 +505,25 @@ class SingleTargetSelectHandler(SelectIndexHandler):
     self.item = item
     self.callback = callback
     self.radius = 8
+    self.child = self
 
   def on_render(self, console: tcod.console.Console = None) -> None:
     if console is None:
       console = self.engine.console
     super().on_render(console=console)
-    console = self.engine.game_map.console
+    # console = self.engine.game_map.console
+    # console = tcod.console.Console(
+    #   width=self.engine.game_map.width,
+    #   height=self.engine.game_map.height,
+    #   order="F"
+    # )
     if self.item.consumable.range:
       self.radius = self.item.consumable.range
     else:
       self.radius = 8
 
-    x = self.engine.player.x- self.radius - 1
-    y = self.engine.player.y- self.radius - 1
+    x = self.engine.player.x- self.radius - 1 + self.engine.game_map.xoffset
+    y = self.engine.player.y- self.radius - 1 + self.engine.game_map.yoffset
     diameter = self.radius * 2 + 3
 
     if self.item:
@@ -528,15 +540,15 @@ class SingleTargetSelectHandler(SelectIndexHandler):
       clear=False
     )
 
-    console.blit(
-      dest=self.engine.console,
-      dest_x=x+self.engine.game_map.offset,
-      dest_y=y+1,
-      src_x=x,
-      src_y=y,
-      width=diameter,
-      height=diameter
-    )
+    # console.blit(
+    #   dest=self.engine.console,
+    #   dest_x=x+self.engine.game_map.xoffset,
+    #   dest_y=y+self.engine.game_map.yoffset,
+    #   src_x=x,
+    #   src_y=y,
+    #   width=diameter,
+    #   height=diameter
+    # )
 
   def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
     return self.callback((x,y))
@@ -556,15 +568,20 @@ class AreaRangedSelectHandler(SelectIndexHandler):
     if console is None:
       console = self.engine.console
     super().on_render(console=console)
-    console = self.engine.game_map.console
+    # console = self.engine.game_map.console
+    # console = tcod.console.Console(
+    #   width=self.engine.game_map.width,
+    #   height=self.engine.game_map.height,
+    #   order="F"
+    # )
     if self.item.consumable.radius:
       self.radius = self.item.consumable.radius
     else:
       self.radius = 8
 
     x,y = self.engine.mouse_location
-    x = x - self.radius - 1
-    y = y - self.radius - 1
+    x = x - self.radius - 1 + self.engine.game_map.xoffset
+    y = y - self.radius - 1 + self.engine.game_map.yoffset
     diameter = self.radius * 2 + 3
     console.draw_frame(
       x=x,
@@ -575,15 +592,15 @@ class AreaRangedSelectHandler(SelectIndexHandler):
       clear=False
     )
 
-    console.blit(
-      dest=self.engine.console,
-      dest_x=x+self.engine.game_map.offset,
-      dest_y=y+1,
-      src_x=x,
-      src_y=y,
-      width=diameter,
-      height=diameter
-    )
+    # console.blit(
+    #   dest=self.engine.console,
+    #   dest_x=x+self.engine.game_map.xoffset,
+    #   dest_y=y+self.engine.game_map.yoffset,
+    #   src_x=x,
+    #   src_y=y,
+    #   width=diameter,
+    #   height=diameter
+    # )
   def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
     return self.callback((x,y))
 
@@ -604,12 +621,16 @@ class LineTargetSelectHandler(SelectIndexHandler):
     if console is None:
       console = self.engine.console
     super().on_render(console=console)
-    console = self.engine.game_map.console
+    # console = tcod.console.Console(
+    #   width=self.engine.game_map.width,
+    #   height=self.engine.game_map.height,
+    #   order="F"
+    # )
     if self.item.consumable.range:
       self.radius = self.item.consumable.range
 
-    x = self.engine.player.x- self.radius - 1
-    y = self.engine.player.y- self.radius - 1
+    x = self.engine.player.x- self.radius - 1 + self.engine.game_map.xoffset
+    y = self.engine.player.y- self.radius - 1 + self.engine.game_map.yoffset
     diameter = self.radius * 2 + 3
 
     if self.item:
@@ -626,47 +647,43 @@ class LineTargetSelectHandler(SelectIndexHandler):
       clear=False
     )
     radius = self.radius
-    playerX = self.engine.player.x
-    playerY = self.engine.player.y
-    mouseX = self.engine.mouse_location[0]
-    mouseY = self.engine.mouse_location[1]
-    if mouseX < playerX - radius - 1:
-      mouseX = playerX - radius - 1
-    if mouseY < playerY - radius - 1:
-      mouseY = playerY - radius - 1
-    if mouseX > playerX + radius + 1:
-      mouseX = playerX + radius + 1
-    if mouseY > playerY + radius + 1:
-      mouseY = playerY + radius + 1
-    self.engine.mouse_location = (mouseX, mouseY)
+    playerX = self.engine.player.x + self.engine.game_map.xoffset
+    playerY = self.engine.player.y + self.engine.game_map.yoffset
+    mouseX = self.engine.mouse_location[0] + self.engine.game_map.xoffset
+    mouseY = self.engine.mouse_location[1] + self.engine.game_map.yoffset
+    # if mouseX < playerX - radius - 1:
+    #   mouseX = playerX - radius - 1
+    # if mouseY < playerY - radius - 1:
+    #   mouseY = playerY - radius - 1
+    # if mouseX > playerX + radius + 1:
+    #   mouseX = playerX + radius + 1
+    # if mouseY > playerY + radius + 1:
+    #   mouseY = playerY + radius + 1
+    # self.engine.mouse_location = (mouseX, mouseY)
     
     line = tcod.los.bresenham(
       start=(playerX, playerY), 
-      end=self.engine.mouse_location
+      end=(mouseX, mouseY)
     ).tolist()
     
     for pointX,pointY in line:
       if playerX-radius > pointX or playerY-radius > pointY :
-        console.rgb['fg'][pointX,pointY]=self.engine.colours['white']
-        console.rgb['bg'][pointX,pointY]=self.engine.colours['black']
         self.valid = False
       elif pointX > playerX+radius or pointY > playerY+radius:
-        console.rgb['fg'][pointX,pointY]=self.engine.colours['white']
-        console.rgb['bg'][pointX,pointY]=self.engine.colours['black']
         self.valid = False
       else:
         console.rgb['fg'][pointX,pointY]=self.engine.colours['black']
         console.rgb['bg'][pointX,pointY]=self.item.colour
 
-    console.blit(
-      dest=self.engine.console,
-      dest_x=x+self.engine.game_map.offset,
-      dest_y=y+1,
-      src_x=x,
-      src_y=y,
-      width=diameter,
-      height=diameter
-    )
+    # console.blit(
+    #   dest=self.engine.console,
+    #   dest_x=x+self.engine.game_map.xoffset,
+    #   dest_y=y+self.engine.game_map.yoffset,
+    #   src_x=x,
+    #   src_y=y,
+    #   width=diameter,
+    #   height=diameter
+    # )
   def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
     return self.callback((x,y))
 

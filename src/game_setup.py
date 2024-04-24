@@ -11,11 +11,18 @@ from src.engine import Engine
 from src.procgen import genDungeon
 from src.utils.colour import loadColours
 
-def new_game(title:str, width:int, height:int, map_max_rooms:int, room_min_size:int, room_max_size:int, max_enemies:int, max_items:int) -> None:
+def new_game(
+    title:str, 
+    width:int, 
+    height:int, 
+    columns:int,
+    rows:int,
+    map_max_rooms:int, 
+    room_min_size:int, 
+    room_max_size:int, 
+    max_enemies:int, 
+    max_items:int) -> None:
   """Start a new game."""
-  map_width = width
-  map_height = height-2
-  squareMapDimMin = min(map_width, map_height)
 
   room_size_min = room_min_size
   room_size_max = room_max_size
@@ -36,8 +43,8 @@ def new_game(title:str, width:int, height:int, map_max_rooms:int, room_min_size:
     max_room_size=room_size_max,
     width= width,
     height= height,
-    columns=squareMapDimMin,
-    rows=squareMapDimMin,
+    columns=columns,
+    rows=rows,
     enemy_limit=room_max_enemy,
     item_limit=room_max_item,
     engine=engine
@@ -59,6 +66,9 @@ def load_game(filename: str) -> Engine:
 
 class MainMenu(event_handler.BaseEventHandler):
   """Handle the main menu rendering and input."""
+  def __init__(self, columns: int, rows:int) -> None:
+    self.columns = columns
+    self.rows = rows
   def on_render(self, console: tcod.console.Console) -> None:
     # console = self.engine.console
     self.console = console
@@ -108,10 +118,13 @@ class MainMenu(event_handler.BaseEventHandler):
   ) -> Optional[event_handler.BaseEventHandler]:
     match event.sym:
       case tcod.event.KeySym.n:
+        squaredMap = min(self.columns, self.rows-2)
         return event_handler.MainGameEventHandler(engine=new_game(
           title="Rogue But Worse",
-          width=self.console.width,
+          width=self.console.width-min((self.console.width // 4), 55),
           height=self.console.height,
+          columns=squaredMap,
+          rows=squaredMap,
           map_max_rooms=30, 
           room_min_size=6, 
           room_max_size=10, 

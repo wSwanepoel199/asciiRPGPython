@@ -84,8 +84,8 @@ def genDungeon(
     y=0,
     width=width, 
     height=height, 
-    # columns=columns,
-    # rows=rows,
+    columns=columns,
+    rows=rows,
     map_type="dungeon", 
     entities=[player]
   )
