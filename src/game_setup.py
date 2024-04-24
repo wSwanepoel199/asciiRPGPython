@@ -8,7 +8,7 @@ from typing import Optional
 import src.factory.actor_factory as actor_factory
 import src.event_handler as event_handler
 from src.engine import Engine
-from src.procgen import genDungeon
+from src.map import GameWorld
 from src.utils.colour import loadColours
 
 def new_game(
@@ -21,7 +21,8 @@ def new_game(
     room_min_size:int, 
     room_max_size:int, 
     max_enemies:int, 
-    max_items:int) -> None:
+    max_items:int
+  ) -> None:
   """Start a new game."""
 
   room_size_min = room_min_size
@@ -37,18 +38,21 @@ def new_game(
 
   engine.title = title
 
-  engine.game_map = genDungeon(
-    room_limit=max_rooms,
-    min_room_size=room_size_min,
-    max_room_size=room_size_max,
+  engine.game_world = GameWorld(
+    engine=engine,
     width= width,
     height= height,
     columns=columns,
     rows=rows,
+    room_limit=max_rooms,
+    min_room_size=room_size_min,
+    max_room_size=room_size_max,
     enemy_limit=room_max_enemy,
     item_limit=room_max_item,
-    engine=engine
   )
+
+  engine.game_world.gen_floor()
+
   engine.update_fov()
 
   engine.message_log.add_message(

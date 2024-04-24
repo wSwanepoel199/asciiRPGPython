@@ -91,6 +91,8 @@ def genDungeon(
   )
   rooms: List[RecRoom] = []
 
+  center_of_last_room = (0, 0)
+
   for r in range(room_limit):
     room_width = random.randint(a=min_room_size, b=max_room_size)
     room_height = random.randint(a=min_room_size, b=max_room_size)
@@ -115,7 +117,12 @@ def genDungeon(
     else:
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+      center_of_last_room = new_room.center
       dungeon.place_entities(room=new_room, maximum_monsters=enemy_limit, maximum_items=item_limit)
+
+    dungeon.tiles[center_of_last_room] = dungeon.tile_types["stairs_down"]
+
+    dungeon.stairsdown = center_of_last_room
 
     rooms.append(new_room)
 

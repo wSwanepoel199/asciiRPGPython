@@ -9,10 +9,11 @@ import src.event_handler as event_handler
 
 if TYPE_CHECKING:
   from src.entity import Actor
-  from src.map import GameMap
+  from src.map import GameMap, GameWorld
 
 class Engine:
   game_map: GameMap
+  game_world: GameWorld
   def __init__(self, player: Actor = None) -> None:
     self.player = player
     self.title = None

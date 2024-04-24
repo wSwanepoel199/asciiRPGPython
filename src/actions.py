@@ -136,3 +136,28 @@ class BumpAction(DirectionalAction):
 class WaitAction(Action):
   def perform(self) -> None:
     pass
+
+class UseAction(Action):
+  def perform(self):
+    for entity in self.engine.game_map.entities - {self.entity}:
+      if (self.entity.x, self.entity.y) == self.engine.game_map.stairsdown:
+        UseStairsAction(entity=self.entity).perform()
+        self.engine.update_fov()
+        return
+      if not entity.x == self.entity.x and not entity.y == self.entity.y:
+        raise self.engine.exceptions.Impossible("There is nothing here to use.")
+      if entity.entity_type == "ITEM":
+        PickupAction(entity=self.entity).perform()
+        return
+
+
+class UseStairsAction(Action):
+  def perform(self) -> None:
+    if (self.entity.x, self.entity.y) == self.engine.game_map.stairsdown:
+      self.engine.game_world.gen_floor()
+      self.engine.message_log.add_message(
+        text="You descend the stairs unto unknown depths.",
+        fg=self.engine.colours['descend']
+      )
+    else:
+      raise self.engine.exceptions.Impossible("There are no stairs here.")

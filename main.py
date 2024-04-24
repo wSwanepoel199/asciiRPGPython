@@ -11,7 +11,6 @@ import tcod, traceback
 import src.event_handler as event_handler
 import src.game_setup as game_setup
 import src.utils.exceptions as exceptions
-from src.engine import Engine
 
 initialLoad = True
 
@@ -74,10 +73,11 @@ def save_game(handler: event_handler.BaseEventHandler, filename: str) -> None:
 def main():
   resolution169 = [16,9]
   resolution425 = [4,2.5]
-  width = 1600
+  width = 800
   height = round(width // resolution169[0] * resolution169[1])
   columns = 80
   rows= round(columns // resolution425[0] * resolution425[1])
+  FLAGS = tcod.context.SDL_WINDOW_RESIZABLE | tcod.context.SDL_WINDOW_MAXIMIZED
   
 
   tileset = tcod.tileset.load_tilesheet(
@@ -108,6 +108,7 @@ def main():
     height=height,
     tileset=tileset,
     title=title,
+    sdl_window_flags=FLAGS
   ) as context:
     consoleSize = context.recommended_console_size()
     handler: event_handler.BaseEventHandler = game_setup.MainMenu(columns=consoleSize[0], rows=consoleSize[1])

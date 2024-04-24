@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Iterator, Optional, Tuple, TYPE_CHECKING
+from typing import Iterable, Optional, TYPE_CHECKING
 
 import numpy as np
 import tcod, random
@@ -295,7 +295,7 @@ class GameMap:
       columns: int, 
       rows: int, 
       map_type: str = "openworld", 
-      entities: Iterable[Entity] = ()
+      entities: Iterable[Entity] = (),
     ) -> None:
     self.x = x
     self.y = y
@@ -304,7 +304,6 @@ class GameMap:
     self.height = height
     self.columns = columns
     self.rows = rows
-    self.offset = (width - self.columns)//2
     self.map_type = map_type
     self.tile_types = tile_types.tile_types
     self.seeing = np.full(
@@ -320,6 +319,7 @@ class GameMap:
     self.entities = set(entities)
     self.tiles = np.full(shape=(self.columns, self.rows), fill_value=self.tile_types["mapfill"], order="F")
     self.console = None
+    self.stairsdown = (0,0)
     # match map_type:
     #   # case "dungeon":
     #   #   self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["wall"], order="F")
@@ -387,6 +387,7 @@ class GameMap:
     # )
     self.xoffset = (self.console.width - self.columns)//2
     self.yoffset = (self.console.height - self.rows)//2
+    
     self.console.rgb[0:self.columns, 0:self.rows] = np.select(
       condlist=[self.seeing, self.seen],
       choicelist=[self.tiles["light"], self.tiles["dark"]],
@@ -401,13 +402,10 @@ class GameMap:
     for entity in objects + items + actors + player:
        if self.seeing[entity.x, entity.y]:
         self.console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
-    # for entity in self.entities:
-    #   if self.seeing[entity.x, entity.y]:
-    #     console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
     
     self.console.blit(
       dest=console,
-      dest_x=0+self.offset,
+      dest_x=0+self.xoffset,
       dest_y=0+self.yoffset,
       # src_x=self.x,
       # src_y=self.y,
@@ -497,19 +495,74 @@ class GameMap:
           available_items["Healing Potion"].spawn(gamemap=self, x=x, y=y)
 
   def placeWall(self, x:int, y:int, dungeon: GameMap) -> None:
-    if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
+    if dungeon.tiles[x+1,y] == dungeon.tile_types["mapfill"]:
       dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:
+    if dungeon.tiles[x+1,y-1] == dungeon.tile_types["mapfill"]:
       dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x,y-1] == dungeon.tile_types["floor"]:
+    if dungeon.tiles[x,y-1] == dungeon.tile_types["mapfill"]:
       dungeon.tiles[x,y-1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x-1,y-1] == dungeon.tile_types["floor"]:
+    if dungeon.tiles[x-1,y-1] == dungeon.tile_types["mapfill"]:
       dungeon.tiles[x-1,y-1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x-1,y] == dungeon.tile_types["floor"]:
+    if dungeon.tiles[x-1,y] == dungeon.tile_types["mapfill"]:
       dungeon.tiles[x-1,y] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x-1,y+1] == dungeon.tile_types["floor"]:
+    if dungeon.tiles[x-1,y+1] == dungeon.tile_types["mapfill"]:
       dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x,y+1] == dungeon.tile_types["floor"]:
+    if dungeon.tiles[x,y+1] == dungeon.tile_types["mapfill"]:
       dungeon.tiles[x,y+1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x+1,y+1] == dungeon.tile_types["floor"]:
+    if dungeon.tiles[x+1,y+1] == dungeon.tile_types["mapfill"]:
       dungeon.tiles[x+1,y+1] = dungeon.tile_types["wall"]
+
+class GameWorld:
+  """
+  Holds the settings for the GameMap, and generates new maps when moving down the stairs.
+  """
+
+  def __init__(
+    self,
+    *,
+    engine: Engine,
+    width: int,
+    height: int,
+    columns: int,
+    rows: int,
+    room_limit: int,
+    min_room_size: int,
+    max_room_size: int,
+    enemy_limit: int,
+    item_limit: int,
+    current_floor: int = 0
+    ):
+    self.engine = engine
+
+    self.width=width
+    self.height=height
+    self.columns=columns
+    self.rows=rows
+
+    self.room_limit = room_limit
+
+    self.min_room_size = min_room_size
+    self.max_room_size = max_room_size
+
+    self.enemy_limit = enemy_limit
+    self.item_limit = item_limit
+
+    self.current_floor = current_floor
+  
+  def gen_floor(self) -> None:
+    from src.procgen import genDungeon
+
+    self.current_floor += 1
+
+    self.engine.game_map = genDungeon(
+      width=self.width,
+      height=self.height,
+      columns=self.columns,
+      rows=self.rows,
+      min_room_size=self.min_room_size,
+      max_room_size=self.min_room_size,
+      room_limit=self.room_limit,
+      enemy_limit=self.enemy_limit,
+      item_limit=self.item_limit,
+      engine=self.engine
+    )

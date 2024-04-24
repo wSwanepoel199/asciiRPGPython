@@ -4,7 +4,6 @@ from typing import Optional, TYPE_CHECKING, Callable, Tuple, Union
 
 import tcod, os
 import tcod.constants
-from tcod.event import WindowResized
 
 import src.actions as action
 
@@ -150,7 +149,7 @@ class EventHandler(BaseEventHandler):
     # self.on_render(console=self.engine.console)
 
   def on_render(self, console: tcod.console.Console) -> None:
-    self.engine.game_map.render(console=console)
+    # self.engine.game_map.render(console=console)
     self.engine.render(console=console)
 
 class AskUserEventHandler(EventHandler):
@@ -377,21 +376,11 @@ class LookHandler(SelectIndexHandler):
 class MainGameEventHandler(EventHandler):
   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
     performing_action: Optional[action.Action] = None
+   
     player = self.engine.player
-    # key = event.sym
-    # if key in MOVE_KEYS:
-    #   dx, dy = MOVE_KEYS[key]
-    #   performing_action = action.BumpAction(entity=player, dx=dx, dy=dy)
-    # elif key in WAIT_KEYS:
-    #   performing_action = action.WaitAction(entity=player)
-    # elif key == tcod.event.KeySym.ESCAPE:
-    #   performing_action = action.EscapeAction(entity=self.engine.player)
-    # elif key == tcod.event.KeySym.v:
-    #   self.engine.event_handler = HistoryViewer(engine=self.engine)
-    # elif key == tcod.event.KeySym.p:
-    #   performing_action = action.PickupAction(entity=player)
-    
+
     key = event.sym
+    modifier = event.mod
     match key:
       case tcod.event.KeySym.ESCAPE:
         # performing_action = action.EscapeAction(entity=self.engine.player)
@@ -405,13 +394,15 @@ class MainGameEventHandler(EventHandler):
       case tcod.event.KeySym.x:
         return LookHandler(engine=self.engine)
       case tcod.event.KeySym.p:
-        performing_action = action.PickupAction(entity=player)
+        return action.PickupAction(entity=player)
       case _:
         if key in MOVE_KEYS:
           dx, dy = MOVE_KEYS[key]
-          performing_action = action.BumpAction(entity=player, dx=dx, dy=dy)
+          return action.BumpAction(entity=player, dx=dx, dy=dy)
         elif key in WAIT_KEYS:
-          performing_action = action.WaitAction(entity=player)
+          return action.WaitAction(entity=player)
+        elif key in CONFIRM_KEYS:
+          return action.UseAction(entity=player)
 
     return performing_action
 

@@ -10,7 +10,7 @@ player = Actor(
   colour=(255, 255, 255),
   name="Player",
   ai_cls=HostileAi,
-  fighter=Fighter(HP=30, ATK=5, DEF=2),
+  fighter=Fighter(HP=300, ATK=50, DEF=20),
   inventory=Inventory(capacity=16)
 )
 
