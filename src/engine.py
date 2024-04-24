@@ -77,12 +77,18 @@ class Engine:
       height=console.height
     )
 
+    self.render_dungeon_level(
+      dungeon_level=self.game_world.current_floor,
+      x = self.game_map.width+1,
+      y = 1,
+    )
+
     if self.side_console > 20:
       bar_width = 20
     else:
       bar_width = self.side_console-4
     
-    y = 1
+    y = 3
 
     # Display Player HP
     if self.player.fighter.HP > 0:
@@ -327,12 +333,14 @@ class Engine:
       if offset > height:
         return
   
-  def toggle_fullscreen(self, context: tcod.context.Context) -> None:
-    """Toggle a context window between fullscreen and windowed modes."""
-    window = context.sdl_window
-    if not window:
-        return
-    if window.fullscreen:
-        window.fullscreen = False
-    else:
-        window.fullscreen = tcod.context.SDL_WINDOW_FULLSCREEN_DESKTOP
+  def render_dungeon_level(
+      self,
+      dungeon_level: int,
+      x: int,
+      y: int
+  ) -> None:
+    """
+    Render the level the player is currently on, at the given location.
+    """
+
+    self.console.print(x=x, y=y, string=f"Dungeon level: {dungeon_level}")

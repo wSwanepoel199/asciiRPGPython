@@ -77,7 +77,6 @@ def main():
   height = round(width // resolution169[0] * resolution169[1])
   columns = 80
   rows= round(columns // resolution425[0] * resolution425[1])
-  FLAGS = tcod.context.SDL_WINDOW_RESIZABLE | tcod.context.SDL_WINDOW_MAXIMIZED
   
 
   tileset = tcod.tileset.load_tilesheet(
@@ -108,7 +107,6 @@ def main():
     height=height,
     tileset=tileset,
     title=title,
-    sdl_window_flags=FLAGS
   ) as context:
     consoleSize = context.recommended_console_size()
     handler: event_handler.BaseEventHandler = game_setup.MainMenu(columns=consoleSize[0], rows=consoleSize[1])
