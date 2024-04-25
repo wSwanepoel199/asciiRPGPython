@@ -19,9 +19,9 @@ max_monsters_by_floor = [
 ]
 
 available_enemies = {
-  0: [(actor_factory.goblin, 80)],
-  3: [(actor_factory.slime, 60)],
-  5: [(actor_factory.orc, 30)],
+  0: [(actor_factory.goblin, 70)],
+  3: [(actor_factory.slime, 80)],
+  5: [(actor_factory.orc, 50)],
   10: [(actor_factory.dragon, 10)],
 }
 

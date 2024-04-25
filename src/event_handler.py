@@ -294,7 +294,7 @@ class SelectIndexHandler(AskUserEventHandler):
     super().__init__(engine=engine)
     player = self.engine.player
     self.viewport = self.engine.game_map.get_viewport()
-    engine.mouse_location = (player.x - self.viewport[0][0], player.y-self.viewport[0][1])
+    engine.mouse_location = (player.x - self.viewport[0][0], player.y - self.viewport[0][1] )
     self.valid = True
     self.child = None
   
@@ -309,7 +309,7 @@ class SelectIndexHandler(AskUserEventHandler):
     # )
     # console = self.engine.game_map.console
     (x,y) = self.engine.mouse_location
-    dist = self.engine.player.distance(x+self.viewport[0][0],y+self.viewport[0][1])
+    dist = self.engine.player.distance(x + self.viewport[0][0],y + self.viewport[0][1])
     if self.child and self.child.radius:
       radius = self.child.radius
       # playerX = self.engine.player.x
@@ -351,8 +351,8 @@ class SelectIndexHandler(AskUserEventHandler):
           x+=dx*mod
           y+=dy*mod
           # clamp x and y to map size
-          x=max(1, min(x, self.engine.game_world.viewport_width-2))
-          y=max(1, min(y, self.engine.game_world.viewport_height-2))
+          x=max(1+self.viewport[0][0], min(x, self.viewport[1][0] - 1))
+          y=max(1+self.viewport[0][1], min(y, self.viewport[1][1] - 1))
           self.engine.mouse_location = x,y
           return None
         elif key in CONFIRM_KEYS and self.valid:

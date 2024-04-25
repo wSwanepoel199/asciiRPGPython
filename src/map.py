@@ -371,11 +371,13 @@ class GameMap:
       x_diff = end_x - self.width
       start_x -= x_diff
       end_x -= x_diff
+      # end_x = self.width
 
     if end_y > self.height:
       y_diff = end_y - self.height
       start_y -= y_diff
       end_y -= y_diff
+      # end_y = self.height
 
     return ((start_x, start_y), (end_x-1, end_y-1))
 
@@ -391,15 +393,17 @@ class GameMap:
     ╔ ╗ ╚ ╝ ╠ ╣ ║ ╩ ╬ ╦ ═
     """
     self.console = console
-    
     (x1,y1),(x2,y2) = self.get_viewport()
-    
+
+    viewport_width = self.engine.game_world.viewport_width
+    viewport_height = self.engine.game_world.viewport_height
+
     offset_x = slice(x1, x2+1)
     offset_y = slice(y1, y2+1)
-    
     viewport_tiles = self.tiles[offset_x, offset_y]
     viewport_visible = self.visible[offset_x, offset_y]
     viewport_explored = self.explored[offset_x, offset_y]
+
     # if not self.console:
     # self.console = self.engine.context.new_console(
     #   min_columns=self.columns,
@@ -415,13 +419,14 @@ class GameMap:
     # self.yoffset = (console.height - self.console.height)//2
     # self.xoffset = 0
     # self.yoffset = 0
+    
     # self.console.rgb[0:self.columns, 0:self.rows] = np.select(
     #   condlist=[self.visible, self.explored],
     #   choicelist=[self.tiles["light"], self.tiles["dark"]],
     #   default=self.tile_types['shroud'],
     # )
 
-    self.console.rgb[0:self.engine.game_world.viewport_width, 0:self.engine.game_world.viewport_height] = np.select(
+    self.console.rgb[0:viewport_width, 0:viewport_height] = np.select(
       condlist=[viewport_visible, viewport_explored],
       choicelist=[viewport_tiles["light"], viewport_tiles["dark"]],
       default=self.tile_types['shroud'],
@@ -435,8 +440,8 @@ class GameMap:
     for entity in objects + items + actors + player:
        if self.visible[entity.x, entity.y]:
         self.console.print(
-          x=entity.x-x1, 
-          y=entity.y-y1, 
+          x=entity.x-x1,
+          y=entity.y-y1,
           string=entity.char, 
           fg=entity.colour
         )
@@ -517,8 +522,8 @@ class GameWorld:
     self.current_floor += 1
 
     self.engine.game_map = genDungeon(
-      map_width=80,
-      map_height=50,
+      map_width=70 + self.current_floor * 10,
+      map_height=70 + self.current_floor * 10,
       min_room_size=self.min_room_size,
       max_room_size=self.min_room_size,
       room_limit=self.room_limit,

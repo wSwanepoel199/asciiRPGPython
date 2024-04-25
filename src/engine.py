@@ -158,7 +158,7 @@ class Engine:
         x=self.game_world.viewport_width+1,
         y=y,
         width=self.side_console-2,
-        height=5
+        height=self.console.height-round(number=self.console.height/3)*2-2-y
       )
 
 
@@ -305,12 +305,13 @@ class Engine:
     )
 
   def get_names_at_location(self, x:int, y:int) -> str:
+    viewport = self.game_map.get_viewport()
     if not self.game_map.in_bounds(x=x, y=y):
       return ""
     names = ", ".join(
       entity.name
       for entity in self.game_map.entities
-      if entity.x == x and entity.y == y
+      if entity.x == x+viewport[0][0] and entity.y == y+viewport[0][1]
     )
     return names
   
