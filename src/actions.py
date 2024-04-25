@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING
 
+import random
+
 from src.entity import Actor
 
 if TYPE_CHECKING:
@@ -103,7 +105,7 @@ class MeleeAction(DirectionalAction):
     self.entity['target'] = target
     if not target:
       raise self.engine.exceptions.Impossible("Nothing to attack.")
-    damage = self.entity.fighter.ATK - target.fighter.DEF
+    damage = random.randint(*self.entity.fighter.ATK) - target.fighter.DEF
     if self.entity is self.engine.player:
       attack_desc = f"{self.entity.name.capitalize()} attacked the {target.name}"
       attack_color = self.engine.colours['player_atk']

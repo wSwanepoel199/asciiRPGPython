@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class Fighter(BaseComponent):
   parent: Actor
-  def __init__(self, HP: int, ATK: int, DEF: int):
+  def __init__(self, HP: int, ATK: Tuple[int,int], DEF: int):
     self._HP = HP
     self.MAX_HP = HP
     self.ATK = ATK

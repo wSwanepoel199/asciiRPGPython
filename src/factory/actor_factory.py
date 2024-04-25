@@ -10,7 +10,7 @@ player = Actor(
   colour=(255, 255, 255),
   name="Player",
   ai_cls=HostileAi,
-  fighter=Fighter(HP=30, ATK=5, DEF=0),
+  fighter=Fighter(HP=30, ATK=[2,5], DEF=1),
   inventory=Inventory(capacity=16)
 )
 
@@ -21,7 +21,7 @@ goblin = Actor(
   name="Goblin",
   money=8,
   ai_cls=HostileAi,
-  fighter=Fighter(HP=15, ATK=3, DEF=0)
+  fighter=Fighter(HP=15, ATK=[1,3], DEF=0)
 )
 
 orc = Actor(
@@ -31,7 +31,7 @@ orc = Actor(
   name="Orc",
   ai_cls=HostileAi,
   money=18,
-  fighter=Fighter(HP=35, ATK=5, DEF=0)
+  fighter=Fighter(HP=35, ATK=[2,6], DEF=1)
 )
 
 slime = Actor(
@@ -41,7 +41,7 @@ slime = Actor(
   name="Slime",
   money=10,
   ai_cls=HostileAi,
-  fighter=Fighter(HP=30, ATK=2, DEF=0)
+  fighter=Fighter(HP=30, ATK=[2,3], DEF=2)
 )
 
 dragon = Actor(
@@ -51,5 +51,5 @@ dragon = Actor(
   name="Dragon",
   money=100,
   ai_cls=HostileAi,
-  fighter=Fighter(HP=100, ATK=8, DEF=0)
+  fighter=Fighter(HP=100, ATK=[5,10], DEF=5)
 )

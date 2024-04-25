@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
-import tcod
+from typing import Optional, TYPE_CHECKING, Tuple
+import tcod, random
 
 import src.actions as actions
 import src.components.ai as ai
@@ -28,13 +28,13 @@ class Consumable(BaseComponent):
       inventory.items.remove(entity)
 
 class HealingConsumable(Consumable):
-  def __init__(self, amount: int, on_use:str = ""):
+  def __init__(self, amount: Tuple[int,int], on_use:str = ""):
     self.amount = amount
     self.on_use = on_use
   
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
-    amount_recovered = entity.fighter.heal_damage(amount=self.amount)
+    amount_recovered = entity.fighter.heal_damage(amount=random.randint(*self.amount))
     if amount_recovered <= 0:
       raise self.engine.exceptions.Impossible("Your health is already full.")
 
@@ -51,7 +51,7 @@ class HealingConsumable(Consumable):
      
 
 class LineDamageConsumable(Consumable):
-  def __init__(self, damage: int, range:int, on_hit_message: str = ""):
+  def __init__(self, damage: Tuple[int,int], range:int, on_hit_message: str = ""):
     super().__init__()
     self.damage = damage
     self.range = range
@@ -88,11 +88,12 @@ class LineDamageConsumable(Consumable):
       #   self.on_hit = self.on_hit.split('<damage>')
       #   self.on_hit = self.on_hit[0] + str(self.damage) + self.on_hit[1]
       # else:
-      self.on_hit = f"A lighting bolt strikes the {target_actor.name} with a loud thunder, for {self.damage} damage!"
+      damage = random.randint(*self.damage)
+      self.on_hit = f"A lighting bolt strikes the {target_actor.name} with a loud thunder, for {damage} damage!"
       self.engine.message_log.add_message(
         text=self.on_hit
       )
-      target_actor.fighter.take_damage(amount=self.damage)
+      target_actor.fighter.take_damage(amount=damage)
       targets_hit = True
 
     if not targets_hit:
@@ -140,7 +141,7 @@ class TeleportConsumable(Consumable):
     self.consume()
 
 class ConfusionConsumable(Consumable):
-  def __init__(self, turns:int, range:int) -> None:
+  def __init__(self, turns: Tuple[int,int], range:int) -> None:
     super().__init__()
     self.turns = turns
     self.range = range
@@ -175,15 +176,16 @@ class ConfusionConsumable(Consumable):
       text=f"The eyes of the {target.name} go vacant, and it starts to stumble!",
       fg=self.engine.colours['status_effect_applied']
     )
+    duration = random.randint(*self.turns)
     target.ai = ai.ConfusedAi(
       entity=target,
       prev_ai=target.ai,
-      turns_remaining=self.turns
+      turns_remaining=duration
     )
     self.consume()
 
 class FireballDamageConsumable(Consumable):
-  def __init__(self, damage: int, radius: int):
+  def __init__(self, damage: Tuple[int,int], radius: int):
     super().__init__()
     self.damage = damage
     self.radius = radius
@@ -207,10 +209,11 @@ class FireballDamageConsumable(Consumable):
     targets_hit = False
     for actor in self.engine.game_map.actors:
       if actor.distance(*target_xy) <= self.radius:
+        damage = random.randint(*self.damage)
         self.engine.message_log.add_message(
-          text=f"The {actor.name} is engulfed in a fiery explosion, taking {self.damage} damage!",
+          text=f"The {actor.name} is engulfed in a fiery explosion, taking {damage} damage!",
         )
-        actor.fighter.take_damage(amount=self.damage)
+        actor.fighter.take_damage(amount=damage)
         targets_hit = True
     if not targets_hit:
       raise self.engine.exceptions.Impossible("There are no targets in the radius.")
