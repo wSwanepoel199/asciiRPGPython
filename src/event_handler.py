@@ -114,6 +114,8 @@ class EventHandler(BaseEventHandler):
       # A valid action was performed
       if not self.engine.player.alive:
         return GameOverEventHandler(engine=self.engine)
+      elif self.engine.player.level.can_level_up:
+        return LevelUpEventHandler(engine=self.engine)
       return MainGameEventHandler(engine=self.engine)
     return self
   
@@ -294,7 +296,7 @@ class SelectIndexHandler(AskUserEventHandler):
     super().__init__(engine=engine)
     player = self.engine.player
     self.viewport = self.engine.game_map.get_viewport()
-    engine.mouse_location = (player.x, player.y)
+    engine.mouse_location = (player.x, player.y )
     self.valid = True
     self.child = None
   
@@ -311,7 +313,7 @@ class SelectIndexHandler(AskUserEventHandler):
     (x,y) = self.engine.mouse_location
     x -= self.viewport[0][0]
     y -= self.viewport[0][1]
-    dist = self.engine.player.distance(x + self.viewport[0][0],y + self.viewport[0][1])
+    dist = self.engine.player.distance(x+self.viewport[0][0],y+self.viewport[0][1] )
     if self.child and self.child.radius:
       radius = self.child.radius
       # playerX = self.engine.player.x
@@ -324,7 +326,6 @@ class SelectIndexHandler(AskUserEventHandler):
     
     console.rgb['fg'][x,y]=self.engine.colours['black']
     console.rgb['bg'][x,y]=self.engine.colours['white']
-
     # console.blit(
     #   dest=self.engine.console,
     #   dest_x=x+self.engine.game_map.xoffset,
@@ -355,6 +356,8 @@ class SelectIndexHandler(AskUserEventHandler):
           # clamp x and y to map size
           x=max(1+self.viewport[0][0], min(x, self.viewport[1][0] - 1))
           y=max(1+self.viewport[0][1], min(y, self.viewport[1][1] - 1))
+          # x=max(1, min(x, self.engine.game_world.viewport_width - 2))
+          # y=max(1, min(y, self.engine.game_world.viewport_height - 2))
           self.engine.mouse_location = x,y
           return None
         elif key in CONFIRM_KEYS and self.valid:
@@ -670,3 +673,71 @@ class LineTargetSelectHandler(SelectIndexHandler):
     # y += v_y
     return self.callback((x, y))
 
+class LevelUpEventHandler(AskUserEventHandler):
+  TITLE = "Level Up!"
+
+  def on_render(self, console: tcod.console.Console) -> None:
+    super().on_render(console=console)
+
+    if self.engine.player.x <= 30:
+      x = 40
+    else:
+      x = 0
+    
+    console.draw_frame(
+      x=x,
+      y=0,
+      width=40,
+      height=8,
+      title=self.TITLE,
+      clear=True,
+      fg=(255, 255, 255),
+      bg=(0, 0, 0),
+    )
+
+    console.print(x=x+1, y=1, string="Congratulations! You level up!")
+    console.print(x=x+1, y=2, string="Select a stat to raise:")
+
+    console.print(
+      x=x + 1,
+      y=4,
+      string=f"1) Vitality (+20 HP, from {self.engine.player.fighter.MAX_HP})",
+    )
+    atk_average = (self.engine.player.fighter.ATK[0] + self.engine.player.fighter.ATK[1])/2
+    console.print(
+      x=x + 1,
+      y=5,
+      string=f"2) Strength (+1 attack, from {atk_average})",
+    )
+    
+    console.print(
+      x=x + 1,
+      y=6,
+      string=f"3) Constitution (+1 defense, from {self.engine.player.fighter.DEF})",
+    )
+  
+  def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+    player = self.engine.player
+    key = event.sym
+    match key:
+      case tcod.event.KeySym.N1:
+        player.level.increase_stat(stat='HP', value=20)
+      case tcod.event.KeySym.N2:
+        player.level.increase_stat(stat='ATK', value=1)
+      case tcod.event.KeySym.N3:
+        player.level.increase_stat(stat='DEF', value=1)
+      case _:
+        self.engine.message_log.add_message(
+          text="Invalid entry.", 
+          fg=self.engine.colours['invalid']
+        )
+        return None
+    return super().ev_keydown(event=event)
+  
+  def ev_mousebuttondown(
+    self, event: tcod.event.MouseButtonDown
+  ) -> Optional[ActionOrHandler]:
+    """
+    Don't allow the player to click to exit the menu, like normal.
+    """
+    return None

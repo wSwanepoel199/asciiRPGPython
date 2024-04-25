@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from src.components.ai import BaseAi
     from src.components.fighter import Fighter
     from src.components.consumable import Consumable
+    from src.components.level import Level
     from src.map import GameMap
 
 T = TypeVar("T", bound="Entity")
@@ -115,6 +116,7 @@ class Actor(Entity):
       ai_cls: Type[BaseAi],
       fighter: Fighter,
       inventory: Inventory = Inventory(capacity=0),
+      level: Level
     ) -> None:
     super().__init__(
       entity_type=entity_type,
@@ -132,6 +134,9 @@ class Actor(Entity):
 
     self.inventory = inventory
     self.inventory.parent = self
+
+    self.level = level
+    self.level.parent = self
 
   @property
   def alive(self)->bool:

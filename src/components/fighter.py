@@ -30,6 +30,7 @@ class Fighter(BaseComponent):
     else:
       death_message = f"The {self.parent.name} has died"
       death_message_colour = self.engine.colours['enemy_dead']
+      self.engine.player.level.add_xp(xp=self.parent.level.xp_given)
 
     self.parent.char = "%"
     self.parent.entity_type = "OBJECT"
@@ -39,6 +40,7 @@ class Fighter(BaseComponent):
     self.parent.name = f"Remains of {self.parent.name}"
 
     self.engine.message_log.add_message(text=death_message, fg=death_message_colour)
+
   
   def heal_damage(self, amount: int) -> int:
     if self.HP == self.MAX_HP:

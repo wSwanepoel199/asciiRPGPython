@@ -77,21 +77,23 @@ class Engine:
       height=console.height
     )
 
-    self.render_dungeon_level(
-      dungeon_level=self.game_world.current_floor,
-      x = self.game_world.viewport_width+1,
-      y = 1,
-    )
+    
 
     if self.side_console > 20:
       bar_width = 20
     else:
       bar_width = self.side_console-4
     
-    y = 3
+    y = 1
 
     # Display Player HP
     if self.player.fighter.HP > 0:
+      self.render_dungeon_level(
+        dungeon_level=self.game_world.current_floor,
+        x = self.game_world.viewport_width+1,
+        y = y,
+      )
+      y +=2
       console.print(
         x=self.game_world.viewport_width+1,
         y=y,
@@ -105,7 +107,25 @@ class Engine:
         max_val=self.player.fighter.MAX_HP,
         total_width=bar_width,
       )
+      y +=2
+      console.print(
+        x=self.game_world.viewport_width+1,
+        y=y,
+        string=f"Level {self.player.level.curr_level}"
+      )
       y +=1
+      self.render_bar(
+        bar_x=self.game_world.viewport_width+2,
+        bar_y=y,
+        bar_text=" XP",
+        curr_val=self.player.level.curr_xp,
+        max_val=self.player.level.xp_to_next_level,
+        total_width=bar_width,
+        flip=True,
+        bar_bg=self.colours['green'],
+        bar_fg=self.colours['black']
+      )
+      y +=2
     # Display Player Target HP
     if self.player.target and self.player.target.alive and self.player.alive:
       target_name= f"{self.player.target.name} HP: "
@@ -125,9 +145,9 @@ class Engine:
           max_val=self.player.target.fighter.MAX_HP,
           total_width=bar_width,
         )
-        y+=1
+        y+=2
       else:
-        y = 1
+        y = 3
         x = console.width
         console.print(
           x=x-len(target_name)-1,
@@ -142,7 +162,7 @@ class Engine:
           max_val=self.player.target.fighter.MAX_HP,
           total_width=bar_width,
         )
-        y+=1
+        y+=2
     # Display If Player is dead
     if self.player.fighter.HP <= 0:
       msg= "YOU DIED!"
@@ -218,15 +238,27 @@ class Engine:
     )
     self.context.change_tileset(tileset=tileset)
 
-  def render_bar(self, bar_x:int = 0, bar_y:int = 0, bar_text: str = '', curr_val: int = 0, max_val:int = 0, total_width:int = 0, flip:bool = False) -> None:
+  def render_bar(
+      self, 
+      bar_x:int = 0, 
+      bar_y:int = 0, 
+      bar_text: str = '', 
+      curr_val: int = 0, 
+      max_val:int = 0, 
+      total_width:int = 0, 
+      flip:bool = False,
+      bar_fg: Tuple[int,int,int] = (0, 96, 0),
+      bar_bg: Tuple[int,int,int] = (64, 16, 16),
+  ) -> None:
+
     if(flip):
       bar_width = total_width - int(float(curr_val) / max_val * total_width)
-      bar_bg = self.colours['bar_filled']
-      bar_fg = self.colours['bar_empty']
+      bar_bg = bar_fg
+      bar_fg = bar_bg
     else:
       bar_width = int(float(curr_val) / max_val * total_width)
-      bar_fg = self.colours['bar_filled']
-      bar_bg = self.colours['bar_empty']
+      bar_fg = bar_fg
+      bar_bg = bar_bg
     self.console.draw_rect(
       x=bar_x,
       y=bar_y,
@@ -305,19 +337,18 @@ class Engine:
     )
 
   def get_names_at_location(self, x:int, y:int) -> str:
-    viewport = self.game_map.get_viewport()
+ 
     if not self.game_map.in_bounds(x=x, y=y):
       return ""
     names = ", ".join(
       entity.name
       for entity in self.game_map.entities
-      if entity.x == x+viewport[0][0] and entity.y == y+viewport[0][1]
+      if entity.x == x and entity.y == y
     )
     return names
   
   def render_names_at_mouse(self, x:int, y:int, width:int, height:int) -> None:
     mouse_x,mouse_y = self.mouse_location
-
     names_at_mouse_local = self.get_names_at_location(x=mouse_x, y=mouse_y)
     # self.console.width - self.game_map.width
     offset = 0
