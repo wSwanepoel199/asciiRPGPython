@@ -351,8 +351,8 @@ class SelectIndexHandler(AskUserEventHandler):
           x+=dx*mod
           y+=dy*mod
           # clamp x and y to map size
-          x=max(0, min(x, self.engine.game_map.width-1))
-          y=max(0, min(y, self.engine.game_map.height-1))
+          x=max(1, min(x, self.engine.game_world.viewport_width-2))
+          y=max(1, min(y, self.engine.game_world.viewport_height-2))
           self.engine.mouse_location = x,y
           return None
         elif key in CONFIRM_KEYS and self.valid:

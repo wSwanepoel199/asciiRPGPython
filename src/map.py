@@ -450,15 +450,15 @@ class GameMap:
     #   width=self.console.width,
     #   height=self.console.height
     # )
-    # console.draw_frame(
-    #   x=0,
-    #   y=0,
-    #   width=console.width-self.engine.side_console,
-    #   height=console.height,
-    #   clear= False,
-    #   fg=self.engine.colours['white'],
-    #   decoration="╔═╗║ ║╚═╝"
-    # )
+    console.draw_frame(
+      x=0,
+      y=0,
+      width=console.width-self.engine.side_console,
+      height=console.height,
+      clear= False,
+      fg=self.engine.colours['white'],
+      decoration="╔═╗║ ║╚═╝"
+    )
 
   def placeWall(self, x:int, y:int, dungeon: GameMap) -> None:
     if dungeon.tiles[x+1,y] == dungeon.tile_types["mapfill"]:
