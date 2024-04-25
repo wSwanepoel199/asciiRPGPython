@@ -23,7 +23,7 @@ class Engine:
   @property
   def side_console(self) -> int:
     if self.console.width:
-      return self.console.width-self.game_map.width
+      return self.console.width-self.game_world.viewport_width
     else:
       return 20
   @property
@@ -43,14 +43,14 @@ class Engine:
 
   def update_fov(self) -> None:
     """Recompute the visible area based on the players point of view."""
-    self.game_map.seeing[:] = tcod.map.compute_fov(
+    self.game_map.visible[:] = tcod.map.compute_fov(
       transparency=self.game_map.tiles['transparent'],
       pov=(self.player.x, self.player.y),
       radius=8
     )
 
-    # If a tile is "seeing" it should be added to "seen".
-    self.game_map.seen |= self.game_map.seeing
+    # If a tile is "visible" it should be added to "explored".
+    self.game_map.explored |= self.game_map.visible
 
   def handle_deaths(self) -> None:
     for entity in self.game_map.actors:
@@ -71,7 +71,7 @@ class Engine:
     self.game_map.render(console=console)
     # Draw Side Window
     self.genWindow(
-      x=self.game_map.width,
+      x=self.game_world.viewport_width,
       y=0,
       width=self.side_console,
       height=console.height
@@ -79,7 +79,7 @@ class Engine:
 
     self.render_dungeon_level(
       dungeon_level=self.game_world.current_floor,
-      x = self.game_map.width+1,
+      x = self.game_world.viewport_width+1,
       y = 1,
     )
 
@@ -93,13 +93,13 @@ class Engine:
     # Display Player HP
     if self.player.fighter.HP > 0:
       console.print(
-        x=self.game_map.width+1,
+        x=self.game_world.viewport_width+1,
         y=y,
         string=f"{self.player.name} HP:"
       )
       y+=1
       self.render_bar(
-        bar_x=self.game_map.width+2,
+        bar_x=self.game_world.viewport_width+2,
         bar_y=y,
         curr_val=self.player.fighter.HP,
         max_val=self.player.fighter.MAX_HP,
@@ -111,7 +111,7 @@ class Engine:
       target_name= f"{self.player.target.name} HP: "
       if self.side_console <= 50:
         y +=1
-        x = self.game_map.width
+        x = self.game_world.viewport_width
         console.print(
           x=x+1,
           y=y,
@@ -147,7 +147,7 @@ class Engine:
     if self.player.fighter.HP <= 0:
       msg= "YOU DIED!"
       console.print(
-        x= self.game_map.width + round(number=(self.side_console - len(msg)-1)/2) ,
+        x= self.game_world.viewport_width + round(number=(self.side_console - len(msg)-1)/2) ,
         y=5,
         string=msg,
       )
@@ -155,7 +155,7 @@ class Engine:
       # render names if entities under mouse
       y+=1
       self.render_names_at_mouse(
-        x=self.game_map.width+1,
+        x=self.game_world.viewport_width+1,
         y=y,
         width=self.side_console-2,
         height=5
@@ -164,7 +164,7 @@ class Engine:
 
     # Event Log
     self.draw_line(
-      x=self.game_map.width,
+      x=self.game_world.viewport_width,
       y=round(number=self.console.height/3)*2,
       width=self.side_console,
       title="┤Events├",
@@ -172,7 +172,7 @@ class Engine:
     )
     self.message_log.render(
       console=console,
-      x=self.game_map.width+1,
+      x=self.game_world.viewport_width+1,
       y=round(number=self.console.height/3)*2+1,
       width=self.side_console-2,
       height=self.console.height-round(number=self.console.height/3)*2-2

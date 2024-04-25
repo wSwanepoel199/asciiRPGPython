@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, TYPE_CHECKING
+from typing import Iterable, Optional, TYPE_CHECKING, Tuple
 
 import numpy as np
 import tcod, random
@@ -288,38 +288,27 @@ class GameMap:
   def __init__(
       self, 
       engine: Engine,
-      x: int,
-      y: int,
       width:int,
       height: int,
-      columns: int, 
-      rows: int, 
       map_type: str = "openworld", 
       entities: Iterable[Entity] = (),
     ) -> None:
-    self.x = x
-    self.y = y
+    # self.x = x
+    # self.y = y
+    
     self.engine = engine
     self.width = width
     self.height = height
-    self.columns = columns
-    self.rows = rows
+    # self.columns = width
+    # self.rows = height
     self.map_type = map_type
-    self.tile_types = tile_types.tile_types
-    self.seeing = np.full(
-      shape=(self.columns, self.rows), 
-      fill_value=False, 
-      order="F"
-    )
-    self.seen = np.full(
-      shape=(self.columns, self.rows), 
-      fill_value=False, 
-      order="F"
-    )
     self.entities = set(entities)
-    self.tiles = np.full(shape=(self.columns, self.rows), fill_value=self.tile_types["mapfill"], order="F")
-    self.console = None
+    self.tile_types = tile_types.tile_types
+    self.tiles = np.full(shape=(self.width, self.height), fill_value=self.tile_types["mapfill"], order="F")
+    self.visible = np.full(shape=(self.width, self.height), fill_value=False, order="F")
+    self.explored = np.full(shape=(self.width, self.height), fill_value=False, order="F")
     self.stairsdown = (0,0)
+    self.console = None
     # match map_type:
     #   # case "dungeon":
     #   #   self.tiles = np.full(shape=(width, height), fill_value=self.tile_types["wall"], order="F")
@@ -362,8 +351,35 @@ class GameMap:
     return None
   def in_bounds(self, x: int, y: int) -> bool:
     """Return True if x and y are inside the bounds of the map."""
-    return 0 <= x < self.columns and 0 <= y < self.rows
+    return 0 <= x < self.width and 0 <= y < self.height
   
+  def get_viewport(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    x = self.player.x
+    y = self.player.y
+    width = self.engine.game_world.viewport_width
+    height = self.engine.game_world.viewport_height
+    half_width = width // 2
+    half_height = height // 2
+    start_x = x - half_width if x - half_width >= 0 else 0
+    start_y = y - half_height if y - half_height >= 0 else 0
+    
+    end_x = start_x + width
+    end_y = start_y + height
+
+    
+    if end_x > self.width:
+      x_diff = end_x - self.width
+      start_x -= x_diff
+      end_x -= x_diff
+
+    if end_y > self.height:
+      y_diff = end_y - self.height
+      start_y -= y_diff
+      end_y -= y_diff
+
+    return ((start_x, start_y), (end_x-1, end_y-1))
+
+
   def render(self, console:tcod.console.Console) -> None:
     """
     Renders the map.
@@ -374,24 +390,40 @@ class GameMap:
 
     ╔ ╗ ╚ ╝ ╠ ╣ ║ ╩ ╬ ╦ ═
     """
-    # self.console = console
+    self.console = console
+    
+    (x1,y1),(x2,y2) = self.get_viewport()
+    
+    offset_x = slice(x1, x2+1)
+    offset_y = slice(y1, y2+1)
+    
+    viewport_tiles = self.tiles[offset_x, offset_y]
+    viewport_visible = self.visible[offset_x, offset_y]
+    viewport_explored = self.explored[offset_x, offset_y]
     # if not self.console:
     # self.console = self.engine.context.new_console(
     #   min_columns=self.columns,
     #   min_rows=self.rows,
     #   order="F"
     # )
-    self.console = tcod.console.Console(
-      width=self.columns,
-      height=self.rows,
-      order="F"
-    )
-    self.xoffset = (console.width - self.engine.side_console - self.console.width)//2
-    self.yoffset = (console.height - self.console.height)//2
-    
-    self.console.rgb[0:self.columns, 0:self.rows] = np.select(
-      condlist=[self.seeing, self.seen],
-      choicelist=[self.tiles["light"], self.tiles["dark"]],
+    # self.console = tcod.console.Console(
+    #   width=self.columns,
+    #   height=self.rows,
+    #   order="F"
+    # )
+    # self.xoffset = (console.width - self.engine.side_console - self.console.width)//2
+    # self.yoffset = (console.height - self.console.height)//2
+    # self.xoffset = 0
+    # self.yoffset = 0
+    # self.console.rgb[0:self.columns, 0:self.rows] = np.select(
+    #   condlist=[self.visible, self.explored],
+    #   choicelist=[self.tiles["light"], self.tiles["dark"]],
+    #   default=self.tile_types['shroud'],
+    # )
+
+    self.console.rgb[0:self.engine.game_world.viewport_width, 0:self.engine.game_world.viewport_height] = np.select(
+      condlist=[viewport_visible, viewport_explored],
+      choicelist=[viewport_tiles["light"], viewport_tiles["dark"]],
       default=self.tile_types['shroud'],
     )
 
@@ -401,99 +433,32 @@ class GameMap:
     items = list(filter(lambda entity: entity['entity_type'] == 'ITEM', self.entities))
 
     for entity in objects + items + actors + player:
-       if self.seeing[entity.x, entity.y]:
-        self.console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.colour)
+       if self.visible[entity.x, entity.y]:
+        self.console.print(
+          x=entity.x-x1, 
+          y=entity.y-y1, 
+          string=entity.char, 
+          fg=entity.colour
+        )
     
-    self.console.blit(
-      dest=console,
-      dest_x=0+self.xoffset,
-      dest_y=0+self.yoffset,
-      src_x=0,
-      src_y=0,
-      width=self.console.width,
-      height=self.console.height
-    )
-    console.draw_frame(
-      x=0,
-      y=0,
-      width=console.width-self.engine.side_console,
-      height=console.height,
-      clear= False,
-      fg=self.engine.colours['white'],
-      decoration="╔═╗║ ║╚═╝"
-    )
-
-  
-  def place_entities(
-    self, 
-    room: RecRoom, 
-    # dungeon: GameMap, 
-    maximum_monsters: int,
-    maximum_items: int
-  ) -> None:
-    number_of_monsters = random.randint(a=0, b=maximum_monsters)
-    number_of_items = random.randint(a=0, b=maximum_items)
-
-    available_enemies = {
-      "Goblin" : actor_factory.goblin,
-      "Orc" : actor_factory.orc,
-      "Slime" : actor_factory.slime,
-      "Dragon" : actor_factory.dragon,
-    }
-
-    available_items = {
-      "Healing Potion" : item_factory.healing_potion,
-      "Cure Wounds Scroll": item_factory.cure_wounds_scroll,
-      "Lightning Bolt Scroll" : item_factory.lightning_bolt_scroll,
-      "Confusion Scroll": item_factory.confusion_scroll,
-      "Teleport Scroll": item_factory.teleport_scroll,
-      "Fireball Scroll": item_factory.fireball_scroll
-    }
-
-    for i in range(number_of_monsters):
-      x = random.randint(a=room.point1[0] + 1, b=room.point2[0] - 1)
-      y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
-      # entity = random.choice(list(available_enemies.values()))
-      if not any(entity.x == x and entity.y == y for entity in self.actors):
-        spawn_chance = random.random()
-        # print("Enemy: ", spawn_chance)
-        # if random.random() < 0.8 and not entity.name == "Dragon":
-        if spawn_chance == 0:
-          continue
-        # elif spawn_chance < 0.2:
-        #   available_enemies["Dragon"].spawn(gamemap=self, x=x, y=y)
-        elif spawn_chance < 0.4:
-          available_enemies["Orc"].spawn(gamemap=self, x=x, y=y)
-        elif spawn_chance < 0.5:
-          available_enemies["Slime"].spawn(gamemap=self, x=x, y=y)
-        elif spawn_chance < 0.7:
-          # entity.spawn(gamemap=self, x=x, y=y)
-          available_enemies["Goblin"].spawn(gamemap=self, x=x, y=y)
-    for i in range(number_of_items):
-      x = random.randint(a=room.point1[0] + 1, b=room.point2[0] - 1)
-      y = random.randint(a=room.point1[1] + 1, b=room.point2[1] - 1)
-      # entity = random.choice(list(available_items.values()))
-      if not any(entity.x == x and entity.y == y for entity in self.entities):
-        spawn_chance = random.random()
-        # print("Item: ", spawn_chance)
-        if spawn_chance == 0:
-          continue
-        elif spawn_chance < 0.5:
-          # random.choice([
-          #   available_items["Cure Wounds Scroll"].spawn(gamemap=self, x=x, y=y),
-          #   available_items["Confusion Scroll"].spawn(gamemap=self, x=x, y=y),
-          #   available_items["Lightning Bolt Scroll"].spawn(gamemap=self, x=x, y=y),
-          #   available_items["Teleport Scroll"].spawn(gamemap=self, x=x, y=y)
-          # ])
-          random.choice([
-            available_items["Cure Wounds Scroll"],
-            available_items["Confusion Scroll"],
-            available_items["Lightning Bolt Scroll"],
-            available_items["Teleport Scroll"],
-            available_items["Fireball Scroll"]
-          ]).spawn(gamemap=self, x=x, y=y)
-        elif spawn_chance < 0.8:
-          available_items["Healing Potion"].spawn(gamemap=self, x=x, y=y)
+    # self.console.blit(
+    #   dest=console,
+    #   dest_x=0+self.xoffset,
+    #   dest_y=0+self.yoffset,
+    #   src_x=0,
+    #   src_y=0,
+    #   width=self.console.width,
+    #   height=self.console.height
+    # )
+    # console.draw_frame(
+    #   x=0,
+    #   y=0,
+    #   width=console.width-self.engine.side_console,
+    #   height=console.height,
+    #   clear= False,
+    #   fg=self.engine.colours['white'],
+    #   decoration="╔═╗║ ║╚═╝"
+    # )
 
   def placeWall(self, x:int, y:int, dungeon: GameMap) -> None:
     if dungeon.tiles[x+1,y] == dungeon.tile_types["mapfill"]:
@@ -522,31 +487,27 @@ class GameWorld:
     self,
     *,
     engine: Engine,
-    width: int,
-    height: int,
-    columns: int,
-    rows: int,
+    viewport_width: int,
+    viewport_height: int,
     room_limit: int,
     min_room_size: int,
     max_room_size: int,
-    enemy_limit: int,
-    item_limit: int,
     current_floor: int = 0
     ):
     self.engine = engine
 
-    self.width=width
-    self.height=height
-    self.columns=columns
-    self.rows=rows
-
+    self.viewport_width = viewport_width
+    self.viewport_height = viewport_height
+    self.min_map_width = viewport_width
+    self.min_map_height = viewport_height
+    print(viewport_width, viewport_height)
     self.room_limit = room_limit
 
     self.min_room_size = min_room_size
     self.max_room_size = max_room_size
 
-    self.enemy_limit = enemy_limit
-    self.item_limit = item_limit
+    # self.enemy_limit = enemy_limit
+    # self.item_limit = item_limit
 
     self.current_floor = current_floor
   
@@ -556,14 +517,12 @@ class GameWorld:
     self.current_floor += 1
 
     self.engine.game_map = genDungeon(
-      width=self.width,
-      height=self.height,
-      columns=self.columns,
-      rows=self.rows,
+      map_width=80,
+      map_height=50,
       min_room_size=self.min_room_size,
       max_room_size=self.min_room_size,
       room_limit=self.room_limit,
-      enemy_limit=self.enemy_limit,
-      item_limit=self.item_limit,
+      # enemy_limit=self.enemy_limit,
+      # item_limit=self.item_limit,
       engine=self.engine
     )

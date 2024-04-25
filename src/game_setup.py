@@ -15,23 +15,15 @@ def new_game(
     title:str, 
     width:int, 
     height:int, 
-    columns:int,
-    rows:int,
     map_max_rooms:int, 
     room_min_size:int, 
     room_max_size:int, 
-    max_enemies:int, 
-    max_items:int
   ) -> None:
   """Start a new game."""
 
   room_size_min = room_min_size
   room_size_max = room_max_size
   max_rooms = map_max_rooms
-
-  room_max_enemy = max_enemies
-  room_max_item = max_items
-
   player = copy.deepcopy(actor_factory.player)
   
   engine = Engine(player=player)
@@ -40,15 +32,11 @@ def new_game(
 
   engine.game_world = GameWorld(
     engine=engine,
-    width= width,
-    height= height,
-    columns=columns,
-    rows=rows,
+    viewport_width= width,
+    viewport_height= height,
     room_limit=max_rooms,
     min_room_size=room_size_min,
     max_room_size=room_size_max,
-    enemy_limit=room_max_enemy,
-    item_limit=room_max_item,
   )
 
   engine.game_world.gen_floor()
@@ -122,18 +110,17 @@ class MainMenu(event_handler.BaseEventHandler):
   ) -> Optional[event_handler.BaseEventHandler]:
     match event.sym:
       case tcod.event.KeySym.n:
-        squaredMap = min(self.columns, self.rows-2)
+        # -min((self.console.width // 4), 55)
+        # squaredMap = min(self.columns, self.rows-2)
+        # columns=self.console.width-min((self.console.width // 4), 55),
+        # rows=self.console.height,
         return event_handler.MainGameEventHandler(engine=new_game(
           title="Rogue But Worse",
           width=self.console.width-min((self.console.width // 4), 55),
           height=self.console.height,
-          columns=self.columns,
-          rows=self.rows,
           map_max_rooms=30, 
           room_min_size=6, 
           room_max_size=10, 
-          max_enemies=2, 
-          max_items=2,
         ))
       case tcod.event.KeySym.c:
         try:

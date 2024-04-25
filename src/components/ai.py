@@ -65,17 +65,17 @@ class HostileAi(BaseAi):
     target = self.engine.player
     dx = 0
     dy = 0
-    if self.engine.game_map.seeing[self.entity.x, self.entity.y]:
+    if self.engine.game_map.visible[self.entity.x, self.entity.y]:
       dx = target.x - self.entity.x
       dy = target.y - self.entity.y
-    elif self.engine.game_map.seen[self.entity.x, self.entity.y] and self.memory > 0:
+    elif self.engine.game_map.explored[self.entity.x, self.entity.y] and self.memory > 0:
       self.memory -= 1
       dx = self.last_seen[0] - self.entity.x
       dy = self.last_seen[1] - self.entity.y
 
     distance = max(abs(dx), abs(dy)) # Chebyshev distance.
 
-    if self.engine.game_map.seeing[self.entity.x, self.entity.y]:
+    if self.engine.game_map.visible[self.entity.x, self.entity.y]:
       if distance <= 1:
         return MeleeAction(entity=self.entity, dx=dx, dy=dy).perform()
       if distance <= 5:

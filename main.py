@@ -73,7 +73,7 @@ def save_game(handler: event_handler.BaseEventHandler, filename: str) -> None:
 def main():
   resolution169 = [16,9]
   resolution425 = [4,2.5]
-  width = 1600
+  width = 800
   height = round(width // resolution169[0] * resolution169[1])
   columns = 80
   rows= round(columns // resolution425[0] * resolution425[1])
@@ -112,18 +112,18 @@ def main():
     sdl_window_flags=FLAGS
   ) as context:
     consoleSize = context.recommended_console_size()
-    handler: event_handler.BaseEventHandler = game_setup.MainMenu(columns=columns-2, rows=rows)
-    # console = context.new_console(
-    #   min_columns=columns, 
-    #   min_rows=rows, 
-    #   order="F"
-    # )
+    handler: event_handler.BaseEventHandler = game_setup.MainMenu(columns=columns, rows=rows)
+    console = context.new_console(
+      min_columns=columns,
+      min_rows=rows,
+      order="F"
+    )
     try:
       while True:
-        console = context.new_console(
-          *context.recommended_console_size(), 
-          1, 
-          "F")
+        # console = context.new_console(
+        #   *context.recommended_console_size(), 
+        #   1, 
+        #   "F")
         console.clear()
         if isinstance(handler, event_handler.EventHandler):
           handler.engine.event_handler = handler

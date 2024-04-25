@@ -17,3 +17,8 @@ class BaseComponent:
   @property
   def engine(self) -> Engine:
     return self.gamemap.engine
+  
+  @property
+  def viewport(self) -> tuple[int, int]:
+    (pos1, pos2)=self.gamemap.get_viewport()
+    return pos1

@@ -52,6 +52,7 @@ class HealingConsumable(Consumable):
 
 class LineDamageConsumable(Consumable):
   def __init__(self, damage: int, range:int, on_hit_message: str = ""):
+    super().__init__()
     self.damage = damage
     self.range = range
     self.on_hit = on_hit_message
@@ -69,12 +70,12 @@ class LineDamageConsumable(Consumable):
   
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
-    target = action.target_xy
+    target_xy = action.target_xy
 
-    if entity.distance(*target) > self.range:
+    if entity.distance(*target_xy) > self.range:
       raise self.engine.exceptions.Impossible("Location is too far away.")
     targets_hit = False
-    for (x,y) in tcod.los.bresenham(start=(entity.x, entity.y), end=target).tolist():
+    for (x,y) in tcod.los.bresenham(start=(entity.x, entity.y), end=target_xy).tolist():
       point = (x,y)
       target_actor = self.engine.game_map.get_actor_at_location(*point)
       if not target_actor or target_actor is entity:
@@ -100,6 +101,7 @@ class LineDamageConsumable(Consumable):
 
 class TeleportConsumable(Consumable):
   def __init__(self, range: int) -> None:
+    super().__init__()
     self.range = range
   
   def get_action(self, entity: Actor) -> event_handler.SingleTargetSelectHandler:
@@ -116,7 +118,7 @@ class TeleportConsumable(Consumable):
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
     target = action.target_actor
-    xy = action.target_xy
+    target_xy = action.target_xy
 
     if not target:
       target = action.item
@@ -125,20 +127,21 @@ class TeleportConsumable(Consumable):
     if target is entity:
       raise self.engine.exceptions.Impossible("You can't teleport onto yourself!")
       
-    if not self.engine.game_map.tiles[action.target_xy]["walkable"]:
+    if not self.engine.game_map.tiles[target_xy]["walkable"]:
       raise self.engine.exceptions.Impossible("You can't teleport to a location you can't walk on!")
 
-    if entity.distance(*xy) > self.range:
+    if entity.distance(*target_xy) > self.range:
       raise self.engine.exceptions.Impossible("You can't teleport more than 10 tiles away!")
     self.engine.message_log.add_message(
       text=f"You feel your very being evaporate as you are teleported!",
       fg=self.engine.colours['status_effect_applied']
     )
-    entity.x, entity.y = action.target_xy
+    entity.x, entity.y = target_xy
     self.consume()
 
 class ConfusionConsumable(Consumable):
   def __init__(self, turns:int, range:int) -> None:
+    super().__init__()
     self.turns = turns
     self.range = range
   
@@ -156,16 +159,16 @@ class ConfusionConsumable(Consumable):
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
     target = action.target_actor
-    xy = action.target_xy
+    target_xy = action.target_xy
 
-    if not self.engine.game_map.seeing[action.target_xy]:
+    if not self.engine.game_map.visible[target_xy]:
       raise self.engine.exceptions.Impossible("You can't target a location you can't see.")
     if not target:
       raise self.engine.exceptions.Impossible("There was no target selected.")
     if target is entity:
       raise self.engine.exceptions.Impossible("You can't confuse yourself!")
 
-    if entity.distance(*xy) > self.range:
+    if entity.distance(*target_xy) > self.range:
       raise self.engine.exceptions.Impossible("There are no targets in the radius.")
     
     self.engine.message_log.add_message(
@@ -181,6 +184,7 @@ class ConfusionConsumable(Consumable):
 
 class FireballDamageConsumable(Consumable):
   def __init__(self, damage: int, radius: int):
+    super().__init__()
     self.damage = damage
     self.radius = radius
   
@@ -196,9 +200,9 @@ class FireballDamageConsumable(Consumable):
     )
   
   def action(self, action: actions.ItemAction) -> None:
-    target_xy = action.target_xy
+    target_xy= action.target_xy
 
-    if not self.engine.game_map.seeing[target_xy]:
+    if not self.engine.game_map.visible[target_xy]:
       raise self.engine.exceptions.Impossible("You can't target a location you can't see.")
     targets_hit = False
     for actor in self.engine.game_map.actors:
