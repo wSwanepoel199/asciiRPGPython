@@ -146,7 +146,7 @@ class EventHandler(BaseEventHandler):
 
   def ev_windowresized(self, event: tcod.event.WindowResized) -> None:
     width, height = self.engine.context.recommended_console_size()
-    self.engine.game_world.viewport_width = width-min((width // 4), 55)
+    self.engine.game_world.viewport_width = width-min((width // 3), 55)
     self.engine.game_world.viewport_height = height
     console = self.engine.context.new_console(
       min_columns=width,
@@ -185,7 +185,7 @@ class AskUserEventHandler(EventHandler):
     return self.on_exit()
 
   def on_exit(self) -> Optional[ActionOrHandler]:
-    self.engine.mouse_location = (self.engine.player.x, self.engine.player.y)
+    self.engine.mouse_location = (0, 0)
     return MainGameEventHandler(engine=self.engine)
   
 class InventoryEventHandler(AskUserEventHandler):

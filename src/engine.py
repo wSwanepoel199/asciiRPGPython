@@ -77,8 +77,6 @@ class Engine:
       height=console.height
     )
 
-    
-
     if self.side_console > 20:
       bar_width = 20
     else:
@@ -88,12 +86,17 @@ class Engine:
 
     # Display Player HP
     if self.player.fighter.HP > 0:
-      self.render_dungeon_level(
-        dungeon_level=self.game_world.current_floor,
-        x = self.game_world.viewport_width+1,
-        y = y,
-      )
-      y +=2
+      for line in list(self.message_log.wrap(
+        string=f"Dungeon level: {self.game_world.current_floor}",
+        width=self.side_console-2
+      )):
+        self.console.print(
+          x=self.game_world.viewport_width+1,
+          y=y,
+          string=line
+        )
+        y+=1
+      y +=1
       console.print(
         x=self.game_world.viewport_width+1,
         y=y,
@@ -106,22 +109,16 @@ class Engine:
         curr_val=self.player.fighter.HP,
         max_val=self.player.fighter.MAX_HP,
         total_width=bar_width,
+        bar_fg=self.colours['hp_bar_filled'],
       )
       y +=2
-      console.print(
-        x=self.game_world.viewport_width+1,
-        y=y,
-        string=f"Level {self.player.level.curr_level}"
-      )
-      y +=1
       self.render_bar(
         bar_x=self.game_world.viewport_width+2,
         bar_y=y,
         curr_val=self.player.level.curr_xp,
         max_val=self.player.level.xp_to_next_level,
         total_width=bar_width,
-        bar_fg=self.colours['green'],
-        bar_bg=self.colours['black']
+        bar_fg=self.colours['xp_bar_filled'],
       )
       text = "XP"
       console.print(
@@ -148,6 +145,7 @@ class Engine:
           curr_val=self.player.target.fighter.HP,
           max_val=self.player.target.fighter.MAX_HP,
           total_width=bar_width,
+          bar_fg=self.colours['enemy_hp_bar_filled'],
         )
         y+=2
       else:
@@ -182,14 +180,15 @@ class Engine:
         x=self.game_world.viewport_width+1,
         y=y,
         width=self.side_console-2,
-        height=self.console.height-round(number=self.console.height/3)*2-2-y
+        height=self.console.height//3 - 3
       )
 
 
+    event_log_height = self.console.height // 3 * 2
     # Event Log
     self.draw_line(
       x=self.game_world.viewport_width,
-      y=round(number=self.console.height/3)*2,
+      y=event_log_height,
       width=self.side_console,
       title="┤Events├",
       alignment=tcod.constants.CENTER
@@ -197,9 +196,9 @@ class Engine:
     self.message_log.render(
       console=console,
       x=self.game_world.viewport_width+1,
-      y=round(number=self.console.height/3)*2+1,
+      y=event_log_height + 1,
       width=self.side_console-2,
-      height=self.console.height-round(number=self.console.height/3)*2-2
+      height=self.console.height-event_log_height - 2
     )
   def genContext(
       self, 
@@ -252,7 +251,7 @@ class Engine:
       total_width:int = 0, 
       flip:bool = False,
       bar_fg: Tuple[int,int,int] = (0, 96, 0),
-      bar_bg: Tuple[int,int,int] = (64, 16, 16),
+      bar_bg: Tuple[int,int,int] = (23, 23, 23),
   ) -> None:
 
     if(flip):
@@ -368,15 +367,3 @@ class Engine:
       offset += 1
       if offset > height:
         return
-  
-  def render_dungeon_level(
-      self,
-      dungeon_level: int,
-      x: int,
-      y: int
-  ) -> None:
-    """
-    Render the level the player is currently on, at the given location.
-    """
-
-    self.console.print(x=x, y=y, string=f"Dungeon level: {dungeon_level}")

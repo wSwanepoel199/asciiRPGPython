@@ -112,7 +112,7 @@ class MainMenu(event_handler.BaseEventHandler):
       case tcod.event.KeySym.n:
         return event_handler.MainGameEventHandler(engine=new_game(
           title="Rogue But Worse",
-          width=self.console.width-min((self.console.width // 4), 55),
+          width=self.console.width-min((self.console.width // 3), 55),
           height=self.console.height,
           map_max_rooms=30, 
           room_min_size=6, 
