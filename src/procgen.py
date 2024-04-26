@@ -115,6 +115,10 @@ def place_entities(
       y = random.randint(a=room.y1 + 1, b=room.y2 - 1)
       # entity = random.choice(list(available_enemies.values()))
       if not any(entity.x == x and entity.y == y for entity in dungeon.actors):
+        entity.fighter.HP += floor_number//2
+        entity.fighter.DEF += floor_number//2
+        entity.fighter.ATK[0] += floor_number//2
+        entity.fighter.ATK[1] += floor_number//2
         entity.spawn(x=x, y=y, gamemap=dungeon)
     
     for item in items:
