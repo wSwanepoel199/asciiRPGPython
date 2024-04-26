@@ -34,7 +34,7 @@ class HealingConsumable(Consumable):
   
   def action(self, action: actions.ItemAction) -> None:
     entity = action.entity
-    amount_recovered = entity.fighter.heal_damage(amount=random.randint(*self.amount))
+    amount_recovered = entity.fighter.heal_damage(amount=random.sample(range(*self.amount), 1)[0])
     if amount_recovered <= 0:
       raise self.engine.exceptions.Impossible("Your health is already full.")
 
@@ -88,7 +88,7 @@ class LineDamageConsumable(Consumable):
       #   self.on_hit = self.on_hit.split('<damage>')
       #   self.on_hit = self.on_hit[0] + str(self.damage) + self.on_hit[1]
       # else:
-      damage = random.randint(*self.damage)
+      damage = random.sample(range(*self.damage), 1)[0]
       self.on_hit = f"A lighting bolt strikes the {target_actor.name} with a loud thunder, for {damage} damage!"
       self.engine.message_log.add_message(
         text=self.on_hit
@@ -172,11 +172,11 @@ class ConfusionConsumable(Consumable):
     if entity.distance(*target_xy) > self.range:
       raise self.engine.exceptions.Impossible("There are no targets in the radius.")
     
+    duration = random.sample(range(*self.turns), 1)[0]
     self.engine.message_log.add_message(
-      text=f"The eyes of the {target.name} go vacant, and it starts to stumble!",
+      text=f"The eyes of the {target.name} go vacant for {duration} turns, as it starts to stumble!",
       fg=self.engine.colours['status_effect_applied']
     )
-    duration = random.randint(*self.turns)
     target.ai = ai.ConfusedAi(
       entity=target,
       prev_ai=target.ai,
@@ -209,7 +209,7 @@ class FireballDamageConsumable(Consumable):
     targets_hit = False
     for actor in self.engine.game_map.actors:
       if actor.distance(*target_xy) <= self.radius:
-        damage = random.randint(*self.damage)
+        damage = random.sample(range(*self.damage), 1)[0]
         self.engine.message_log.add_message(
           text=f"The {actor.name} is engulfed in a fiery explosion, taking {damage} damage!",
         )

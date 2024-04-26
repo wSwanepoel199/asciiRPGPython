@@ -117,13 +117,17 @@ class Engine:
       self.render_bar(
         bar_x=self.game_world.viewport_width+2,
         bar_y=y,
-        bar_text=" XP",
         curr_val=self.player.level.curr_xp,
         max_val=self.player.level.xp_to_next_level,
         total_width=bar_width,
-        flip=True,
-        bar_bg=self.colours['green'],
-        bar_fg=self.colours['black']
+        bar_fg=self.colours['green'],
+        bar_bg=self.colours['black']
+      )
+      text = "XP"
+      console.print(
+        x=self.game_world.viewport_width+2+bar_width-len(text),
+        y=y,
+        string=text
       )
       y +=2
     # Display Player Target HP

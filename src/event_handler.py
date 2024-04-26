@@ -6,6 +6,7 @@ import tcod, os
 import tcod.constants
 
 import src.actions as action
+import src.utils.constants as constants
 
 if TYPE_CHECKING:
   from src.engine import Engine
@@ -678,44 +679,49 @@ class LevelUpEventHandler(AskUserEventHandler):
 
   def on_render(self, console: tcod.console.Console) -> None:
     super().on_render(console=console)
-
-    if self.engine.player.x <= 30:
-      x = 40
-    else:
-      x = 0
-    
+    x = self.engine.game_world.viewport_width+1
+    lines = []
+    width = self.engine.side_console-3
+    lines += list(self.engine.message_log.wrap(
+      string="Congratulations! You level up!",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string="Raise one stat:",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"1)Vitality (+20 HP)",
+      width=width,
+    ))
+    lines += list(self.engine.message_log.wrap(
+      string=f"2)Strength (+1 attack)",
+      width=width,
+    ))
+    lines += list(self.engine.message_log.wrap(
+      string=f"3)Constitution (+1 defence)",
+      width=width,
+    ))
+    height = len(lines) +2
     console.draw_frame(
       x=x,
-      y=0,
-      width=40,
-      height=8,
+      y=1,
+      width=width+1,
+      height=height,
       title=self.TITLE,
       clear=True,
       fg=(255, 255, 255),
       bg=(0, 0, 0),
     )
 
-    console.print(x=x+1, y=1, string="Congratulations! You level up!")
-    console.print(x=x+1, y=2, string="Select a stat to raise:")
-
-    console.print(
-      x=x + 1,
-      y=4,
-      string=f"1) Vitality (+20 HP, from {self.engine.player.fighter.MAX_HP})",
-    )
-    atk_average = (self.engine.player.fighter.ATK[0] + self.engine.player.fighter.ATK[1])/2
-    console.print(
-      x=x + 1,
-      y=5,
-      string=f"2) Strength (+1 attack, from {atk_average})",
-    )
-    
-    console.print(
-      x=x + 1,
-      y=6,
-      string=f"3) Constitution (+1 defense, from {self.engine.player.fighter.DEF})",
-    )
-  
+    offset = 2
+    for line in lines:
+      console.print(x=x+1, y=offset, string=line)
+      offset+=1
+      if offset > height:
+        break
   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
     player = self.engine.player
     key = event.sym
