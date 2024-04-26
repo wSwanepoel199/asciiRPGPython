@@ -17,27 +17,30 @@ class Equippable(BaseComponent):
   def __init__(
       self,
       equipment_type: EquipmentType,
-      bonus: Tuple[str, int] = ["", 0],
+      ATK_bonus: int = 0,
+      DEF_bonus: int = 0,
+      HP_bonus: int = 0,
   ):
     self.equipment_type = equipment_type
-    self.stat = bonus[0]
-    self.bonus = bonus[1]
+    self.ATK_bonus = ATK_bonus
+    self.DEF_bonus = DEF_bonus
+    self.HP_bonus = HP_bonus
 
   def get_action(self, entity: Actor) -> Optional[event_handler.ActionOrHandler]:
     return actions.ItemAction(entity=entity, item=self.parent)
 
 class Dagger(Equippable):
   def __init__(self) -> None:
-    super().__init__(equipment_type=EquipmentType.WEAPON, bonus=["ATK", 2])
+    super().__init__(equipment_type=EquipmentType.WEAPON, ATK_bonus=2)
 
 class Sword(Equippable):
   def __init__(self) -> None:
-    super().__init__(equipment_type=EquipmentType.WEAPON, bonus=["ATK", 4])
+    super().__init__(equipment_type=EquipmentType.WEAPON, ATK_bonus=4)
 
 class LeatherArmour(Equippable):
   def __init__(self) -> None:
-    super().__init__(equipment_type=EquipmentType.ARMOUR, bonus=["DEF", 1])
+    super().__init__(equipment_type=EquipmentType.ARMOUR, DEF_bonus=1)
 
 class ChainMail(Equippable):
   def __init__(self) -> None:
-    super().__init__(equipment_type=EquipmentType.ARMOUR, bonus=["DEF", 3])
+    super().__init__(equipment_type=EquipmentType.ARMOUR, DEF_bonus=3)

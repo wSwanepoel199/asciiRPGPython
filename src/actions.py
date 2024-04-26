@@ -71,6 +71,8 @@ class ItemAction(Action):
   def perform(self)->None:
     if self.item.consumable:
       self.item.consumable.action(action=self)
+    elif self.item.equippable:
+      self.entity.equipment.toggle_equip(equippable_item=self.item)
     else:
       raise self.engine.exceptions.Impossible(f"The {self.item.name} cannot be used.")
 
@@ -80,6 +82,8 @@ class ItemAction(Action):
 
 class DropItem(ItemAction):
   def perform(self) -> None:
+    if self.entity.equipment.item_is_equipped(item=self.item):
+      self.entity.equipment.toggle_equip(equippable_item=self.item)
     self.entity.inventory.drop(item=self.item)
 
 class DirectionalAction(Action):

@@ -10,19 +10,52 @@ if TYPE_CHECKING:
 
 class Fighter(BaseComponent):
   parent: Actor
-  def __init__(self, HP: int, ATK: Tuple[int,int], DEF: int):
-    self._HP = HP
-    self.MAX_HP = HP
-    self.ATK = ATK
-    self.DEF = DEF
+  def __init__(self, Base_HP: int, Base_ATK: Tuple[int,int], Base_DEF: int):
+    self.Base_HP = Base_HP
+    self.Base_Max_HP = Base_HP
+    self.Base_ATK = Base_ATK
+    self.Base_DEF = Base_DEF
   
   @property
   def HP(self) -> int:
-    return self._HP
+    return self.Base_HP
   
+  @property
+  def MAX_HP(self) -> int:
+    return self.Base_Max_HP + self.HP_Bonus
+
+  @property
+  def DEF(self) -> int:
+    return self.Base_DEF + self.DEF_Bonus
+
+  @property
+  def ATK(self) -> int:
+    return [self.Base_ATK[0] + self.ATK_Bonus, self.Base_ATK[1] + self.ATK_Bonus]
+
+  @property
+  def DEF_Bonus(self) -> int:
+    if self.parent.equipment:
+      return self.parent.equipment.def_bonus
+    else:
+      return 0
+
+  @property
+  def ATK_Bonus(self) -> int:
+    if self.parent.equipment:
+      return self.parent.equipment.atk_bonus
+    else:
+      return 0
+  
+  @property
+  def HP_Bonus(self) -> int:
+    if self.parent.equipment:
+      return self.parent.equipment.hp_bonus
+    else:
+      return 0
+
   @HP.setter
   def HP(self, value: int) -> None:
-    self._HP = max(0, min(value, self.MAX_HP))
+    self.Base_HP = max(0, min(value, self.MAX_HP))
 
   def die(self) -> None:
     if self.engine.player is self.parent:

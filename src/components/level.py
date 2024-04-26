@@ -55,25 +55,20 @@ class Level(BaseComponent):
   def increase_stat(self, stat: str, value: int) -> None:
     match stat:
       case "HP":
-        hp = self.parent.fighter.HP
-        maxhp = self.parent.fighter.MAX_HP
-        if hp == maxhp:
-          self.parent.fighter.MAX_HP += value
-          self.parent.fighter.HP += value
-        else:
-          self.parent.fighter.MAX_HP += value
+        self.parent.fighter.Base_Max_HP += value
+        self.parent.fighter.Base_HP += value
         self.engine.message_log.add_message(text="Your health improves!")
         self.increase_level()
       case "ATK":
-        (min_atk,max_atk) = self.parent.fighter.ATK
+        (min_atk,max_atk) = self.parent.fighter.Base_ATK
         atk_average = (min_atk + max_atk) // 2
         max_increase = atk_average % value
         min_increase = atk_average % (value+1)
+        self.parent.fighter.Base_ATK = (min_atk + min_increase, max_atk + max_increase)
         self.engine.message_log.add_message(text="You feel stronger!")
-        self.parent.fighter.ATK = (min_atk + min_increase, max_atk + max_increase)
         self.increase_level()
       case "DEF":
         self.engine.message_log.add_message(
           text="You become more resilient to blows!")
-        self.parent.fighter.DEF += value
+        self.parent.fighter.Base_DEF += value
         self.increase_level()

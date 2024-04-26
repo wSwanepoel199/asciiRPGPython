@@ -3,17 +3,17 @@ from __future__ import annotations
 import copy, math
 from typing import  Optional, Tuple, TypeVar, TYPE_CHECKING, Any, Type, Union
 
-from src.components.inventory import Inventory
 from src.utils.render_order import RenderOrder
 
 
 if TYPE_CHECKING:
+    from src.map import GameMap
     from src.components.ai import BaseAi
+    from src.components.level import Level
     from src.components.fighter import Fighter
     from src.components.consumable import Consumable
-    from src.components.level import Level
     from src.components.equippable import Equippable
-    from src.map import GameMap
+    from src.components.inventory import Inventory, Equipment
 
 T = TypeVar("T", bound="Entity")
 
@@ -126,7 +126,8 @@ class Actor(Entity):
       name: str= "<Unnamed>",
       ai_cls: Type[BaseAi],
       fighter: Fighter,
-      inventory: Inventory = Inventory(capacity=0),
+      inventory: Inventory,
+      equipment: Equipment,
       level: Level
     ) -> None:
     super().__init__(
@@ -146,6 +147,9 @@ class Actor(Entity):
 
     self.inventory = inventory
     self.inventory.parent = self
+
+    self.equipment: Equipment = equipment
+    self.equipment.parent = self
 
     self.level = level
     self.level.parent = self

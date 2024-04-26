@@ -208,8 +208,13 @@ class InventoryEventHandler(AskUserEventHandler):
       lines = []
       for i, item in enumerate(player.inventory.items):
         item_key = chr(ord("a") + i)
+        is_equipped = player.equipment.item_is_equipped(item=item)
+        item_string = f"[{item_key}]-{item.name}"
+        if is_equipped:
+          item_string = f"{item_string} (E)"
+
         item = list(self.engine.message_log.wrap(
-          string=f"[{item_key}]-{item.name}",
+          string=item_string,
           width=width-2
         ))
         lines += item + [constants.empty_space]
@@ -265,14 +270,14 @@ class InventoryEventHandler(AskUserEventHandler):
     )
     # print each line
     for line in lines:
+      if offset >= height:
+        return
       console.print(
         x=x + 1, 
         y=1 + y + offset + 1, 
         string=line
       )
       offset += 1
-      if offset > height:
-        break
 
   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
     player = self.engine.player
