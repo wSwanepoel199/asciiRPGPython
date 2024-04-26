@@ -14,7 +14,7 @@ player = Actor(
   fighter=Fighter(Base_HP=30, Base_ATK=[2,5], Base_DEF=1),
   equipment=Equipment(),
   inventory=Inventory(capacity=16),
-  level=Level(level_up_base=50)
+  # level=Level(level_up_base=50)
 )
 
 goblin = Actor(
@@ -27,7 +27,7 @@ goblin = Actor(
   fighter=Fighter(Base_HP=15, Base_ATK=[1,3], Base_DEF=1),
   equipment=Equipment(),
   inventory=Inventory(capacity=0),
-  level=Level(xp_given=10)
+  # level=Level(xp_given=10)
 )
 slime = Actor(
   entity_type="ACTOR",
@@ -39,7 +39,7 @@ slime = Actor(
   fighter=Fighter(Base_HP=30, Base_ATK=[2,3], Base_DEF=2),
   equipment=Equipment(),
   inventory=Inventory(capacity=0),
-  level=Level(xp_given=25)
+  # level=Level(xp_given=25)
 )
 
 orc = Actor(
@@ -52,7 +52,7 @@ orc = Actor(
   fighter=Fighter(Base_HP=35, Base_ATK=[2,6], Base_DEF=3),
   equipment=Equipment(),
   inventory=Inventory(capacity=0),
-  level=Level(xp_given=50)
+  # level=Level(xp_given=50)
 )
 
 
@@ -66,5 +66,5 @@ dragon = Actor(
   fighter=Fighter(Base_HP=100, Base_ATK=[5,10], Base_DEF=5),
   equipment=Equipment(),
   inventory=Inventory(capacity=0),
-  level=Level(xp_given=200)
+  # level=Level(xp_given=200)
 )

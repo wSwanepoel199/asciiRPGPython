@@ -115,7 +115,7 @@ class EventHandler(BaseEventHandler):
       # A valid action was performed
       if not self.engine.player.alive:
         return GameOverEventHandler(engine=self.engine)
-      elif self.engine.player.level.can_level_up:
+      elif self.engine.player.level and self.engine.player.level.can_level_up:
         return LevelUpEventHandler(engine=self.engine)
       return MainGameEventHandler(engine=self.engine)
     return self
@@ -802,21 +802,22 @@ class CharacterScreenEventHandler(AskUserEventHandler):
       width=width,
     ))
     lines += [constants.empty_space]
-    lines += list(self.engine.message_log.wrap(
-      string=f"Level: {self.engine.player.level.curr_level}",
-      width=width,
-    ))
-    lines += [constants.empty_space]
-    lines += list(self.engine.message_log.wrap(
-      string=f"XP: {self.engine.player.level.curr_xp}",
-      width=width,
-    ))
-    lines += [constants.empty_space]
-    lines += list(self.engine.message_log.wrap(
-      string=f"Next Level: {self.engine.player.level.xp_to_next_level}",
-      width=width,
-    ))
-    lines += [constants.empty_space]
+    if self.engine.player.level:
+      lines += list(self.engine.message_log.wrap(
+        string=f"Level: {self.engine.player.level.curr_level}",
+        width=width,
+      ))
+      lines += [constants.empty_space]
+      lines += list(self.engine.message_log.wrap(
+        string=f"XP: {self.engine.player.level.curr_xp}",
+        width=width,
+      ))
+      lines += [constants.empty_space]
+      lines += list(self.engine.message_log.wrap(
+        string=f"Next Level: {self.engine.player.level.xp_to_next_level}",
+        width=width,
+      ))
+      lines += [constants.empty_space]
     height = len(lines)+3
     console.draw_frame(
       x=x,

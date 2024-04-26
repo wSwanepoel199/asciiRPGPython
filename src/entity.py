@@ -128,7 +128,7 @@ class Actor(Entity):
       fighter: Fighter,
       inventory: Inventory,
       equipment: Equipment,
-      level: Level
+      level: Optional[Level] = None
     ) -> None:
     super().__init__(
       entity_type=entity_type,
@@ -152,7 +152,8 @@ class Actor(Entity):
     self.equipment.parent = self
 
     self.level = level
-    self.level.parent = self
+    if self.level:
+      self.level.parent = self
 
   @property
   def alive(self)->bool:

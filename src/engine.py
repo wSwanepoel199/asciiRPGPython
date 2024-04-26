@@ -112,21 +112,22 @@ class Engine:
         bar_fg=self.colours['hp_bar_filled'],
       )
       y +=2
-      self.render_bar(
-        bar_x=self.game_world.viewport_width+2,
-        bar_y=y,
-        curr_val=self.player.level.curr_xp,
-        max_val=self.player.level.xp_to_next_level,
-        total_width=bar_width,
-        bar_fg=self.colours['xp_bar_filled'],
-      )
-      text = "XP"
-      console.print(
-        x=self.game_world.viewport_width+2+bar_width-len(text),
-        y=y,
-        string=text
-      )
-      y +=2
+      if self.player.level:
+        self.render_bar(
+          bar_x=self.game_world.viewport_width+2,
+          bar_y=y,
+          curr_val=self.player.level.curr_xp,
+          max_val=self.player.level.xp_to_next_level,
+          total_width=bar_width,
+          bar_fg=self.colours['xp_bar_filled'],
+        )
+        text = "XP"
+        console.print(
+          x=self.game_world.viewport_width+2+bar_width-len(text),
+          y=y,
+          string=text
+        )
+        y +=2
     # Display Player Target HP
     if self.player.target and self.player.target.alive and self.player.alive:
       target_name= f"{self.player.target.name} HP: "

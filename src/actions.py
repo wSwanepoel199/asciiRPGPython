@@ -120,10 +120,10 @@ class MeleeAction(DirectionalAction):
       attack_desc = f"The {self.entity.name.capitalize()} attacked {target.name}"
       attack_color = self.engine.colours['enemy_atk']
     if damage > 0:
-      target.fighter.HP -= damage
       attack_message = f"{attack_desc} for {damage} hit points."
+      target.fighter.HP -= damage
     else :
-      attack_message = f"{attack_desc} but did no damage."
+      attack_message = f"{attack_desc} for {damage} but did no damage."
     self.engine.message_log.add_message(text=attack_message, fg=attack_color)
 
 class MovementAction(DirectionalAction):
