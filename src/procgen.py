@@ -208,9 +208,9 @@ def genDungeon(
       player.place(*new_room.center, gamemap=dungeon)
       x = new_room.center[0]
       y = new_room.center[1]
-      for item in available_items.values():
-        for i in item:
-          i[0].spawn(x=x, y=y, gamemap=dungeon)
+      # for item in available_items.values():
+      #   for i in item:
+      #     i[0].spawn(x=x, y=y, gamemap=dungeon)
     else:
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
