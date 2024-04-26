@@ -91,7 +91,7 @@ def main():
     charmap=tcod.tileset.CHARMAP_CP437
   )
   title = "Rogue But Worse"
-  tcod.tileset.procedural_block_elements(tileset=tileset)
+  # tcod.tileset.procedural_block_elements(tileset=tileset)
   # context: tcod.context.Context = Engine().genContext(
   #   width= width,
   #   height= height,
@@ -113,17 +113,16 @@ def main():
   ) as context:
     consoleSize = context.recommended_console_size()
     handler: event_handler.BaseEventHandler = game_setup.MainMenu(columns=columns, rows=rows)
-    console = context.new_console(
-      min_columns=columns,
-      min_rows=rows,
-      order="F"
-    )
+    # console = context.new_console(
+    #   min_columns=columns,
+    #   min_rows=rows,
+    #   order="F"
+    # )
     try:
       while True:
-        # console = context.new_console(
-        #   *context.recommended_console_size(), 
-        #   1, 
-        #   "F")
+        console = context.new_console(
+          *context.recommended_console_size(),
+          order="F")
         console.clear()
         if isinstance(handler, event_handler.EventHandler):
           handler.engine.event_handler = handler
@@ -139,7 +138,7 @@ def main():
           # handler.engine.game_map.height = console.height-2
 
         handler.on_render(console=console)
-        context.present(console=console)
+        context.present(console=console, integer_scaling=True)
         try:
           for event in tcod.event.wait():
             context.convert_event(event=event)

@@ -78,7 +78,6 @@ def genDungeon(
     ) -> GameMap:
   """Generate a new dungeon map."""
   player = engine.player
-  print(columns, rows)
   dungeon = GameMap(
     engine=engine, 
     x=0,

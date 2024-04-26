@@ -110,10 +110,6 @@ class MainMenu(event_handler.BaseEventHandler):
   ) -> Optional[event_handler.BaseEventHandler]:
     match event.sym:
       case tcod.event.KeySym.n:
-        # -min((self.console.width // 4), 55)
-        # squaredMap = min(self.columns, self.rows-2)
-        # columns=self.console.width-min((self.console.width // 4), 55),
-        # rows=self.console.height,
         return event_handler.MainGameEventHandler(engine=new_game(
           title="Rogue But Worse",
           width=self.console.width-min((self.console.width // 4), 55),

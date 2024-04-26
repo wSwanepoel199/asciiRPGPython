@@ -317,6 +317,9 @@ class GameMap:
   def gamemap(self) -> GameMap:
     return self
   @property
+  def game_world(self) -> GameMap:
+    return self.engine.game_world
+  @property
   def actors(self) -> Iterable[Actor]:
     yield from (
       entity
@@ -354,8 +357,8 @@ class GameMap:
   def get_viewport(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
     x = self.player.x
     y = self.player.y
-    width = self.engine.game_world.viewport_width
-    height = self.engine.game_world.viewport_height
+    width = self.engine.game_world.viewport_width if self.game_world.viewport_width <= self.width else self.width
+    height = self.engine.game_world.viewport_height if self.game_world.viewport_height <= self.height else self.height
     half_width = width // 2
     half_height = height // 2
     start_x = x - half_width if x - half_width >= 0 else 0
@@ -363,19 +366,15 @@ class GameMap:
     
     end_x = start_x + width
     end_y = start_y + height
-
     
     if end_x > self.width:
       x_diff = end_x - self.width
       start_x -= x_diff
       end_x -= x_diff
-      # end_x = self.width
-
     if end_y > self.height:
       y_diff = end_y - self.height
       start_y -= y_diff
       end_y -= y_diff
-      # end_y = self.height
 
     return ((start_x, start_y), (end_x-1, end_y-1))
 
@@ -392,16 +391,14 @@ class GameMap:
     """
     self.console = console
     (x1,y1),(x2,y2) = self.get_viewport()
-
-    viewport_width = self.engine.game_world.viewport_width
-    viewport_height = self.engine.game_world.viewport_height
+    viewport_width = self.engine.game_world.viewport_width if self.width > self.game_world.viewport_width else self.width
+    viewport_height = self.engine.game_world.viewport_height if self.height > self.game_world.viewport_height else self.height
 
     offset_x = slice(x1, x2+1)
     offset_y = slice(y1, y2+1)
     viewport_tiles = self.tiles[offset_x, offset_y]
     viewport_visible = self.visible[offset_x, offset_y]
     viewport_explored = self.explored[offset_x, offset_y]
-
     # if not self.console:
     # self.console = self.engine.context.new_console(
     #   min_columns=self.columns,
@@ -608,7 +605,7 @@ class GameWorld:
     self.viewport_height = viewport_height
     self.min_map_width = viewport_width
     self.min_map_height = viewport_height
-    print(viewport_width, viewport_height)
+    print(f"game world viewport width: {viewport_width}, game world viewport height: {viewport_height}")
     self.room_limit = room_limit
 
     self.min_room_size = min_room_size

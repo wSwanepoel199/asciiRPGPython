@@ -69,7 +69,6 @@ class Level(BaseComponent):
         atk_average = (min_atk + max_atk) // 2
         max_increase = atk_average % value
         min_increase = atk_average % (value+1)
-        # print(f"Increase Amount: {value}, Max Increase: {max_increase}, Min Increase: {min_increase}")
         self.engine.message_log.add_message(text="You feel stronger!")
         self.parent.fighter.ATK = (min_atk + min_increase, max_atk + max_increase)
         self.increase_level()

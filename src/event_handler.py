@@ -145,9 +145,21 @@ class EventHandler(BaseEventHandler):
       self.engine.mouse_location = event.tile.x, event.tile.y
 
   def ev_windowresized(self, event: tcod.event.WindowResized) -> None:
-    # print("Resized")
+    width, height = self.engine.context.recommended_console_size()
+    self.engine.game_world.viewport_width = width-min((width // 4), 55)
+    self.engine.game_world.viewport_height = height
+    console = self.engine.context.new_console(
+      min_columns=width,
+      min_rows=height,
+      order="F"
+    )
+    self.engine.game_map.render(console=console)
+    # console = self.engine.context.new_console(
+    #   *self.engine.context.recommended_console_size(),
+    #   order="F"
+    # )
+    # self.engine.render(console=console)
     # print(self.engine.console.width, self.engine.console.height, self.engine.game_map.width, self.engine.game_map.height)
-    return self
 
     # self.on_render(console=self.engine.console)
 
