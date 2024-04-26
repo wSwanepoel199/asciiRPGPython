@@ -4,6 +4,7 @@ import copy, math
 from typing import  Optional, Tuple, TypeVar, TYPE_CHECKING, Any, Type, Union
 
 from src.components.inventory import Inventory
+from src.utils.render_order import RenderOrder
 
 
 if TYPE_CHECKING:
@@ -40,6 +41,7 @@ class Entity:
     key: bool=False,
     combat: bool=False,
     blocks_movement: bool= False,
+    render_order: RenderOrder = RenderOrder.OBJECT
   ) -> None:
     self.entity_type = entity_type
     self.char= char
@@ -52,11 +54,19 @@ class Entity:
     self.safe=safe
     self.key=key
     self.combat =combat
+    self._render_order = render_order
     self.blocks_movement = blocks_movement
     self.target: Optional[Entity] = None
     if parent:
       self.parent = parent
       parent.entities.add(self)
+  @property
+  def render_order(self) -> RenderOrder:
+    if self.entity_type == "PLAYER":
+      return RenderOrder.PLAYER
+    elif self.entity_type == "CORPSE":
+      return RenderOrder.CORPSE
+    return self._render_order
   @property
   def gamemap(self) -> GameMap:
     return self.parent.gamemap
@@ -126,7 +136,8 @@ class Actor(Entity):
       char=char,
       colour=colour,
       name=name,
-      blocks_movement=True
+      blocks_movement=True,
+      render_order=RenderOrder.ACTOR
     )
     self.ai: Optional[BaseAi] = ai_cls(self)
     self.fighter = fighter
@@ -151,7 +162,6 @@ class Item(Entity):
     char:str="?",
     colour: Tuple[int,int,int]=(255,255,255),
     name: str= "<Unnamed>",
-    entity_type: str= "ITEM",
     consumable: Consumable,
   ):
     super().__init__(
@@ -161,7 +171,8 @@ class Item(Entity):
       colour=colour,
       name=name,
       blocks_movement=False,
-      entity_type=entity_type
+      entity_type="ITEM",
+      render_order=RenderOrder.ITEM
     )
     self.consumable = consumable
     self.consumable.parent = self

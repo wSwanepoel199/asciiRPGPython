@@ -12,7 +12,7 @@ max_items_by_floor = [
   (4,2),
 ]
 
-max_monsters_by_floor = [
+max_enemies_by_floor = [
   (1,2),
   (4,3),
   (6,5)
@@ -96,12 +96,12 @@ def place_entities(
   dungeon: GameMap, 
   floor_number: int
 ) -> None:
-    number_of_monsters = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_monsters_by_floor, floor=floor_number))
+    number_of_enemies = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_enemies_by_floor, floor=floor_number))
     number_of_items = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_items_by_floor, floor=floor_number))
 
     monsters = get_entities_at_random(
       list_of_entities=available_enemies, 
-      number_of_entities=number_of_monsters, 
+      number_of_entities=number_of_enemies, 
       floor=floor_number
     )
     items = get_entities_at_random(

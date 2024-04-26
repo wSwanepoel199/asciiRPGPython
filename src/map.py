@@ -432,12 +432,16 @@ class GameMap:
       default=self.tile_types['shroud'],
     )
 
-    player = list(filter(lambda entity: entity['entity_type'] == 'PLAYER', self.entities))
-    actors = list(filter(lambda entity: entity['entity_type'] == 'ACTOR', self.entities))
-    objects = list(filter(lambda entity: entity['entity_type'] == 'OBJECT', self.entities))
-    items = list(filter(lambda entity: entity['entity_type'] == 'ITEM', self.entities))
+    sorted_entities_for_rendering = sorted(
+      self.entities, key=lambda entity: entity.render_order.value
+    )
 
-    for entity in objects + items + actors + player:
+    # player = list(filter(lambda entity: entity['entity_type'] == 'PLAYER', self.entities))
+    # actors = list(filter(lambda entity: entity['entity_type'] == 'ACTOR', self.entities))
+    # objects = list(filter(lambda entity: entity['entity_type'] == 'OBJECT', self.entities))
+    # items = list(filter(lambda entity: entity['entity_type'] == 'ITEM', self.entities))
+
+    for entity in sorted_entities_for_rendering:
        if self.visible[entity.x, entity.y]:
         self.console.print(
           x=entity.x-x1,

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple
 
 from src.components.base_component import BaseComponent
+from src.utils.render_order import RenderOrder
 
 if TYPE_CHECKING:
   from src.entity import Actor
@@ -33,7 +34,8 @@ class Fighter(BaseComponent):
       self.engine.player.level.add_xp(xp=self.parent.level.xp_given)
 
     self.parent.char = "%"
-    self.parent.entity_type = "OBJECT"
+    self.parent.entity_type = "CORPSE"
+    self.parent._render_order = RenderOrder.CORPSE
     self.parent.colour = (191,0,0)
     self.parent.blocks_movement = False
     self.parent.ai = None
