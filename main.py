@@ -1,6 +1,6 @@
 print(__name__)
 # ‎ 
-import tcod, traceback
+import tcod, traceback, io
 # from src.map import Map, GameMap
 # from src.player import Player
 # from src.entity import Entity
@@ -11,6 +11,7 @@ import tcod, traceback
 import src.event_handler as event_handler
 import src.game_setup as game_setup
 import src.utils.exceptions as exceptions
+
 
 initialLoad = True
 
@@ -79,17 +80,28 @@ def main():
   rows= round(columns // resolution425[0] * resolution425[1])
   FLAGS = tcod.context.SDL_WINDOW_RESIZABLE
   # | tcod.context.SDL_WINDOW_MAXIMIZED
-  
 
+  
   tileset = tcod.tileset.load_tilesheet(
     # path="./src/assets/dejavu10x10_gs_tc.png",
     # path="./src/assets/rexpaint_cp437_10x10.png",
-    path="./src/assets/Cheepicus_15x15.png",
+    path='./src/assets/Cheepicus_15x15.png',
     # path="./src/assets/Aesomatica_16x16.png",
     # path="./src/assets/Runeset_24x24.png",
     columns=16, rows=16,
     charmap=tcod.tileset.CHARMAP_CP437
   )
+
+
+  # tileset = tcod.tileset.load_tilesheet(
+  #   # path="./src/assets/dejavu10x10_gs_tc.png",
+  #   # path="./src/assets/rexpaint_cp437_10x10.png",
+  #   path="./src/assets/Cheepicus_15x15.png",
+  #   # path="./src/assets/Aesomatica_16x16.png",
+  #   # path="./src/assets/Runeset_24x24.png",
+  #   columns=16, rows=16,
+  #   charmap=tcod.tileset.CHARMAP_CP437
+  # )
   title = "Rogue But Worse"
   # tcod.tileset.procedural_block_elements(tileset=tileset)
   # context: tcod.context.Context = Engine().genContext(

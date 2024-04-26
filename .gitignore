@@ -4,3 +4,7 @@ saves/
 
 # game saves
 *.sav
+
+build
+dist
+**/*.spec
