@@ -8,6 +8,7 @@ from typing import Optional
 import src.factory.actor_factory as actor_factory
 import src.factory.item_factory as item_factory
 import src.event_handler as event_handler
+import src.assets.load_asset as load_asset
 from src.engine import Engine
 from src.map import GameWorld
 from src.utils.colour import loadColours
@@ -82,7 +83,7 @@ class MainMenu(event_handler.BaseEventHandler):
     image = tcod.image.Image(
       width=console.width,
       height=console.height,
-    ).from_file("./src/assets/menu_background.png")
+    ).from_file(load_asset.menu_background)
     image.scale(width=console.width*2, height=console.height*2)
 
     console.draw_semigraphics(pixels=image,x=0,y=0)
