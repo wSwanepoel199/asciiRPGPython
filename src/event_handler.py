@@ -200,7 +200,7 @@ class InventoryEventHandler(AskUserEventHandler):
           string=f"[{item_key}]-{item.name}",
           width=width-2
         ))
-        lines += item + ['‎']
+        lines += item + [constants.empty_space]
         height += len(item)
         
         # height += len(lines)
@@ -400,6 +400,8 @@ class MainGameEventHandler(EventHandler):
         return LookHandler(engine=self.engine)
       case tcod.event.KeySym.p:
         return action.PickupAction(entity=player)
+      case tcod.event.KeySym.c:
+        return CharacterScreenEventHandler(engine=self.engine)
       case _:
         if key in MOVE_KEYS:
           dx, dy = MOVE_KEYS[key]
@@ -680,6 +682,7 @@ class LevelUpEventHandler(AskUserEventHandler):
   def on_render(self, console: tcod.console.Console) -> None:
     super().on_render(console=console)
     x = self.engine.game_world.viewport_width+1
+    y = 1
     lines = []
     width = self.engine.side_console-3
     lines += list(self.engine.message_log.wrap(
@@ -707,7 +710,7 @@ class LevelUpEventHandler(AskUserEventHandler):
     height = len(lines) +2
     console.draw_frame(
       x=x,
-      y=1,
+      y=y,
       width=width+1,
       height=height,
       title=self.TITLE,
@@ -716,7 +719,7 @@ class LevelUpEventHandler(AskUserEventHandler):
       bg=(0, 0, 0),
     )
 
-    offset = 2
+    offset = y+1
     for line in lines:
       console.print(x=x+1, y=offset, string=line)
       offset+=1
@@ -747,3 +750,66 @@ class LevelUpEventHandler(AskUserEventHandler):
     Don't allow the player to click to exit the menu, like normal.
     """
     return None
+  
+class CharacterScreenEventHandler(AskUserEventHandler):
+  TITLE = "Stats"
+
+  def on_render(self, console: tcod.console.Console) -> None:
+    super().on_render(console=console)
+    x = self.engine.game_world.viewport_width+1
+    y = 1
+    width = self.engine.side_console-3
+    lines = []
+    lines += list(self.engine.message_log.wrap(
+      string=f"Name: {self.engine.player.name}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"HP: {self.engine.player.fighter.HP}/{self.engine.player.fighter.MAX_HP}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"Attack: {self.engine.player.fighter.ATK[0]}-{self.engine.player.fighter.ATK[1]}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"Defence: {self.engine.player.fighter.DEF}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"Level: {self.engine.player.level.curr_level}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"XP: {self.engine.player.level.curr_xp}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"Next Level: {self.engine.player.level.xp_to_next_level}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    height = len(lines)+3
+    console.draw_frame(
+      x=x,
+      y=y,
+      width=width+1,
+      height=height,
+      title=self.TITLE,
+      clear=True,
+      fg=(255, 255, 255),
+      bg=(0, 0, 0),
+    )
+
+    offset = y+2
+    for line in lines:
+      console.print(x=x+1, y=offset, string=line)
+      offset+=1
+      if offset > height:
+        break

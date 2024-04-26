@@ -105,7 +105,7 @@ class MeleeAction(DirectionalAction):
     self.entity['target'] = target
     if not target:
       raise self.engine.exceptions.Impossible("Nothing to attack.")
-    damage = random.sample(range(*self.entity.fighter.ATK), 1)[0] - target.fighter.DEF
+    damage = random.sample(range(*self.entity.fighter.ATK), 1)[0] - random.sample(range(*[target.fighter.DEF//2, target.fighter.DEF]), 1)[0]
     if self.entity is self.engine.player:
       attack_desc = f"{self.entity.name.capitalize()} attacked the {target.name}"
       attack_color = self.engine.colours['player_atk']

@@ -23,7 +23,7 @@ goblin = Actor(
   name="Goblin",
   money=8,
   ai_cls=HostileAi,
-  fighter=Fighter(HP=15, ATK=[1,3], DEF=0),
+  fighter=Fighter(HP=15, ATK=[1,3], DEF=1),
   level=Level(xp_given=10)
 )
 slime = Actor(
@@ -44,7 +44,7 @@ orc = Actor(
   name="Orc",
   ai_cls=HostileAi,
   money=18,
-  fighter=Fighter(HP=35, ATK=[2,6], DEF=1),
+  fighter=Fighter(HP=35, ATK=[2,6], DEF=3),
   level=Level(xp_given=50)
 )
 
