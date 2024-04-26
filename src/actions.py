@@ -69,7 +69,10 @@ class ItemAction(Action):
     return self.engine.game_map.get_actor_at_location(*self.target_xy)
   
   def perform(self)->None:
-    self.item.consumable.action(action=self)
+    if self.item.consumable:
+      self.item.consumable.action(action=self)
+    else:
+      raise self.engine.exceptions.Impossible(f"The {self.item.name} cannot be used.")
 
 # class EscapeAction(Action):
 #   def perform(self) -> None:

@@ -19,16 +19,37 @@ max_enemies_by_floor = [
 ]
 
 available_enemies = {
-  0: [(actor_factory.goblin, 70)],
-  3: [(actor_factory.slime, 80)],
-  5: [(actor_factory.orc, 50)],
-  10: [(actor_factory.dragon, 10)],
+  0: [
+    (actor_factory.goblin, 70)
+    ],
+  3: [
+    (actor_factory.slime, 80)
+    ],
+  5: [
+    (actor_factory.orc, 50)
+    ],
+  10: [
+    (actor_factory.dragon, 10)
+    ],
 }
 
 available_items = {
-  0 : [(item_factory.healing_potion, 80), (item_factory.lightning_bolt_scroll, 70), (item_factory.fireball_scroll, 60)],
-  2 : [(item_factory.cure_wounds_scroll, 40)],
-  4 : [(item_factory.confusion_scroll, 40), (item_factory.teleport_scroll, 40)],
+  0 : [
+    (item_factory.healing_potion, 80),
+    (item_factory.lightning_bolt_scroll, 70),
+    (item_factory.fireball_scroll, 60),
+    (item_factory.dagger, 60),
+    (item_factory.leather_armour, 30)
+    ],
+  2 : [
+    (item_factory.cure_wounds_scroll, 40),
+    (item_factory.sword, 30)
+    ],
+  4 : [
+    (item_factory.confusion_scroll, 40),
+    (item_factory.teleport_scroll, 40),
+    (item_factory.chain_mail, 20)
+    ],
 }
 
 def get_max_value_for_floor(max_value_by_floor, floor):
@@ -190,7 +211,6 @@ def genDungeon(
       #   for i in item:
       #     i[0].spawn(x=x, y=y, gamemap=dungeon)
     else:
-
       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
 
@@ -206,6 +226,7 @@ def genDungeon(
 
   i = 0
   j = 0
+  wall_layout = []
   while i < dungeon.height:
     if i+1 >= dungeon.height:
       break
@@ -220,5 +241,24 @@ def genDungeon(
     j = 0
     i += 1
 
+  i = 0
+  j = 0
+  while i < dungeon.height:
+    if i+1 >= dungeon.height:
+      break
+    while j < dungeon.width:
+      if j+1 >= dungeon.width:
+        break
+      if dungeon.tiles[j,i] == dungeon.tile_types["wall"]:
+        wall_layout += [dungeon.modifyWall(x=j,y=i,dungeon=dungeon)]
+      j += 1
+    j = 0
+    i += 1
+
+  for wall in list(wall_layout):
+    if wall and len(wall) == 3:
+      dungeon.tiles[wall[0],wall[1]] = dungeon.tile_types[wall[2]]
+    else:
+      continue
 
   return dungeon

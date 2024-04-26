@@ -40,9 +40,75 @@ tile_types = {
   ),
   'wall': new_tile(
     walkable=False, 
+    transparent=True, 
+    dark=(ord("\xa0"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("\xa0"), (255, 255, 255), (0, 0, 0))
+  ),
+  'h-wall': new_tile(
+    walkable=False, 
     transparent=False, 
-    dark=(ord("#"), (100, 100, 100), (10, 10, 10)),
-    light=(ord("#"), (255, 255, 255), (0, 0, 0))
+    dark=(ord("═"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("═"), (255, 255, 255), (0, 0, 0))
+  ),
+  'v-wall': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("║"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("║"), (255, 255, 255), (0, 0, 0))
+  ),
+  'l-wall-d-r': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("╔"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("╔"), (255, 255, 255), (0, 0, 0))
+  ),
+  'l-wall-d-l': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("╗"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("╗"), (255, 255, 255), (0, 0, 0))
+  ),
+  'l-wall-t-r': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("╚"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("╚"), (255, 255, 255), (0, 0, 0))
+  ),
+  'l-wall-t-l': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("╝"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("╝"), (255, 255, 255), (0, 0, 0))
+  ),
+  't-wall-v-l': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("╣"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("╣"), (255, 255, 255), (0, 0, 0))
+  ),
+  't-wall-v-r': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("╠"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("╠"), (255, 255, 255), (0, 0, 0))
+  ),
+  't-wall-h-t': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("╩"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("╩"), (255, 255, 255), (0, 0, 0))
+  ),
+  't-wall-h-d': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("╦"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("╦"), (255, 255, 255), (0, 0, 0))
+  ),
+  'x-wall': new_tile(
+    walkable=False, 
+    transparent=False, 
+    dark=(ord("╬"), (100, 100, 100), (10, 10, 10)),
+    light=(ord("╬"), (255, 255, 255), (0, 0, 0))
   ),
   'stairs_down': new_tile(
     walkable=True,

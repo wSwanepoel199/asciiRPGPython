@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, TYPE_CHECKING, Tuple
+from typing import Iterable, Optional, TYPE_CHECKING, Tuple, List
 
 import numpy as np
 import tcod, random
@@ -9,13 +9,11 @@ import src.tile_types as tile_types
 from src.game import Game
 from src.save import Save
 from src.entity import Actor, Item
-import src.factory.actor_factory as actor_factory
-import src.factory.item_factory as item_factory
+import src.utils.constants as constants
 
 if TYPE_CHECKING:
-    from src.entity import Entity
-    from src.engine import Engine
-    from src.procgen import RecRoom
+  from src.entity import Entity
+  from src.engine import Engine
 
 class Map:
   def __init__(self, ) -> None:
@@ -486,6 +484,107 @@ class GameMap:
       dungeon.tiles[x,y+1] = dungeon.tile_types["wall"]
     if dungeon.tiles[x+1,y+1] == dungeon.tile_types["mapfill"]:
       dungeon.tiles[x+1,y+1] = dungeon.tile_types["wall"]
+  
+  def modifyWall(self, x:int, y:int, dungeon: GameMap) -> Tuple[int,int, str]:
+    # check for cross placement
+    if (
+      dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      return [x,y, "x-wall"]
+    # check for horizontal down placement
+    if (
+      dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["t-wall-h-d"]
+      return [ x , y ,"t-wall-h-d"]
+    # check for horizontal up placement
+    if (
+      dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["t-wall-h-t"]
+      return [x,y,"t-wall-h-t"]
+    # check for vertical left placement
+    if (
+      not dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["t-wall-v-l"]
+      return [x,y,"t-wall-v-l"]
+    # check for vertical right placement
+    if (
+      dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["t-wall-v-r"]
+      return [x,y,"t-wall-v-r"]
+    # check for corner down right
+    if (
+      dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["l-wall-d-r"]
+      return [x,y,"l-wall-d-r"]
+    # check for corner down left
+    if (
+      not dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["l-wall-d-l"]
+      return [x,y,"l-wall-d-l"]
+    # check for corner up right
+    if (
+      dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["l-wall-t-r"]
+      return [x,y,"l-wall-t-r"]
+    # check for corner up left
+    if (
+      not dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["l-wall-t-l"]
+      return [x,y,"l-wall-t-l"]
+    # check for horizontal placement
+    if (
+      dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["h-wall"]
+      return [x,y,"h-wall"]
+    # check for vertical placement
+    if (
+      not dungeon.tiles[x+1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y+1] == dungeon.tile_types["wall"]
+      and not dungeon.tiles[x-1,y] == dungeon.tile_types["wall"]
+      and dungeon.tiles[x,y-1] == dungeon.tile_types["wall"]
+    ):
+      # dungeon.tiles[x,y] = dungeon.tile_types["v-wall"]
+      return [x,y,"v-wall"]
+    # return [x,y,'wall']
 
 class GameWorld:
   """

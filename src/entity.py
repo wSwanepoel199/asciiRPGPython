@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from src.components.fighter import Fighter
     from src.components.consumable import Consumable
     from src.components.level import Level
+    from src.components.equippable import Equippable
     from src.map import GameMap
 
 T = TypeVar("T", bound="Entity")
@@ -162,7 +163,8 @@ class Item(Entity):
     char:str="?",
     colour: Tuple[int,int,int]=(255,255,255),
     name: str= "<Unnamed>",
-    consumable: Consumable,
+    consumable: Optional[Consumable] = None,
+    equippable: Optional[Equippable] = None
   ):
     super().__init__(
       x=x,
@@ -175,4 +177,9 @@ class Item(Entity):
       render_order=RenderOrder.ITEM
     )
     self.consumable = consumable
-    self.consumable.parent = self
+    if consumable:
+      self.consumable.parent = self
+    
+    self.equippable = equippable
+    if equippable:
+      self.equippable.parent = self

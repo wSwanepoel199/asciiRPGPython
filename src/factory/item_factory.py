@@ -1,6 +1,6 @@
 import src.utils.constants as constants
-import src.components.consumable as consumable 
 
+from src.components import consumable, equippable
 from src.entity import Item
 
 healing_potion = Item(
@@ -43,4 +43,32 @@ fireball_scroll = Item(
   colour=(255, 0, 0),
   name="Scroll of Fireball",
   consumable=consumable.FireballDamageConsumable(damage=[8,48], radius=3)
+)
+
+dagger = Item(
+  char="/", 
+  colour=(0, 191, 255), 
+  name="Dagger", 
+  equippable=equippable.Dagger()
+)
+
+sword = Item(
+  char="/", 
+  colour=(0, 191, 255), 
+  name="Sword", 
+  equippable=equippable.Sword()
+)
+
+leather_armour = Item(
+  char=constants.armour,
+  colour=(102, 63, 24),
+  name="Leather Armour",
+  equippable=equippable.LeatherArmour(),
+)
+
+chain_mail = Item(
+  char=constants.armour, 
+  colour=(145, 142, 140), 
+  name="Chain Mail", 
+  equippable=equippable.ChainMail()
 )

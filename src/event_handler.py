@@ -285,7 +285,12 @@ class InventoryEventHandler(AskUserEventHandler):
 class InventoryActivationHandler(InventoryEventHandler):
 
   def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
-    return item.consumable.get_action(entity=self.engine.player)
+    if item.consumable:
+      return item.consumable.get_action(entity=self.engine.player)
+    elif item.equippable:
+      return item.equippable.get_action(entity=self.engine.player)
+    else:
+      return None
 
 class InventoryDropHandler(InventoryEventHandler):
   TITLE = "DROP ITEM?"
