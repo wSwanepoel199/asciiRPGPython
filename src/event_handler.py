@@ -166,6 +166,15 @@ class EventHandler(BaseEventHandler):
   def on_render(self, console: tcod.console.Console) -> None:
     # self.engine.game_map.render(console=console)
     self.engine.render(console=console)
+    width, height = self.engine.context.recommended_console_size()
+    self.engine.game_world.viewport_width = width-min((width // 3), 55)
+    self.engine.game_world.viewport_height = height
+    # console = self.engine.context.new_console(
+    #   min_columns=width,
+    #   min_rows=height,
+    #   order="F"
+    # )
+    self.engine.game_map.render(console=console)
 
 class AskUserEventHandler(EventHandler):
   

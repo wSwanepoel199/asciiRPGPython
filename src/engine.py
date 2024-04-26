@@ -68,7 +68,6 @@ class Engine:
 
   def render(self, console: tcod.console.Console) -> None:
     self.console = console
-    self.game_map.render(console=console)
     # Draw Side Window
     self.genWindow(
       x=self.game_world.viewport_width,

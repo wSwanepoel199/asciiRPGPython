@@ -135,6 +135,9 @@ class MainMenu(event_handler.BaseEventHandler):
         ))
       case tcod.event.KeySym.c:
         try:
+          # create a load game handler that is called instead if main game
+          # handler needs to mimic resize event functionality
+          # then call the on render function once engine has been setup for new instance
           return event_handler.MainGameEventHandler(engine=load_game(filename="savegame.sav"))
         except FileNotFoundError:
           return event_handler.PopupMessage(parent=self, text="No saved game to load.")
