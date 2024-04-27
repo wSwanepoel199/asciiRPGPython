@@ -410,8 +410,9 @@ class GameMap:
     #   height=self.rows,
     #   order="F"
     # )
-    # self.xoffset = (console.width - self.engine.side_console - self.console.width)//2
-    # self.yoffset = (console.height - self.console.height)//2
+    self.xoffset = (self.console.width-x2)//2
+    self.yoffset = (self.console.height-y2)//2
+    print(self.xoffset, self.yoffset)
     # self.xoffset = 0
     # self.yoffset = 0
     
@@ -429,6 +430,14 @@ class GameMap:
 
     sorted_entities_for_rendering = sorted(
       self.entities, key=lambda entity: entity.render_order.value
+    )
+
+    self.console.print_box(
+      x=0+self.xoffset,
+      y=0+self.yoffset,
+      width=viewport_width,
+      height=viewport_height,
+      string="Test Box"
     )
 
     # player = list(filter(lambda entity: entity['entity_type'] == 'PLAYER', self.entities))
