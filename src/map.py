@@ -389,16 +389,21 @@ class GameMap:
 
     ╔ ╗ ╚ ╝ ╠ ╣ ║ ╩ ╬ ╦ ═
     """
-    self.console = console
+    # self.console = console
+    self.console = tcod.console.Console(
+      width= self.width,
+      height= self.height,
+      order="F"
+    )
     (x1,y1),(x2,y2) = self.get_viewport()
     viewport_width = self.engine.game_world.viewport_width if self.width > self.game_world.viewport_width else self.width
     viewport_height = self.engine.game_world.viewport_height if self.height > self.game_world.viewport_height else self.height
 
-    offset_x = slice(x1, x2+1)
-    offset_y = slice(y1, y2+1)
-    viewport_tiles = self.tiles[offset_x, offset_y]
-    viewport_visible = self.visible[offset_x, offset_y]
-    viewport_explored = self.explored[offset_x, offset_y]
+    slice_x = slice(x1, x2+1)
+    slice_y = slice(y1, y2+1)
+    viewport_tiles = self.tiles[slice_x, slice_y]
+    viewport_visible = self.visible[slice_x, slice_y]
+    viewport_explored = self.explored[slice_x, slice_y]
     # if not self.console:
     # self.console = self.engine.context.new_console(
     #   min_columns=self.columns,
@@ -410,9 +415,9 @@ class GameMap:
     #   height=self.rows,
     #   order="F"
     # )
-    self.xoffset = (self.console.width-x2)//2
-    self.yoffset = (self.console.height-y2)//2
-    print(self.xoffset, self.yoffset)
+    self.offset_x = (self.game_world.viewport_width - x2 + x1) //2
+    self.offset_y = (self.game_world.viewport_height - y2 + y1) //2
+    # print(self.xoffset, self.yoffset)
     # self.xoffset = 0
     # self.yoffset = 0
     
@@ -432,14 +437,6 @@ class GameMap:
       self.entities, key=lambda entity: entity.render_order.value
     )
 
-    self.console.print_box(
-      x=0+self.xoffset,
-      y=0+self.yoffset,
-      width=viewport_width,
-      height=viewport_height,
-      string="Test Box"
-    )
-
     # player = list(filter(lambda entity: entity['entity_type'] == 'PLAYER', self.entities))
     # actors = list(filter(lambda entity: entity['entity_type'] == 'ACTOR', self.entities))
     # objects = list(filter(lambda entity: entity['entity_type'] == 'OBJECT', self.entities))
@@ -454,15 +451,16 @@ class GameMap:
           fg=entity.colour
         )
     
-    # self.console.blit(
-    #   dest=console,
-    #   dest_x=0+self.xoffset,
-    #   dest_y=0+self.yoffset,
-    #   src_x=0,
-    #   src_y=0,
-    #   width=self.console.width,
-    #   height=self.console.height
-    # )
+    self.console.blit(
+      dest=console,
+      dest_x=0+self.offset_x,
+      dest_y=0+self.offset_y,
+      src_x=0,
+      src_y=0,
+      width=viewport_width,
+      height=viewport_height
+    )
+    
     console.draw_frame(
       x=0,
       y=0,

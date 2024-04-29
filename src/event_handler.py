@@ -145,15 +145,15 @@ class EventHandler(BaseEventHandler):
       self.engine.mouse_location = event.tile.x, event.tile.y
 
   def ev_windowresized(self, event: tcod.event.WindowResized) -> None:
-    width, height = self.engine.context.recommended_console_size()
-    self.engine.game_world.viewport_width = width-min((width // 3), 55)
-    self.engine.game_world.viewport_height = height
+    # width, height = self.engine.context.recommended_console_size()
+    # self.engine.game_world.viewport_width = width-min((width // 3), 55)
+    # self.engine.game_world.viewport_height = height
     console = self.engine.context.new_console(
-      min_columns=width,
-      min_rows=height,
+      *self.engine.context.recommended_console_size(),
       order="F"
     )
-    self.engine.game_map.render(console=console)
+    self.engine.render(console=console)
+    # self.engine.game_map.render(console=console)
     # console = self.engine.context.new_console(
     #   *self.engine.context.recommended_console_size(),
     #   order="F"
@@ -165,16 +165,10 @@ class EventHandler(BaseEventHandler):
 
   def on_render(self, console: tcod.console.Console) -> None:
     # self.engine.game_map.render(console=console)
+    # width, height = self.engine.context.recommended_console_size()
+    # self.engine.game_world.viewport_width = width-min((width // 3), 55)
+    # self.engine.game_world.viewport_height = height
     self.engine.render(console=console)
-    width, height = self.engine.context.recommended_console_size()
-    self.engine.game_world.viewport_width = width-min((width // 3), 55)
-    self.engine.game_world.viewport_height = height
-    # console = self.engine.context.new_console(
-    #   min_columns=width,
-    #   min_rows=height,
-    #   order="F"
-    # )
-    self.engine.game_map.render(console=console)
 
 class AskUserEventHandler(EventHandler):
   
@@ -328,7 +322,7 @@ class SelectIndexHandler(AskUserEventHandler):
     super().__init__(engine=engine)
     player = self.engine.player
     self.viewport = self.engine.game_map.get_viewport()
-    engine.mouse_location = (player.x, player.y )
+    engine.mouse_location = (player.x, player.y)
     self.valid = True
     self.child = None
   
@@ -336,20 +330,15 @@ class SelectIndexHandler(AskUserEventHandler):
     if console is None:
       console = self.engine.console
     super().on_render(console=console)
-    # console = tcod.console.Console(
-    #   width=self.engine.game_map.width,
-    #   height=self.engine.game_map.height,
-    #   order="F"
-    # )
-    # console = self.engine.game_map.console
-    (x,y) = self.engine.mouse_location
-    x -= self.viewport[0][0]
-    y -= self.viewport[0][1]
-    dist = self.engine.player.distance(x+self.viewport[0][0],y+self.viewport[0][1] )
+
+    viewport = self.engine.game_map.get_viewport()
+    x, y = self.engine.mouse_location
+    x = x + self.engine.game_map.offset_x - viewport[0][0]
+    y = y + self.engine.game_map.offset_y - viewport[0][1]
+
+    dist = self.engine.player.distance(x+viewport[0][0],y+viewport[0][1] )
     if self.child and self.child.radius:
       radius = self.child.radius
-      # playerX = self.engine.player.x
-      # playerY = self.engine.player.y
       if dist > radius:
         console.rgb['fg'][x,y]=self.engine.colours['black']
         console.rgb['bg'][x,y]=self.engine.colours['red']
@@ -358,15 +347,6 @@ class SelectIndexHandler(AskUserEventHandler):
     
     console.rgb['fg'][x,y]=self.engine.colours['black']
     console.rgb['bg'][x,y]=self.engine.colours['white']
-    # console.blit(
-    #   dest=self.engine.console,
-    #   dest_x=x+self.engine.game_map.xoffset,
-    #   dest_y=y+self.engine.game_map.yoffset,
-    #   src_x=x,
-    #   src_y=y,
-    #   width=1,
-    #   height=1,
-    # )
   
   def ev_keydown(self, event: tcod.event.KeyDown) ->  Optional[ActionOrHandler]:
     key = event.sym
@@ -541,14 +521,15 @@ class SingleTargetSelectHandler(SelectIndexHandler):
       console = self.engine.console
     super().on_render(console=console)
     viewport = self.engine.game_map.get_viewport()
+    x, y = self.player_pos = (self.engine.player.x + self.engine.game_map.offset_x - viewport[0][0], self.engine.player.y + self.engine.game_map.offset_y - viewport[0][1])
 
     if self.item.consumable.range:
       self.radius = self.item.consumable.range
     else:
       self.radius = 8
 
-    x = self.engine.player.x - self.radius - 1 - viewport[0][0]
-    y = self.engine.player.y - self.radius - 1 - viewport[0][1]
+    x = x - self.radius - 1
+    y = y - self.radius - 1
     diameter = self.radius * 2 + 3
 
     if self.item:
@@ -565,20 +546,9 @@ class SingleTargetSelectHandler(SelectIndexHandler):
       clear=False
     )
 
-    # console.blit(
-    #   dest=self.engine.console,
-    #   dest_x=x+self.engine.game_map.xoffset,
-    #   dest_y=y+self.engine.game_map.yoffset,
-    #   src_x=x,
-    #   src_y=y,
-    #   width=diameter,
-    #   height=diameter
-    # )
 
   def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
-    # (v_x, v_y), (v_x1, v_y1) = self.engine.game_map.get_viewport()
-    # x+= v_x
-    # y += v_y
+
     return self.callback((x, y))
 
 class AreaRangedSelectHandler(SelectIndexHandler):
@@ -597,21 +567,16 @@ class AreaRangedSelectHandler(SelectIndexHandler):
       console = self.engine.console
     super().on_render(console=console)
     viewport = self.engine.game_map.get_viewport()
-    # console = self.engine.game_map.console
-    # console = tcod.console.Console(
-    #   width=self.engine.game_map.width,
-    #   height=self.engine.game_map.height,
-    #   order="F"
-    # )
+    x, y = self.engine.mouse_location
+    x, y = self.mouse_pos = (x + self.engine.game_map.offset_x - viewport[0][0], y + self.engine.game_map.offset_y - viewport[0][1])
+
 
     if self.item.consumable.radius:
       self.radius = self.item.consumable.radius
     else:
       self.radius = 8
-
-    x , y = self.engine.mouse_location
-    x = x - self.radius - 1 - viewport[0][0]
-    y = y - self.radius - 1 - viewport[0][1]
+    x = x - self.radius - 1
+    y = y - self.radius - 1
     diameter = self.radius * 2 + 3
     
     console.draw_frame(
@@ -623,19 +588,9 @@ class AreaRangedSelectHandler(SelectIndexHandler):
       clear=False
     )
 
-    # console.blit(
-    #   dest=self.engine.console,
-    #   dest_x=x+self.engine.game_map.xoffset,
-    #   dest_y=y+self.engine.game_map.yoffset,
-    #   src_x=x,
-    #   src_y=y,
-    #   width=diameter,
-    #   height=diameter
-    # )
+
   def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
-    # (v_x, v_y), (v_x1, v_y1) = self.engine.game_map.get_viewport()
-    # x+= v_x
-    # y += v_y
+
     return self.callback((x, y))
 
 class LineTargetSelectHandler(SelectIndexHandler):
@@ -655,18 +610,13 @@ class LineTargetSelectHandler(SelectIndexHandler):
       console = self.engine.console
     super().on_render(console=console)
     viewport = self.engine.game_map.get_viewport()
-    # self.engine.player.x -= viewport[0][0]
-    # self.engine.player.y -= viewport[0][1]
-    # console = tcod.console.Console(
-    #   width=self.engine.game_map.width,
-    #   height=self.engine.game_map.height,
-    #   order="F"
-    # )
+    x, y = self.player_pos = (self.engine.player.x + self.engine.game_map.offset_x - viewport[0][0], self.engine.player.y + self.engine.game_map.offset_y - viewport[0][1])
+
     if self.item.consumable.range:
       self.radius = self.item.consumable.range
-
-    x = self.engine.player.x - self.radius - 1 - viewport[0][0]
-    y = self.engine.player.y - self.radius - 1 - viewport[0][1]
+    (playerX, playerY) = self.player_pos
+    x = x - self.radius - 1
+    y = y - self.radius - 1
     diameter = self.radius * 2 + 3
 
     if self.item:
@@ -683,13 +633,11 @@ class LineTargetSelectHandler(SelectIndexHandler):
       clear=False
     )
     radius = self.radius
-    playerX = self.engine.player.x - viewport[0][0]
-    playerY = self.engine.player.y - viewport[0][1]
     mouseX = self.engine.mouse_location[0] - viewport[0][0]
     mouseY = self.engine.mouse_location[1] - viewport[0][1]
     
     line = tcod.los.bresenham(
-      start=(playerX, playerY), 
+      start=(x, y), 
       end=(mouseX, mouseY)
     ).tolist()
     
@@ -702,9 +650,7 @@ class LineTargetSelectHandler(SelectIndexHandler):
         console.rgb['fg'][pointX,pointY]=self.engine.colours['black']
         console.rgb['bg'][pointX,pointY]=self.item.colour
   def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
-    # (v_x, v_y), (v_x1, v_y1) = self.engine.game_map.get_viewport()
-    # x += v_x
-    # y += v_y
+
     return self.callback((x, y))
 
 class LevelUpEventHandler(AskUserEventHandler):
