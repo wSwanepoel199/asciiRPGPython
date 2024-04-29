@@ -629,8 +629,8 @@ class GameWorld:
     self.current_floor += 1
 
     self.engine.game_map = genDungeon(
-      map_width=70 + self.current_floor * 10,
-      map_height=70 + self.current_floor * 10,
+      map_width=20 + self.current_floor * 10,
+      map_height=20 + self.current_floor * 10,
       min_room_size=self.min_room_size,
       max_room_size=self.min_room_size,
       room_limit=self.room_limit,

@@ -1,5 +1,5 @@
 from __future__ import annotations
-import random, tcod
+import random, tcod, time
 import src.factory.actor_factory as actor_factory
 import src.factory.item_factory as item_factory
 from typing import Tuple, Iterator, List, TYPE_CHECKING
@@ -85,6 +85,7 @@ class RecRoom:
     self.y1 = y
     self.x2 = x + width
     self.y2 = y + height
+    self.node = None
 
     # self.point1 = (x, y)
     # self.point2 = (x+w, y+h)
@@ -167,6 +168,103 @@ def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,
   for x,y in tcod.los.bresenham(start=(corner_x, corner_y), end=(x2, y2)).tolist():
     yield x, y
 
+# def oldgenDungeon(
+#     *,
+#     map_width: int,
+#     map_height: int,
+#     min_room_size: int,
+#     max_room_size: int,
+#     room_limit: int,
+#     engine:Engine
+#     ) -> GameMap:
+#   """Generate a new dungeon map."""
+#   player = engine.player
+#   dungeon = GameMap(
+#     engine=engine, 
+#     width=map_width, 
+#     height=map_height, 
+#     map_type="dungeon", 
+#     entities=[player]
+#   )
+#   rooms: List[RecRoom] = []
+
+#   center_of_last_room = (0, 0)
+
+#   for r in range(room_limit):
+#     room_width = random.randint(a=min_room_size, b=max_room_size)
+#     room_height = random.randint(a=min_room_size, b=max_room_size)
+
+#     x = random.randint(a=1, b=dungeon.width - room_width - 2)
+#     y = random.randint(a=1, b=dungeon.height - room_height - 2)
+
+#     new_room = RecRoom(x=x, y=y, width=room_width, height=room_height)
+
+#     if any(new_room.intersects(other=other) for other in rooms):
+#       continue
+
+#     # dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
+#     dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
+
+#     if len(rooms) == 0:
+#       player.place(*new_room.center, gamemap=dungeon)
+#       x = new_room.center[0]
+#       y = new_room.center[1]
+#       # for item in available_items.values():
+#       #   for i in item:
+#       #     i[0].spawn(x=x, y=y, gamemap=dungeon)
+#     else:
+#       for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
+#         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+
+#       center_of_last_room = new_room.center
+
+#       place_entities(room=new_room, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+
+#     dungeon.tiles[center_of_last_room] = dungeon.tile_types["stairs_down"]
+
+#     dungeon.stairsdown = center_of_last_room
+
+#     rooms.append(new_room)
+
+#   i = 0
+#   j = 0
+#   wall_layout = []
+#   while i < dungeon.height:
+#     if i+1 >= dungeon.height:
+#       break
+#     while j < dungeon.width:
+#       if dungeon.tiles[j,i] == dungeon.tile_types["mapfill"] or dungeon.tiles[j,i] == dungeon.tile_types["wall"] or not dungeon.tiles[j,i]:
+#         j += 1
+#         continue
+#       if j+1 >= dungeon.width:
+#         break
+#       dungeon.placeWall(x=j,y=i,dungeon=dungeon)
+#       j += 1
+#     j = 0
+#     i += 1
+
+#   i = 0
+#   j = 0
+#   while i < dungeon.height:
+#     if i+1 >= dungeon.height:
+#       break
+#     while j < dungeon.width:
+#       if j+1 >= dungeon.width:
+#         break
+#       if dungeon.tiles[j,i] == dungeon.tile_types["wall"]:
+#         wall_layout += [dungeon.modifyWall(x=j,y=i,dungeon=dungeon)]
+#       j += 1
+#     j = 0
+#     i += 1
+
+#   for wall in list(wall_layout):
+#     if wall and len(wall) == 3:
+#       dungeon.tiles[wall[0],wall[1]] = dungeon.tile_types[wall[2]]
+#     else:
+#       continue
+
+#   return dungeon
+
 def genDungeon(
     *,
     map_width: int,
@@ -186,62 +284,87 @@ def genDungeon(
     entities=[player]
   )
   rooms: List[RecRoom] = []
-
   center_of_last_room = (0, 0)
 
-  for r in range(room_limit):
-    room_width = random.randint(a=min_room_size, b=max_room_size)
-    room_height = random.randint(a=min_room_size, b=max_room_size)
-
-    x = random.randint(a=1, b=dungeon.width - room_width - 2)
-    y = random.randint(a=1, b=dungeon.height - room_height - 2)
-
-    new_room = RecRoom(x=x, y=y, width=room_width, height=room_height)
-
-    if any(new_room.intersects(other=other) for other in rooms):
-      continue
-
-    # dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
-    dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
-
-    if len(rooms) == 0:
-      player.place(*new_room.center, gamemap=dungeon)
-      x = new_room.center[0]
-      y = new_room.center[1]
-      # for item in available_items.values():
-      #   for i in item:
-      #     i[0].spawn(x=x, y=y, gamemap=dungeon)
+  bsp = tcod.bsp.BSP(
+    x=1,
+    y=1,
+    width=dungeon.width-2,
+    height=dungeon.height-2
+  )
+  print(dungeon.height, dungeon.game_world.viewport_height)
+  bsp.split_recursive(
+    depth=3,
+    min_width=min_room_size,
+    min_height=min_room_size,
+    max_horizontal_ratio=1.5,
+    max_vertical_ratio=1.5,
+  )
+  
+  for node in bsp.inverted_level_order():
+    print(node)
+    if node.children:
+      node1, node2 = node.children
+      # print('Connect the rooms:\n%s\n%s' % (node1, node2))
     else:
-      for x, y in genTunnel(start=rooms[-1].center, end=new_room.center):
+      # print('Dig a room for %s.' % node)
+
+      room_width = random.randint(a=min_room_size, b=node.width)
+      room_height = random.randint(a=min_room_size, b=node.height)
+      room_x = random.randint(a=node.x, b=node.x+node.width-room_width)
+      room_y = random.randint(a=node.y, b=node.y+node.height-room_height)
+      new_room = RecRoom(x=room_x, y=room_y, width=room_width-1, height= room_height-1)
+
+      dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
+
+      new_room.node = node
+      if len(rooms)==0:
+        player.place(*new_room.center, gamemap=dungeon)
+        # x = new_room.center[0]
+        # y = new_room.center[1]
+        # for item in available_items.values():
+        #   for i in item:
+        #     i[0].spawn(x=x, y=y, gamemap=dungeon)
+      else:
+        center_of_last_room = new_room.center
+
+        place_entities(room=new_room, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+
+      rooms.append(new_room)
+
+  prev_room = None
+  for room in rooms:
+    if prev_room:
+      start = prev_room.center
+      end = room.center
+
+      for x, y in genTunnel(start=start, end=end):
+        if not dungeon.tiles[x-1,y] == dungeon.tile_types["floor"]:
+          dungeon.tiles[x-1,y] = dungeon.tile_types["wall"]
+        if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
+          dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
+        if not dungeon.tiles[x,y-1] == dungeon.tile_types["floor"]:
+          dungeon.tiles[x,y-1] = dungeon.tile_types["wall"]
+        if not dungeon.tiles[x,y+1] == dungeon.tile_types["floor"]:
+          dungeon.tiles[x,y+1] = dungeon.tile_types["wall"]
+        if not dungeon.tiles[x+1,y+1] == dungeon.tile_types["floor"]:
+          dungeon.tiles[x+1,y+1] = dungeon.tile_types["wall"]
+        if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:
+          dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
+        if not dungeon.tiles[x-1,y-1] == dungeon.tile_types["floor"]:
+          dungeon.tiles[x-1,y-1] = dungeon.tile_types["wall"]
+        if not dungeon.tiles[x-1,y+1] == dungeon.tile_types["floor"]:
+          dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
         dungeon.tiles[x,y] = dungeon.tile_types["floor"]
-
-      center_of_last_room = new_room.center
-
-      place_entities(room=new_room, dungeon=dungeon, floor_number=engine.game_world.current_floor)
-
+    else:
+      prev_room = room
+    dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
+    
     dungeon.tiles[center_of_last_room] = dungeon.tile_types["stairs_down"]
 
     dungeon.stairsdown = center_of_last_room
-
-    rooms.append(new_room)
-
-  i = 0
-  j = 0
+  
   wall_layout = []
-  while i < dungeon.height:
-    if i+1 >= dungeon.height:
-      break
-    while j < dungeon.width:
-      if dungeon.tiles[j,i] == dungeon.tile_types["mapfill"] or dungeon.tiles[j,i] == dungeon.tile_types["wall"] or not dungeon.tiles[j,i]:
-        j += 1
-        continue
-      if j+1 >= dungeon.width:
-        break
-      dungeon.placeWall(x=j,y=i,dungeon=dungeon)
-      j += 1
-    j = 0
-    i += 1
-
   i = 0
   j = 0
   while i < dungeon.height:
