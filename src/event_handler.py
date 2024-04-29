@@ -333,10 +333,9 @@ class SelectIndexHandler(AskUserEventHandler):
 
     viewport = self.engine.game_map.get_viewport()
     x, y = self.engine.mouse_location
-    x = x + self.engine.game_map.offset_x - viewport[0][0]
-    y = y + self.engine.game_map.offset_y - viewport[0][1]
-
-    dist = self.engine.player.distance(x+viewport[0][0],y+viewport[0][1] )
+    dist = self.engine.player.distance(x,y )
+    x = x - viewport[0][0] + self.engine.game_map.offset_x
+    y = y - viewport[0][1] + self.engine.game_map.offset_y
     if self.child and self.child.radius:
       radius = self.child.radius
       if dist > radius:
@@ -366,8 +365,8 @@ class SelectIndexHandler(AskUserEventHandler):
           x+=dx*mod
           y+=dy*mod
           # clamp x and y to map size
-          x=max(1+self.viewport[0][0], min(x, self.viewport[1][0] - 1))
-          y=max(1+self.viewport[0][1], min(y, self.viewport[1][1] - 1))
+          x=max(1-self.engine.game_map.offset_x + self.viewport[0][0], min(x, self.viewport[1][0] + self.engine.game_map.offset_x - 1))
+          y=max(1-self.engine.game_map.offset_y + self.viewport[0][1], min(y, self.viewport[1][1] + self.engine.game_map.offset_y - 1))
           # x=max(1, min(x, self.engine.game_world.viewport_width - 2))
           # y=max(1, min(y, self.engine.game_world.viewport_height - 2))
           self.engine.mouse_location = x,y
@@ -614,7 +613,7 @@ class LineTargetSelectHandler(SelectIndexHandler):
 
     if self.item.consumable.range:
       self.radius = self.item.consumable.range
-    (playerX, playerY) = self.player_pos
+
     x = x - self.radius - 1
     y = y - self.radius - 1
     diameter = self.radius * 2 + 3
@@ -633,18 +632,18 @@ class LineTargetSelectHandler(SelectIndexHandler):
       clear=False
     )
     radius = self.radius
-    mouseX = self.engine.mouse_location[0] - viewport[0][0]
-    mouseY = self.engine.mouse_location[1] - viewport[0][1]
-    
+    mouseX = self.engine.mouse_location[0] - viewport[0][0] + self.engine.game_map.offset_x
+    mouseY = self.engine.mouse_location[1] - viewport[0][1] + self.engine.game_map.offset_y
+    x, y = self.player_pos = (x + self.radius + 1, y + self.radius + 1)
     line = tcod.los.bresenham(
       start=(x, y), 
       end=(mouseX, mouseY)
     ).tolist()
     
     for pointX,pointY in line:
-      if playerX-radius > pointX or playerY-radius > pointY :
+      if x-radius > pointX or y-radius > pointY :
         self.valid = False
-      elif pointX > playerX+radius or pointY > playerY+radius:
+      elif pointX > x+radius or pointY > y+radius:
         self.valid = False
       else:
         console.rgb['fg'][pointX,pointY]=self.engine.colours['black']
