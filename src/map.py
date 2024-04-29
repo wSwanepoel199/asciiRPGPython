@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Iterable, Optional, TYPE_CHECKING, Tuple, List
 
 import numpy as np
+import multiprocessing as mp
 import tcod, random
 
 import src.tile_types as tile_types
@@ -626,7 +627,7 @@ class GameWorld:
   def gen_floor(self) -> None:
     from src.procgen import genDungeon
 
-    self.current_floor += 1
+    self.current_floor += 7
 
     self.engine.game_map = genDungeon(
       map_width=20 + self.current_floor * 10,

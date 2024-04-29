@@ -1,8 +1,11 @@
 from __future__ import annotations
-import random, tcod, time
+from typing import Tuple, Iterator, List, TYPE_CHECKING, Any
+
+import random, tcod
+import multiprocessing as mp
+
 import src.factory.actor_factory as actor_factory
 import src.factory.item_factory as item_factory
-from typing import Tuple, Iterator, List, TYPE_CHECKING
 from src.map import GameMap
 if TYPE_CHECKING:
   from src.engine import Engine
@@ -118,8 +121,12 @@ def place_entities(
   dungeon: GameMap, 
   floor_number: int
 ) -> None:
-    number_of_enemies = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_enemies_by_floor, floor=floor_number))
-    number_of_items = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_items_by_floor, floor=floor_number))
+    entity_num = max(max(room.x2, room.y2)//10, 1)
+    item_num = max(min(room.x2, room.y2)//10, 1)
+    number_of_enemies = random.randint(0, entity_num)
+    number_of_items = random.randint(0, item_num)
+    # number_of_enemies = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_enemies_by_floor, floor=floor_number))
+    # number_of_items = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_items_by_floor, floor=floor_number))
 
     monsters = get_entities_at_random(
       list_of_entities=available_enemies, 
@@ -265,6 +272,33 @@ def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,
 
 #   return dungeon
 
+def genTunnels(queue: mp.Queue, room: RecRoom, prev_room: RecRoom, dungeon: GameMap):
+  
+  start = prev_room.center
+  end = room.center
+
+  for x, y in genTunnel(start=start, end=end):
+    if not dungeon.tiles[x-1,y] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x-1,y] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x,y-1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x,y-1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x,y+1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x,y+1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x+1,y+1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x+1,y+1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x-1,y-1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x-1,y-1] = dungeon.tile_types["wall"]
+    if not dungeon.tiles[x-1,y+1] == dungeon.tile_types["floor"]:
+      dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
+    dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+  queue.put(dungeon.tiles)
+
+
+
 def genDungeon(
     *,
     map_width: int,
@@ -284,39 +318,56 @@ def genDungeon(
     entities=[player]
   )
   rooms: List[RecRoom] = []
+  tunnels: List[RecRoom] = []
   center_of_last_room = (0, 0)
-
   bsp = tcod.bsp.BSP(
     x=1,
     y=1,
     width=dungeon.width-2,
     height=dungeon.height-2
   )
-  print(dungeon.height, dungeon.game_world.viewport_height)
   bsp.split_recursive(
-    depth=3,
+    depth=2+dungeon.game_world.current_floor,
     min_width=min_room_size,
     min_height=min_room_size,
     max_horizontal_ratio=1.5,
     max_vertical_ratio=1.5,
   )
   
-  for node in bsp.inverted_level_order():
+  for node in bsp.pre_order():
     print(node)
     if node.children:
       node1, node2 = node.children
-      # print('Connect the rooms:\n%s\n%s' % (node1, node2))
+      print('Connect the rooms:\n%s\n%s' % (node1, node2))
+      if node.horizontal:
+        tunnel = RecRoom(
+          x=node1.x+node1.width//2+(node1.width%2),
+          y=node1.y+node1.height//2+(node1.height%2),
+          width=2,
+          height=node2.y+node2.height//2-(node1.y+node1.height//2)
+          )
+      else:
+        tunnel = RecRoom(
+          x=node1.x+node1.width//2+(node1.width%2),
+          y=node1.y+node1.height//2+(node1.height%2),
+          width=node2.x+node2.width//2-(node1.x+node1.width//2),
+          height=2
+          )
+      dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
+      tunnels.append(tunnel)
     else:
-      # print('Dig a room for %s.' % node)
+      print('Dig a room for %s.' % node)
 
       room_width = random.randint(a=min_room_size, b=node.width)
       room_height = random.randint(a=min_room_size, b=node.height)
-      room_x = random.randint(a=node.x, b=node.x+node.width-room_width)
-      room_y = random.randint(a=node.y, b=node.y+node.height-room_height)
+      # room_x = random.randint(a=node.x, b=node.x+node.width-room_width)
+      # room_y = random.randint(a=node.y, b=node.y+node.height-room_height)
+      room_x = node.x+node.width//2-room_width//2
+      room_y = node.y+node.height//2-room_height//2
       new_room = RecRoom(x=room_x, y=room_y, width=room_width-1, height= room_height-1)
 
       dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
-
+      
       new_room.node = node
       if len(rooms)==0:
         player.place(*new_room.center, gamemap=dungeon)
@@ -332,37 +383,15 @@ def genDungeon(
 
       rooms.append(new_room)
 
-  prev_room = None
   for room in rooms:
-    if prev_room:
-      start = prev_room.center
-      end = room.center
-
-      for x, y in genTunnel(start=start, end=end):
-        if not dungeon.tiles[x-1,y] == dungeon.tile_types["floor"]:
-          dungeon.tiles[x-1,y] = dungeon.tile_types["wall"]
-        if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
-          dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
-        if not dungeon.tiles[x,y-1] == dungeon.tile_types["floor"]:
-          dungeon.tiles[x,y-1] = dungeon.tile_types["wall"]
-        if not dungeon.tiles[x,y+1] == dungeon.tile_types["floor"]:
-          dungeon.tiles[x,y+1] = dungeon.tile_types["wall"]
-        if not dungeon.tiles[x+1,y+1] == dungeon.tile_types["floor"]:
-          dungeon.tiles[x+1,y+1] = dungeon.tile_types["wall"]
-        if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:
-          dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
-        if not dungeon.tiles[x-1,y-1] == dungeon.tile_types["floor"]:
-          dungeon.tiles[x-1,y-1] = dungeon.tile_types["wall"]
-        if not dungeon.tiles[x-1,y+1] == dungeon.tile_types["floor"]:
-          dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
-        dungeon.tiles[x,y] = dungeon.tile_types["floor"]
-    else:
-      prev_room = room
     dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
     
     dungeon.tiles[center_of_last_room] = dungeon.tile_types["stairs_down"]
 
     dungeon.stairsdown = center_of_last_room
+  
+  for tunnel in tunnels:
+    dungeon.tiles[tunnel.inner] = dungeon.tile_types["floor"]
   
   wall_layout = []
   i = 0
