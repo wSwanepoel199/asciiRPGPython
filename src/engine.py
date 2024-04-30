@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Tuple
-import tcod, traceback, lzma, pickle
+import tcod, lzma, pickle
 import tcod.constants
 from src.utils.colour import loadColours
 from src.message import MessageLog
@@ -46,7 +46,8 @@ class Engine:
     self.game_map.visible[:] = tcod.map.compute_fov(
       transparency=self.game_map.tiles['transparent'],
       pov=(self.player.x, self.player.y),
-      radius=8
+      radius=8,
+      algorithm=tcod.constants.FOV_BASIC
     )
 
     # If a tile is "visible" it should be added to "explored".
@@ -70,9 +71,6 @@ class Engine:
     self.console = console
     # Draw Side Window
 
-    width, height = self.context.recommended_console_size()
-    self.game_world.viewport_width = width-min((width // 3), 55)
-    self.game_world.viewport_height = height
     self.game_map.render(console=console)
 
     self.genWindow(

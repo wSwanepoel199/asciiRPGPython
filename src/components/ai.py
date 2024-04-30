@@ -61,7 +61,6 @@ class HostileAi(BaseAi):
 
   def perform(self) -> None:
 
-
     target = self.engine.player
     dx = 0
     dy = 0

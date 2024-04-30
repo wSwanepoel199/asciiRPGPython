@@ -327,7 +327,7 @@ def genDungeon(
     height=dungeon.height-2
   )
   bsp.split_recursive(
-    depth=2+dungeon.game_world.current_floor,
+    depth=2+(dungeon.game_world.current_floor//2),
     min_width=min_room_size,
     min_height=min_room_size,
     max_horizontal_ratio=1.5,
@@ -344,13 +344,13 @@ def genDungeon(
           x=node1.x+node1.width//2+(node1.width%2),
           y=node1.y+node1.height//2+(node1.height%2),
           width=2,
-          height=node2.y+node2.height//2-(node1.y+node1.height//2)
+          height=node.position
           )
       else:
         tunnel = RecRoom(
           x=node1.x+node1.width//2+(node1.width%2),
           y=node1.y+node1.height//2+(node1.height%2),
-          width=node2.x+node2.width//2-(node1.x+node1.width//2),
+          width=node.position,
           height=2
           )
       dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
@@ -367,7 +367,10 @@ def genDungeon(
       new_room = RecRoom(x=room_x, y=room_y, width=room_width-1, height= room_height-1)
 
       dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
-      
+      dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
+
+
+
       new_room.node = node
       if len(rooms)==0:
         player.place(*new_room.center, gamemap=dungeon)
@@ -384,7 +387,7 @@ def genDungeon(
       rooms.append(new_room)
 
   for room in rooms:
-    dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
+    # dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
     
     dungeon.tiles[center_of_last_room] = dungeon.tile_types["stairs_down"]
 
