@@ -369,8 +369,6 @@ def genDungeon(
       dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
       dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
 
-
-
       new_room.node = node
       if len(rooms)==0:
         player.place(*new_room.center, gamemap=dungeon)
