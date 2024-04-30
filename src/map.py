@@ -444,7 +444,7 @@ class GameMap:
     # items = list(filter(lambda entity: entity['entity_type'] == 'ITEM', self.entities))
 
     for entity in sorted_entities_for_rendering:
-       if self.visible[entity.x, entity.y]:
+      # if self.visible[entity.x, entity.y]:
         self.console.print(
           x=entity.x-x1,
           y=entity.y-y1,
