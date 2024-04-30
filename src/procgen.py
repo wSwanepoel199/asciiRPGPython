@@ -116,26 +116,19 @@ class RecRoom:
             self.y1 <= other.y2 and
             self.y2 >= other.y1)
 
-def place_entities(
+def place_enemies(
   room: RecRoom, 
   dungeon: GameMap, 
   floor_number: int
 ) -> None:
     entity_num = max(max(room.x2, room.y2)//10, 1)
-    item_num = max(min(room.x2, room.y2)//10, 1)
     number_of_enemies = random.randint(0, entity_num)
-    number_of_items = random.randint(0, item_num)
+
     # number_of_enemies = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_enemies_by_floor, floor=floor_number))
-    # number_of_items = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_items_by_floor, floor=floor_number))
 
     monsters = get_entities_at_random(
       list_of_entities=available_enemies, 
       number_of_entities=number_of_enemies, 
-      floor=floor_number
-    )
-    items = get_entities_at_random(
-      list_of_entities=available_items, 
-      number_of_entities=number_of_items, 
       floor=floor_number
     )
 
@@ -150,13 +143,28 @@ def place_entities(
         # entity.fighter.Base_ATK[0] += (floor_number//2)
         # entity.fighter.Base_ATK[1] += (floor_number//2)
         entity.spawn(x=x, y=y, gamemap=dungeon)
-    
-    for item in items:
-      x = random.randint(a=room.x1 + 1, b=room.x2 - 1)
-      y = random.randint(a=room.y1 + 1, b=room.y2 - 1)
-      # entity = random.choice(list(available_items.values()))
-      if not any(entity.x == x and entity.y == y for entity in dungeon.items):
-        item.spawn(x=x, y=y, gamemap=dungeon)
+
+def place_items(
+  room: RecRoom, 
+  dungeon: GameMap, 
+  floor_number: int
+) -> None:
+  item_num = max(min(room.x2, room.y2)//10, 1)
+  number_of_items = random.randint(0, item_num)
+  # number_of_items = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_items_by_floor, floor=floor_number))
+
+  items = get_entities_at_random(
+    list_of_entities=available_items, 
+    number_of_entities=number_of_items, 
+    floor=floor_number
+  )
+
+  for item in items:
+    x = random.randint(a=room.x1 + 1, b=room.x2 - 1)
+    y = random.randint(a=room.y1 + 1, b=room.y2 - 1)
+    # entity = random.choice(list(available_items.values()))
+    if not any(entity.x == x and entity.y == y for entity in dungeon.items):
+      item.spawn(x=x, y=y, gamemap=dungeon)
 
 def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,int]]:
   """Return an L-shaped tunnel between these two points."""
@@ -297,7 +305,7 @@ def genTunnels(queue: mp.Queue, room: RecRoom, prev_room: RecRoom, dungeon: Game
     dungeon.tiles[x,y] = dungeon.tile_types["floor"]
   queue.put(dungeon.tiles)
 
-
+# https://roguebasin.com/index.php/Complete_Roguelike_Tutorial,_using_Python%2Blibtcod,_extras#BSP_Dungeon_Generator
 
 def genDungeon(
     *,
@@ -328,46 +336,90 @@ def genDungeon(
   )
   bsp.split_recursive(
     depth=2+(dungeon.game_world.current_floor//2),
-    min_width=min_room_size,
-    min_height=min_room_size,
+    min_width=min_room_size+1,
+    min_height=min_room_size+1,
     max_horizontal_ratio=1.5,
     max_vertical_ratio=1.5,
   )
-  
-  for node in bsp.pre_order():
-    print(node)
+
+  for node in bsp.inverted_level_order():
     if node.children:
+      print("Parent Node:\n %s" % node)
       node1, node2 = node.children
       print('Connect the rooms:\n%s\n%s' % (node1, node2))
+      # if node.horizontal:
+      #   tunnel = RecRoom(
+      #     x=node1.x+node1.width//2,
+      #     y=node1.y+node1.height//2,
+      #     width=2,
+      #     height=node2.y+node2.height//2-(node1.y+node1.height//2)
+      #   )
+      # else:
+      #   tunnel = RecRoom(
+      #     x=node1.x+node1.width//2,
+      #     y=node1.y+node1.height//2,
+      #     width=node2.x+node2.width//2-(node1.x+node1.width//2),
+      #     height=2
+      #     )
+
+      # dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
+      # tunnels.append(tunnel)
+      node.x = min(node1.x, node2.x)
+      node.y = min(node1.y, node2.y)
+      node.width = max(node1.x+node1.width, node2.x+node2.width) - node.x
+      node.height = max(node1.y+node1.height, node2.y+node2.height) - node.y
+      # node split horizontally
       if node.horizontal:
         tunnel = RecRoom(
-          x=node1.x+node1.width//2+(node1.width%2),
-          y=node1.y+node1.height//2+(node1.height%2),
+          x=node.x+node.width//2,
+          y=node.y+node.height//2,
           width=2,
-          height=node.position
-          )
+          height=node.height
+        )
       else:
         tunnel = RecRoom(
-          x=node1.x+node1.width//2+(node1.width%2),
-          y=node1.y+node1.height//2+(node1.height%2),
-          width=node.position,
+          x=node.x+node.width//2,
+          y=node.y+node.height//2,
+          width=node.width,
           height=2
-          )
+        )
+
       dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
       tunnels.append(tunnel)
     else:
       print('Dig a room for %s.' % node)
-
-      room_width = random.randint(a=min_room_size, b=node.width)
-      room_height = random.randint(a=min_room_size, b=node.height)
+      minx = node.x 
+      miny = node.y 
+      maxx = node.width + node.x - 1
+      maxy = node.height + node.y - 1
+      
+      if maxx >= dungeon.width - 1:
+        maxx -= 1
+      if maxy >= dungeon.height - 1:
+        maxy -= 1
+      
+      # room_width = random.randint(a=min_room_size, b=node.width)
+      # room_height = random.randint(a=min_room_size, b=node.height)
       # room_x = random.randint(a=node.x, b=node.x+node.width-room_width)
       # room_y = random.randint(a=node.y, b=node.y+node.height-room_height)
-      room_x = node.x+node.width//2-room_width//2
-      room_y = node.y+node.height//2-room_height//2
-      new_room = RecRoom(x=room_x, y=room_y, width=room_width-1, height= room_height-1)
+      # new_room = RecRoom(x=room_x, y=room_y, width=room_width-1, height= room_height-1)
+
+      minx = random.randint(a=minx, b=maxx-min_room_size+1)
+      miny = random.randint(a=miny, b=maxy-min_room_size+1)
+      maxx = random.randint(a=minx+min_room_size-2, b=maxx)
+      maxy = random.randint(a=miny+min_room_size-2, b=maxy)
+      
+      print(f"minx: {minx}, miny: {miny}, maxx: {maxx}, maxy: {maxy}")
+      
+      node.x = minx
+      node.y = miny
+      node.width = maxx-minx
+      node.height = maxy-miny
+
+      new_room = RecRoom(x=node.x, y=node.y, width=node.width, height=node.height)
 
       dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
-      dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
+      # dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
 
       new_room.node = node
       if len(rooms)==0:
@@ -380,20 +432,24 @@ def genDungeon(
       else:
         center_of_last_room = new_room.center
 
-        place_entities(room=new_room, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+        place_enemies(room=new_room, dungeon=dungeon, floor_number=engine.game_world.current_floor)
 
       rooms.append(new_room)
 
   for room in rooms:
-    # dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
+    dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
     
+    place_items(room=room, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+
     dungeon.tiles[center_of_last_room] = dungeon.tile_types["stairs_down"]
 
     dungeon.stairsdown = center_of_last_room
   
   for tunnel in tunnels:
     dungeon.tiles[tunnel.inner] = dungeon.tile_types["floor"]
-  
+    
+    place_items(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+
   wall_layout = []
   i = 0
   j = 0
