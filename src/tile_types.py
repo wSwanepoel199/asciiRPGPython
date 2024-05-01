@@ -39,8 +39,8 @@ tile_types = {
     light=(ord(constants.floor_char), (255, 255, 255), (0, 0, 0))
   ),
   'wall': new_tile(
-    walkable=False, 
-    transparent=False, 
+    walkable=True, 
+    transparent=True, 
     dark=(ord("\xa0"), (100, 100, 100), (10, 10, 10)),
     light=(ord("\xa0"), (255, 255, 255), (0, 0, 0))
   ),
@@ -117,7 +117,7 @@ tile_types = {
     light=(ord(constants.stairs_down), (255, 255, 255), (200, 180, 50)),
   ),
   "mapfill": new_tile(
-    walkable=False, 
+    walkable=True, 
     transparent=True, 
     dark=(ord(" "), (255, 255, 255), (0, 0, 1)), 
     light=(ord(" "), (255, 255, 255), (0, 0, 1))

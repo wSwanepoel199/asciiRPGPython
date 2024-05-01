@@ -358,8 +358,8 @@ class GameMap:
   def get_viewport(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
     x = self.player.x
     y = self.player.y
-    width = self.engine.game_world.viewport_width if self.game_world.viewport_width <= self.width else self.width
-    height = self.engine.game_world.viewport_height if self.game_world.viewport_height <= self.height else self.height
+    width = self.game_world.viewport_width if self.game_world.viewport_width <= self.width else self.width
+    height = self.game_world.viewport_height if self.game_world.viewport_height <= self.height else self.height
     half_width = width // 2
     half_height = height // 2
     start_x = x - half_width if x - half_width >= 0 else 0
@@ -393,8 +393,8 @@ class GameMap:
     # self.console = console
 
     (x1,y1),(x2,y2) = self.get_viewport()
-    viewport_width = self.engine.game_world.viewport_width if self.width > self.game_world.viewport_width else self.width
-    viewport_height = self.engine.game_world.viewport_height if self.height > self.game_world.viewport_height else self.height
+    viewport_width = self.game_world.viewport_width if self.width > self.game_world.viewport_width else self.width
+    viewport_height = self.game_world.viewport_height if self.height > self.game_world.viewport_height else self.height
     slice_x = slice(x1, x2+1)
     slice_y = slice(y1, y2+1)
     viewport_tiles = self.tiles[slice_x, slice_y]
@@ -627,7 +627,7 @@ class GameWorld:
   def gen_floor(self) -> None:
     from src.procgen import genDungeon
 
-    self.current_floor += 7
+    self.current_floor += 1
 
     self.engine.game_map = genDungeon(
       map_width=20 + self.current_floor * 10,
