@@ -333,7 +333,7 @@ def genDungeon(
   rooms: List[RecRoom] = []
   tunnels: List[RecRoom] = []
   center_of_last_room = (0, 0)
-  map_width = dungeon.width-1
+  map_width = dungeon.width-2
   map_height = dungeon.height-2
   bsp = tcod.bsp.BSP(
     x=1,
@@ -362,9 +362,9 @@ def genDungeon(
       maxx = node.width + node.x -1
       maxy = node.height + node.y -1
       
-      while maxx >= map_width - 1:
+      if maxx >= map_width - 1:
         maxx -= 1
-      while maxy >= map_height - 1:
+      if maxy >= map_height - 1:
         maxy -= 1
       
       # room_width = random.randint(a=min_room_size, b=node.width)
@@ -374,9 +374,9 @@ def genDungeon(
       # new_room = RecRoom(x=room_x, y=room_y, width=room_width-1, height= room_height-1)
 
       minx = random.randint(a=minx, b=max(maxx-min_room_size, minx+1))
-      miny = random.randint(a=miny, b=max(maxy-min_room_size,miny+1))
-      maxx = random.randint(a=minx+min_room_size, b=max(maxx,minx+min_room_size+1 ))
-      maxy = random.randint(a=miny+min_room_size, b=max(maxy,miny+min_room_size+1 ))
+      miny = random.randint(a=miny, b=max(maxy-min_room_size, miny+1))
+      maxx = random.randint(a=minx+min_room_size-2, b=maxx)
+      maxy = random.randint(a=miny+min_room_size-2, b=maxy)
       
       print(f"minx: {minx}, miny: {miny}, maxx: {maxx}, maxy: {maxy}")
       
@@ -410,13 +410,15 @@ def genDungeon(
       # new_room = RecRoom(x=node.x, y=node.y, width=node.width, height=node.height)
       # dungeon.tiles[new_room.outer] = dungeon.tile_types["wall"]
       # dungeon.tiles[new_room.inner] = dungeon.tile_types["mapfill"]
-      left, right = node.children
+      node1, node2 = node.children
+      left = bsp.find_node(node1.x, node1.y)
+      right = bsp.find_node(node2.x, node2.y)
       print('Connect the rooms:\n%s\n%s' % (left, right))
       node.x = min(left.x, right.x)
       node.y = min(left.y, right.y)
       node.width = max(left.x+left.width, right.x+right.width) - node.x
       node.height = max(left.y+left.height, right.y+right.height) - node.y
-
+      tunnel = None
       # for x,y in tcod.los.bresenham((left.x+left.width//2,left.y+left.height//2), (right.x+right.width//2,right.y+right.height//2)).tolist():
       #   dungeon.tiles[x,y] = dungeon.tile_types["floor"]
 
@@ -425,15 +427,23 @@ def genDungeon(
           x1 = random.randint(a=left.x, b=left.x+left.width-1)
           x2 = random.randint(a=right.x, b=right.x+right.width-1)
           y = random.randint(a=left.y+left.height, b=right.y)
-          if x1 > x2:
-            x1,x2 = x2,x1
+          # if x1 > x2:
+          #   x1,x2 = x2,x1
           # dungeon.tiles[x1:x2+1,y] = dungeon.tile_types["floor"]
-          tunnel = RecRoom(
-            x=x1,
-            y=y,
-            width=x2,
-            height=2
-          )
+          print("dug tunnel from (%d,%d) to (%d,%d)" % (x1,y,x2,y))
+          # for x,y in tcod.los.bresenham((x1,y), (x2,y)).tolist():
+          #   dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+          # tunnel = RecRoom(
+          #   x=x1,
+          #   y=y,
+          #   width=x2,
+          #   height=2
+          # )
+          for x,y in genTunnel(
+            start=(x1, y), 
+            end=(x2, y)
+          ):
+            dungeon.tiles[x,y] = dungeon.tile_types["floor"]
         else:
           minx = max(left.x, right.x)
           maxx = min(left.x+left.width-1, right.x+right.width-1)
@@ -448,25 +458,38 @@ def genDungeon(
           # while y >= 0 and not dungeon.tiles[x,y] == dungeon.tile_types["floor"]:
           #   dungeon.tiles[x,y] = dungeon.tile_types["floor"]
           #   y -= 1
-          tunnel = RecRoom(
-            x=x,
-            y=left.y+left.height//2,
-            width=2,
-            height=right.y
-          )
+          # tunnel = RecRoom(
+          #   x=x,
+          #   y=left.y,
+          #   width=2,
+          #   height=right.y
+          # )
+          for x,y in genTunnel(
+            start=(random.randint(a=left.x+1, b=left.x+left.width-1), left.y+left.height-1), 
+            end=(right.x+right.width-1, right.y+right.height-1)
+          ):
+            dungeon.tiles[x,y] = dungeon.tile_types["floor"]
       else:
         if left.y + left.height -1 < right.y or right.y + right.height -1 < left.y:
           y1 = random.randint(a=left.y, b=left.y+left.height-1)
           y2 = random.randint(a=right.y, b=right.y+right.height-1)
           x = random.randint(a=left.x+left.width, b=right.x)
-          if y1 > y2:
-            y1,y2 = y2,y1
-          tunnel = RecRoom(
-            x=x,
-            y=y1,
-            width=2,
-            height=y2
-          )
+          # if y1 > y2:
+          #   y1,y2 = y2,y1
+          print("dug tunnel from (%s,%s) to (%s,%s)" % (x, y1, x, y2))
+          # for x,y in tcod.los.bresenham((x,y1), (x,y2)).tolist():
+          #   dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+          # tunnel = RecRoom(
+          #   x=x,
+          #   y=y1,
+          #   width=2,
+          #   height=y2
+          # )
+          for x,y in genTunnel(
+            start=(x, y1), 
+            end=(x, y2)
+          ):
+            dungeon.tiles[x,y] = dungeon.tile_types["floor"]
           # dungeon.tiles[x,y1:y2+1] = dungeon.tile_types["floor"]
         else:
           miny = max(left.y, right.y)
@@ -483,19 +506,27 @@ def genDungeon(
           # while x >= 0 and not dungeon.tiles[x,y] == dungeon.tile_types["floor"]:
           #   dungeon.tiles[x,y] = dungeon.tile_types["floor"]
           #   x -= 1
-          tunnel = RecRoom(
-            x=left.x+left.width//2,
-            y=y,
-            width=right.x,
-            height=2
-          )
-      dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
-      tunnels.append(tunnel)
+          # for x,y in tcod.los.bresenham((left.x+left.width//2,left.y+left.height//2), (right.x+right.width//2,right.y+right.height//2)).tolist():
+          #   dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+          # tunnel = RecRoom(
+          #   x=left.x,
+          #   y=y,
+          #   width=right.x,
+          #   height=2
+          # )
+          for x,y in genTunnel(
+            start=(left.x+left.width-1, random.randint(a=left.y+1, b=left.y+left.height-1)), 
+            end=(right.x+right.width-1, right.y+right.height-1)
+          ):
+            dungeon.tiles[x,y] = dungeon.tile_types["floor"]
+      if tunnel:
+        dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
+        tunnels.append(tunnel)
 
   for tunnel in tunnels:
     dungeon.tiles[tunnel.inner] = dungeon.tile_types["floor"]
     
-    place_items(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+    # place_items(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
 
   for room in rooms:
     dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
