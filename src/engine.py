@@ -80,6 +80,16 @@ class Engine:
       height=console.height
     )
 
+    text = "%s, %s" % (self.player.x, self.player.y)
+    self.console.print_box(
+      x=self.game_world.viewport_width,
+      y=0,
+      width=self.side_console,
+      height=1,
+      string=text,
+      alignment=tcod.constants.CENTER
+    )
+
     if self.side_console > 20:
       bar_width = 20
     else:
