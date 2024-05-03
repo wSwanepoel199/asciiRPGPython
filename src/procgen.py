@@ -297,6 +297,7 @@ def genDungeon(
       tunnel_size = 2
       # print("dig from (%s, %s) to (%s, %s) via (%s)" % (x1, y1, x3, y3, z2))
       if node.horizontal:
+        z2 = random.randint(a=left.y+left.height-1, b=right.y+1)
         if y1 < z2:
           tunnel = Tunnel(
             start=(x1, y1),
@@ -346,6 +347,7 @@ def genDungeon(
         dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
         tunnels.append(tunnel)
       else:
+        z2 = random.randint(a=left.x+left.width-1, b=right.x+1)
         if x1 < z2:
           tunnel = Tunnel(
             start=(x1, y1),
@@ -398,10 +400,10 @@ def genDungeon(
 
   for tunnel in tunnels:
     dungeon.tiles[tunnel.inner] = dungeon.tile_types["floor"]
-    
-    place_enemies(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
-
-    place_items(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+    if random.random() <0.3:
+      place_enemies(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+    if random.random() <0.3:
+      place_items(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
 
   for room in rooms:
     dungeon.tiles[room.inner] = dungeon.tile_types["floor"]

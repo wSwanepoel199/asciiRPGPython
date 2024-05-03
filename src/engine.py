@@ -97,18 +97,18 @@ class Engine:
     
     y = 1
 
+    for line in list(self.message_log.wrap(
+      string=f"Dungeon level: {self.game_world.current_floor}",
+      width=self.side_console-2
+    )):
+      self.console.print(
+        x=self.game_world.viewport_width+1,
+        y=y,
+        string=line
+      )
+      y+=1
     # Display Player HP
     if self.player.fighter.HP > 0:
-      for line in list(self.message_log.wrap(
-        string=f"Dungeon level: {self.game_world.current_floor}",
-        width=self.side_console-2
-      )):
-        self.console.print(
-          x=self.game_world.viewport_width+1,
-          y=y,
-          string=line
-        )
-        y+=1
       y +=1
       console.print(
         x=self.game_world.viewport_width+1,
@@ -180,16 +180,16 @@ class Engine:
         )
         y+=2
     # Display If Player is dead
+    y +=1
     if self.player.fighter.HP <= 0:
       msg= "YOU DIED!"
       console.print(
         x= self.game_world.viewport_width + round(number=(self.side_console - len(msg)-1)/2) ,
-        y=5,
+        y=y if y < 5 else 5,
         string=msg,
       )
     else:
       # render names if entities under mouse
-      y+=1
       self.render_names_at_mouse(
         x=self.game_world.viewport_width+1,
         y=y,
