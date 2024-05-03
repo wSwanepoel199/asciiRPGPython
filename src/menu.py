@@ -1,8 +1,6 @@
 from src.save import Save
 from src.entity import Entity
 
-print(__name__)
-
 class Menu:
   def __init__(self) -> None:
     self.mainmenu = True

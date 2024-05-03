@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Tuple
-import tcod, traceback, lzma, pickle
+import tcod, lzma, pickle
 import tcod.constants
 from src.utils.colour import loadColours
 from src.message import MessageLog
@@ -46,7 +46,8 @@ class Engine:
     self.game_map.visible[:] = tcod.map.compute_fov(
       transparency=self.game_map.tiles['transparent'],
       pov=(self.player.x, self.player.y),
-      radius=8
+      radius=8,
+      algorithm=tcod.constants.FOV_BASIC
     )
 
     # If a tile is "visible" it should be added to "explored".
@@ -70,9 +71,6 @@ class Engine:
     self.console = console
     # Draw Side Window
 
-    width, height = self.context.recommended_console_size()
-    self.game_world.viewport_width = width-min((width // 3), 55)
-    self.game_world.viewport_height = height
     self.game_map.render(console=console)
 
     self.genWindow(
@@ -82,6 +80,16 @@ class Engine:
       height=console.height
     )
 
+    text = "%s, %s" % (self.player.x, self.player.y)
+    self.console.print_box(
+      x=self.game_world.viewport_width,
+      y=0,
+      width=self.side_console,
+      height=1,
+      string=text,
+      alignment=tcod.constants.CENTER
+    )
+
     if self.side_console > 20:
       bar_width = 20
     else:
@@ -89,18 +97,18 @@ class Engine:
     
     y = 1
 
+    for line in list(self.message_log.wrap(
+      string=f"Dungeon level: {self.game_world.current_floor}",
+      width=self.side_console-2
+    )):
+      self.console.print(
+        x=self.game_world.viewport_width+1,
+        y=y,
+        string=line
+      )
+      y+=1
     # Display Player HP
     if self.player.fighter.HP > 0:
-      for line in list(self.message_log.wrap(
-        string=f"Dungeon level: {self.game_world.current_floor}",
-        width=self.side_console-2
-      )):
-        self.console.print(
-          x=self.game_world.viewport_width+1,
-          y=y,
-          string=line
-        )
-        y+=1
       y +=1
       console.print(
         x=self.game_world.viewport_width+1,
@@ -172,16 +180,16 @@ class Engine:
         )
         y+=2
     # Display If Player is dead
+    y +=1
     if self.player.fighter.HP <= 0:
       msg= "YOU DIED!"
       console.print(
         x= self.game_world.viewport_width + round(number=(self.side_console - len(msg)-1)/2) ,
-        y=5,
+        y=y if y < 5 else 5,
         string=msg,
       )
     else:
       # render names if entities under mouse
-      y+=1
       self.render_names_at_mouse(
         x=self.game_world.viewport_width+1,
         y=y,
@@ -251,7 +259,7 @@ class Engine:
       self, 
       bar_x:int = 0, 
       bar_y:int = 0, 
-      bar_text: str = '', 
+      bar_text: str = None, 
       curr_val: int = 0, 
       max_val:int = 0, 
       total_width:int = 0, 
@@ -285,7 +293,7 @@ class Engine:
         ch=1,
         bg=bar_fg
       )
-    if flip:
+    if flip and bar_text:
       msg = f"{curr_val}/{max_val}{bar_text}"
       self.console.print(
         x=self.game_map.width - len(msg) - 1,
@@ -293,7 +301,7 @@ class Engine:
         string=msg,
         fg=self.colours['white'],
       )
-    else:
+    elif bar_text:
       self.console.print(
         x=bar_x,
         y=bar_y,

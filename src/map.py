@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Iterable, Optional, TYPE_CHECKING, Tuple, List
 
 import numpy as np
+import multiprocessing as mp
 import tcod, random
 
 import src.tile_types as tile_types
@@ -357,8 +358,8 @@ class GameMap:
   def get_viewport(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
     x = self.player.x
     y = self.player.y
-    width = self.engine.game_world.viewport_width if self.game_world.viewport_width <= self.width else self.width
-    height = self.engine.game_world.viewport_height if self.game_world.viewport_height <= self.height else self.height
+    width = self.game_world.viewport_width if self.game_world.viewport_width <= self.width else self.width
+    height = self.game_world.viewport_height if self.game_world.viewport_height <= self.height else self.height
     half_width = width // 2
     half_height = height // 2
     start_x = x - half_width if x - half_width >= 0 else 0
@@ -390,42 +391,28 @@ class GameMap:
     ╔ ╗ ╚ ╝ ╠ ╣ ║ ╩ ╬ ╦ ═
     """
     # self.console = console
-    self.console = tcod.console.Console(
-      width= self.width,
-      height= self.height,
-      order="F"
-    )
+
     (x1,y1),(x2,y2) = self.get_viewport()
-    viewport_width = self.engine.game_world.viewport_width if self.width > self.game_world.viewport_width else self.width
-    viewport_height = self.engine.game_world.viewport_height if self.height > self.game_world.viewport_height else self.height
+    
+    
+    viewport_width = self.game_world.viewport_width if self.width > self.game_world.viewport_width else self.width
+    viewport_height = self.game_world.viewport_height if self.height > self.game_world.viewport_height else self.height
+    
+    self.offset_x = (self.game_world.viewport_width - x2 + x1) //2
+    self.offset_y = (self.game_world.viewport_height - y2 + y1) //2
 
     slice_x = slice(x1, x2+1)
     slice_y = slice(y1, y2+1)
+    
     viewport_tiles = self.tiles[slice_x, slice_y]
     viewport_visible = self.visible[slice_x, slice_y]
     viewport_explored = self.explored[slice_x, slice_y]
-    # if not self.console:
-    # self.console = self.engine.context.new_console(
-    #   min_columns=self.columns,
-    #   min_rows=self.rows,
-    #   order="F"
-    # )
-    # self.console = tcod.console.Console(
-    #   width=self.columns,
-    #   height=self.rows,
-    #   order="F"
-    # )
-    self.offset_x = (self.game_world.viewport_width - x2 + x1) //2
-    self.offset_y = (self.game_world.viewport_height - y2 + y1) //2
-    # print(self.xoffset, self.yoffset)
-    # self.xoffset = 0
-    # self.yoffset = 0
-    
-    # self.console.rgb[0:self.columns, 0:self.rows] = np.select(
-    #   condlist=[self.visible, self.explored],
-    #   choicelist=[self.tiles["light"], self.tiles["dark"]],
-    #   default=self.tile_types['shroud'],
-    # )
+
+    self.console = self.engine.context.new_console(
+      min_columns= self.width,
+      min_rows= self.height,
+      order="F"
+    )
 
     self.console.rgb[0:viewport_width, 0:viewport_height] = np.select(
       condlist=[viewport_visible, viewport_explored],
@@ -443,7 +430,7 @@ class GameMap:
     # items = list(filter(lambda entity: entity['entity_type'] == 'ITEM', self.entities))
 
     for entity in sorted_entities_for_rendering:
-       if self.visible[entity.x, entity.y]:
+      if self.visible[entity.x, entity.y]:
         self.console.print(
           x=entity.x-x1,
           y=entity.y-y1,
@@ -453,8 +440,8 @@ class GameMap:
     
     self.console.blit(
       dest=console,
-      dest_x=0+self.offset_x,
-      dest_y=0+self.offset_y,
+      dest_x=self.offset_x,
+      dest_y=self.offset_y,
       src_x=0,
       src_y=0,
       width=viewport_width,

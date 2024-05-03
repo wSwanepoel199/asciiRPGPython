@@ -10,11 +10,13 @@ if TYPE_CHECKING:
 
 class Fighter(BaseComponent):
   parent: Actor
-  def __init__(self, Base_HP: int, Base_ATK: Tuple[int,int], Base_DEF: int):
+  def __init__(self, Base_HP: int, Base_ATK: Tuple[int,int], Base_DEF: int, Base_Speed: int):
     self.Base_HP = Base_HP
     self.Base_Max_HP = Base_HP
     self.Base_ATK = Base_ATK
     self.Base_DEF = Base_DEF
+    self.Base_Speed = Base_Speed
+    self.Wait = 0
   
   @property
   def HP(self) -> int:
@@ -31,6 +33,10 @@ class Fighter(BaseComponent):
   @property
   def ATK(self) -> int:
     return [self.Base_ATK[0] + self.ATK_Bonus, self.Base_ATK[1] + self.ATK_Bonus]
+
+  @property
+  def SPD(self) -> int:
+    return min(self.Base_Speed + self.SPD_Bonus, 100)
 
   @property
   def DEF_Bonus(self) -> int:
@@ -50,6 +56,13 @@ class Fighter(BaseComponent):
   def HP_Bonus(self) -> int:
     if self.parent.equipment:
       return self.parent.equipment.hp_bonus
+    else:
+      return 0
+
+  @property
+  def SPD_Bonus(self) -> int:
+    if self.parent.equipment:
+      return self.parent.equipment.spd_bonus
     else:
       return 0
 
@@ -82,8 +95,8 @@ class Fighter(BaseComponent):
     if self.HP == self.MAX_HP:
       return 0
     
-    if self.HP + amount > self.MAX_HP:
-      amount = self.HP+amount - self.MAX_HP
+    if self.HP + amount >= self.MAX_HP:
+      amount = self.MAX_HP - self.HP
 
     self.HP += amount
     return amount

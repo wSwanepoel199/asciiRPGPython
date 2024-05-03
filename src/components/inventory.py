@@ -86,6 +86,24 @@ class Equipment(BaseComponent):
 
     return bonus
   
+  @property
+  def spd_bonus(self) -> int:
+    bonus = 0
+
+    if (
+      self.weapon is not None
+      and self.weapon.equippable is not None
+    ):
+      bonus += self.weapon.equippable.SPD_bonus
+
+    if (
+      self.armour is not None
+      and self.armour.equippable is not None
+    ):
+      bonus += self.armour.equippable.SPD_bonus
+
+    return bonus
+  
   def item_is_equipped(self, item: Item) -> bool:
     return self.weapon == item or self.armour == item or self.accessory == item
 

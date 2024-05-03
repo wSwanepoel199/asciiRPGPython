@@ -117,7 +117,7 @@ tile_types = {
     light=(ord(constants.stairs_down), (255, 255, 255), (200, 180, 50)),
   ),
   "mapfill": new_tile(
-    walkable=False, 
+    walkable=True, 
     transparent=True, 
     dark=(ord(" "), (255, 255, 255), (0, 0, 1)), 
     light=(ord(" "), (255, 255, 255), (0, 0, 1))

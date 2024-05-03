@@ -8,3 +8,5 @@ saves/
 build
 dist
 **/*.spec
+
+profile.svg

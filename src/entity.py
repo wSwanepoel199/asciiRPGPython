@@ -108,10 +108,10 @@ class Entity:
     gamemap.entities.add(self)
   
   def distance(self, x:int, y:int) -> float:
-    dx = x - self.x
-    dy = y - self.y
-    return max(abs(dx), abs(dy))
-    # return math.sqrt((x-self.x)**2+(y-self.y)**2)
+    # dx = x - self.x
+    # dy = y - self.y
+    # return max(abs(dx), abs(dy))
+    return math.sqrt((x-self.x)**2+(y-self.y)**2)
 
 class Actor(Entity):
   def __init__(
@@ -125,9 +125,9 @@ class Actor(Entity):
       colour: Tuple[int,int,int]=(255,255,255),
       name: str= "<Unnamed>",
       ai_cls: Type[BaseAi],
-      fighter: Fighter,
       inventory: Inventory,
       equipment: Equipment,
+      fighter: Optional[Fighter] = None,
       level: Optional[Level] = None
     ) -> None:
     super().__init__(
@@ -143,7 +143,8 @@ class Actor(Entity):
     )
     self.ai: Optional[BaseAi] = ai_cls(self)
     self.fighter = fighter
-    self.fighter.parent = self
+    if self.fighter:
+      self.fighter.parent = self
 
     self.inventory = inventory
     self.inventory.parent = self
