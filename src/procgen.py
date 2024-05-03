@@ -226,7 +226,7 @@ def genDungeon(
     max_vertical_ratio=1.5,
   )
 
-  for node in bsp.inverted_level_order():
+  for node in bsp.post_order():
     if not node.children:
       # print('Dig a room for %s.' % node)
       minx = node.x
@@ -273,7 +273,7 @@ def genDungeon(
 
     else:
       # print("Parent Node:\n %s" % node)
-      left, right = node1, node2 = node.children
+      left, right = node.children
       while left.children:
         left = random.choice(left.children)
         # left = left.children[0]
@@ -294,7 +294,7 @@ def genDungeon(
       x3 = random.randint(a=right.x+1, b=right.x+right.width-2)
       y3 = random.randint(a=right.y+1, b=right.y+right.height-2)
       z2 = node.position
-      tunnel_size = 2
+      tunnel_size = random.randint(a=2, b=4)
       # print("dig from (%s, %s) to (%s, %s) via (%s)" % (x1, y1, x3, y3, z2))
       if node.horizontal:
         z2 = random.randint(a=left.y+left.height-1, b=right.y+1)
