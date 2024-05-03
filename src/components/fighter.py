@@ -79,6 +79,8 @@ class Fighter(BaseComponent):
       death_message_colour = self.engine.colours['enemy_dead']
       if self.engine.player.level and self.parent.level:
         self.engine.player.level.add_xp(xp=self.parent.level.xp_given)
+      if self.engine.player.target == self.parent:
+        self.engine.player.target = None
 
     self.parent.char = "%"
     self.parent.entity_type = "CORPSE"

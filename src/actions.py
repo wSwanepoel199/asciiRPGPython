@@ -68,11 +68,14 @@ class ItemAction(Action):
   def target_actor(self) -> Optional[Actor]:
     return self.engine.game_map.get_actor_at_location(*self.target_xy)
   
-  def perform(self)->None:
+  def perform(self)->bool:
     if self.item.consumable:
-      self.item.consumable.action(action=self)
-    elif self.item.equippable:
+      return self.item.consumable.action(action=self)
+    elif self.item.equippable and not self.item.equippable.action:
       self.entity.equipment.toggle_equip(equippable_item=self.item)
+      return False
+    elif self.item.equippable and self.item.equippable.action:
+      self.item.equippable.action(action=self)
     else:
       raise self.engine.exceptions.Impossible(f"The {self.item.name} cannot be used.")
 
@@ -81,10 +84,12 @@ class ItemAction(Action):
 #     raise SystemExit()
 
 class DropItem(ItemAction):
-  def perform(self) -> None:
+  def perform(self) -> bool:
     if self.entity.equipment.item_is_equipped(item=self.item):
       self.entity.equipment.toggle_equip(equippable_item=self.item)
-    self.entity.inventory.drop(item=self.item)
+    else:
+      self.entity.inventory.drop(item=self.item)
+    return False
 
 class DirectionalAction(Action):
   def __init__(self, entity: Actor, dx:int, dy:int) -> None:
@@ -112,7 +117,7 @@ class MeleeAction(DirectionalAction):
     self.entity['target'] = target
     if not target:
       raise self.engine.exceptions.Impossible("Nothing to attack.")
-    damage = random.sample(range(*self.entity.fighter.ATK), 1)[0] - random.sample(range(*[target.fighter.DEF//2, target.fighter.DEF]), 1)[0]
+    damage = random.sample(range(*self.entity.fighter.Base_ATK), 1)[0] - random.sample(range(*[target.fighter.DEF//2, target.fighter.DEF]), 1)[0]
     if self.entity is self.engine.player:
       attack_desc = f"{self.entity.name.capitalize()} attacked the {target.name}"
       attack_color = self.engine.colours['player_atk']

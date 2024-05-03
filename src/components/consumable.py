@@ -32,7 +32,7 @@ class HealingConsumable(Consumable):
     self.amount = amount
     self.on_use = on_use
   
-  def action(self, action: actions.ItemAction) -> None:
+  def action(self, action: actions.ItemAction) -> bool:
     entity = action.entity
     amount_recovered = entity.fighter.heal_damage(amount=random.sample(range(*self.amount), 1)[0])
     if amount_recovered <= 0:
@@ -48,9 +48,9 @@ class HealingConsumable(Consumable):
       fg=self.engine.colours['health_recovery']
     )
     self.consume()
-     
+    return True
 
-class LineDamageConsumable(Consumable):
+class LightningBoltConsumable(Consumable):
   def __init__(self, damage: Tuple[int,int], range:int, on_hit_message: str = ""):
     super().__init__()
     self.damage = damage
@@ -68,13 +68,14 @@ class LineDamageConsumable(Consumable):
       callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
     )
   
-  def action(self, action: actions.ItemAction) -> None:
+  def action(self, action: actions.ItemAction) -> Optional[event_handler.InventoryEventHandler]:
     entity = action.entity
     target_xy = action.target_xy
-
-    if entity.distance(*target_xy) > self.range:
+    distance = max(abs(entity.x - target_xy[0]), abs(entity.y - target_xy[1]))
+    if distance > self.range:
       raise self.engine.exceptions.Impossible("Location is too far away.")
     targets_hit = False
+    damage = random.sample(range(*self.damage), 1)[0]
     for (x,y) in tcod.los.bresenham(start=(entity.x, entity.y), end=target_xy).tolist():
       point = (x,y)
       target_actor = self.engine.game_map.get_actor_at_location(*point)
@@ -88,7 +89,6 @@ class LineDamageConsumable(Consumable):
       #   self.on_hit = self.on_hit.split('<damage>')
       #   self.on_hit = self.on_hit[0] + str(self.damage) + self.on_hit[1]
       # else:
-      damage = random.sample(range(*self.damage), 1)[0]
       self.on_hit = f"A lighting bolt strikes the {target_actor.name} with a loud thunder, for {damage} damage!"
       self.engine.message_log.add_message(
         text=self.on_hit
@@ -130,8 +130,8 @@ class TeleportConsumable(Consumable):
       
     if not self.engine.game_map.tiles[target_xy]["walkable"]:
       raise self.engine.exceptions.Impossible("You can't teleport to a location you can't walk on!")
-
-    if entity.distance(*target_xy) > self.range:
+    distance = max(abs(entity.x - target_xy[0]), abs(entity.y - target_xy[1]))
+    if distance > self.range:
       raise self.engine.exceptions.Impossible("You can't teleport more than 10 tiles away!")
     self.engine.message_log.add_message(
       text=f"You feel your very being evaporate as you are teleported!",
@@ -157,7 +157,7 @@ class ConfusionConsumable(Consumable):
       callback=lambda xy: actions.ItemAction(entity=entity,item=self.parent, target_xy=xy)
     )
   
-  def action(self, action: actions.ItemAction) -> None:
+  def action(self, action: actions.ItemAction) -> bool:
     entity = action.entity
     target = action.target_actor
     target_xy = action.target_xy
@@ -168,8 +168,8 @@ class ConfusionConsumable(Consumable):
       raise self.engine.exceptions.Impossible("There was no target selected.")
     if target is entity:
       raise self.engine.exceptions.Impossible("You can't confuse yourself!")
-
-    if entity.distance(*target_xy) > self.range:
+    distance = max(abs(entity.x - target_xy[0]), abs(entity.y - target_xy[1]))
+    if distance > self.range:
       raise self.engine.exceptions.Impossible("There are no targets in the radius.")
     
     duration = random.sample(range(*self.turns), 1)[0]
@@ -183,6 +183,7 @@ class ConfusionConsumable(Consumable):
       turns_remaining=duration
     )
     self.consume()
+    return True
 
 class FireballDamageConsumable(Consumable):
   def __init__(self, damage: Tuple[int,int], radius: int):
@@ -207,9 +208,10 @@ class FireballDamageConsumable(Consumable):
     if not self.engine.game_map.visible[target_xy]:
       raise self.engine.exceptions.Impossible("You can't target a location you can't see.")
     targets_hit = False
+    damage = random.sample(range(*self.damage), 1)[0]
     for actor in self.engine.game_map.actors:
-      if actor.distance(*target_xy) <= self.radius:
-        damage = random.sample(range(*self.damage), 1)[0]
+      distance = max(abs(actor.x - target_xy[0]), abs(actor.y - target_xy[1]))
+      if distance <= self.radius:
         self.engine.message_log.add_message(
           text=f"The {actor.name} is engulfed in a fiery explosion, taking {damage} damage!",
         )

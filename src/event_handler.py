@@ -117,6 +117,8 @@ class EventHandler(BaseEventHandler):
         return GameOverEventHandler(engine=self.engine)
       elif self.engine.player.level and self.engine.player.level.can_level_up:
         return LevelUpEventHandler(engine=self.engine)
+      elif self.engine.player.inventory and self.engine.player.inventory.open:
+        return InventoryActivationHandler(engine=self.engine)
       return MainGameEventHandler(engine=self.engine)
     return self
   
@@ -124,7 +126,9 @@ class EventHandler(BaseEventHandler):
     if action is None:
       return False
     try:
-      action.perform()
+      res = action.perform()
+      if isinstance(res, bool):
+        return res
       self.engine.handle_deaths()
     except self.engine.exceptions.Impossible as exc:
       self.engine.message_log.add_message(
@@ -193,6 +197,7 @@ class AskUserEventHandler(EventHandler):
 
   def on_exit(self) -> Optional[ActionOrHandler]:
     self.engine.mouse_location = (0, 0)
+    self.engine.player.inventory.open = False
     return MainGameEventHandler(engine=self.engine)
   
 class InventoryEventHandler(AskUserEventHandler):
@@ -203,10 +208,14 @@ class InventoryEventHandler(AskUserEventHandler):
       console = self.engine.console
     super().on_render(console=console)
     player = self.engine.player
+    viewport = self.engine.game_map.get_viewport()
+    if player.x+viewport[0][0]+self.engine.game_map.offset_x <= self.engine.side_console:
+      x = self.engine.game_world.viewport_width-self.engine.side_console
+    else:
+      x = 1
     # ─│┌┐└├┤┬┴┼┘
     number_of_items_in_inventory = len(player.inventory.items)
     height = 0
-    x = self.engine.game_world.viewport_width
     y = 0
     width = self.engine.side_console
     offset = 0
@@ -239,10 +248,12 @@ class InventoryEventHandler(AskUserEventHandler):
     # adjust height based on number of lines
     height = min(4+height, console.height)
     # set frame decoration based on height
-    if height == console.height:
-      decoration = '┌─┐│ │└─┘'
-    else:
-      decoration = '┌─┐│ │├─┤'
+    # if height == console.height:
+    #   decoration = '┌─┐│ │└─┘'
+    # else:
+    #   decoration = '┌─┐│ │├─┤'
+    decoration = '┌─┐│ │└─┘'
+
     # draw inventory frame
     console.draw_frame(
       x=x,
@@ -266,12 +277,12 @@ class InventoryEventHandler(AskUserEventHandler):
     console.print(
       x=x+1,
       y=y+height-1,
-      string='p-pick up',
+      string='p-loot',
     )
     # draw drop instruction
     string = 'd-drop'
     console.print(
-      x=console.width - len(string)-1,
+      x=x+self.engine.side_console - len(string)-1,
       y=y+height-1,
       string=string,
     )
@@ -301,7 +312,10 @@ class InventoryEventHandler(AskUserEventHandler):
         )
         return None
       return self.on_item_selected(item=selected_item)
-    return super().ev_keydown(event=event)
+    if key == tcod.event.KeySym.ESCAPE or key == tcod.event.KeySym.BACKSPACE:
+      return super().ev_keydown(event=event)
+    else:
+      return None
 
   def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
     raise NotImplementedError()
@@ -322,11 +336,14 @@ class InventoryDropHandler(InventoryEventHandler):
     return action.DropItem(entity=self.engine.player, item=item)
 
 class SelectIndexHandler(AskUserEventHandler):
-  def __init__(self, engine: Engine):
+  def __init__(self, engine: Engine, target_xy: Optional[Tuple[int, int]] = None):
     super().__init__(engine=engine)
     player = self.engine.player
     self.viewport = self.engine.game_map.get_viewport()
-    engine.mouse_location = (player.x, player.y)
+    if target_xy:
+      engine.mouse_location = target_xy
+    else:
+      engine.mouse_location = (player.x, player.y)
     self.valid = True
     self.child = None
   
@@ -337,7 +354,8 @@ class SelectIndexHandler(AskUserEventHandler):
 
     viewport = self.engine.game_map.get_viewport()
     x, y = self.engine.mouse_location
-    dist = self.engine.player.distance(x,y )
+    # dist = self.engine.player.distance(x,y )
+    dist = max(abs(self.engine.player.x - x), abs(self.engine.player.y - y))
     x = x - viewport[0][0] + self.engine.game_map.offset_x
     y = y - viewport[0][1] + self.engine.game_map.offset_y
     if self.child and self.child.radius:
@@ -347,9 +365,13 @@ class SelectIndexHandler(AskUserEventHandler):
         console.rgb['bg'][x,y]=self.engine.colours['red']
         self.valid = False
         return
-    
+    if self.child and hasattr(self.child, 'item'):
+      colour = self.child.item.colour if hasattr(self.child.item, 'colour') else self.engine.colours['white']
+    else:
+      colour = self.engine.colours['white']
+
     console.rgb['fg'][x,y]=self.engine.colours['black']
-    console.rgb['bg'][x,y]=self.engine.colours['white']
+    console.rgb['bg'][x,y]=colour
   
   def ev_keydown(self, event: tcod.event.KeyDown) ->  Optional[ActionOrHandler]:
     key = event.sym
@@ -407,8 +429,10 @@ class MainGameEventHandler(EventHandler):
       case tcod.event.KeySym.v:
         return HistoryViewer(engine=self.engine)
       case tcod.event.KeySym.i:
+        self.engine.player.inventory.open = True
         return InventoryActivationHandler(engine=self.engine)
       case tcod.event.KeySym.d:
+        self.engine.player.inventory.open = True
         return InventoryDropHandler(engine=self.engine)
       case tcod.event.KeySym.x:
         return LookHandler(engine=self.engine)
@@ -416,6 +440,18 @@ class MainGameEventHandler(EventHandler):
         return action.PickupAction(entity=player)
       case tcod.event.KeySym.c:
         return CharacterScreenEventHandler(engine=self.engine)
+      case tcod.event.KeySym.e:
+        if player.equipment.weapon:
+          return player.equipment.weapon.equippable.get_action(entity=player)
+        else:
+          return MeleeSelectHandler(
+            engine=self.engine,
+            callback=lambda xy: action.MeleeAction(
+              entity=player,
+              dx=xy[0]-player.x,
+              dy=xy[1]-player.y,
+            )
+          )
       case _:
         if key in MOVE_KEYS:
           dx, dy = MOVE_KEYS[key]
@@ -505,6 +541,145 @@ class HistoryViewer(EventHandler):
     else:  # Any other key moves back to the main game state.
       return MainGameEventHandler(engine=self.engine)
     return None
+
+class LevelUpEventHandler(AskUserEventHandler):
+  TITLE = "Level Up!"
+
+  def on_render(self, console: tcod.console.Console) -> None:
+    super().on_render(console=console)
+    x = self.engine.game_world.viewport_width+1
+    y = 1
+    lines = []
+    width = self.engine.side_console-3
+    lines += list(self.engine.message_log.wrap(
+      string="Congratulations! You level up!",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string="Raise one stat:",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"1)Vitality (+20 HP)",
+      width=width,
+    ))
+    lines += list(self.engine.message_log.wrap(
+      string=f"2)Strength (+1 attack)",
+      width=width,
+    ))
+    lines += list(self.engine.message_log.wrap(
+      string=f"3)Constitution (+1 defence)",
+      width=width,
+    ))
+    height = len(lines) +2
+    console.draw_frame(
+      x=x,
+      y=y,
+      width=width+1,
+      height=height,
+      title=self.TITLE,
+      clear=True,
+      fg=(255, 255, 255),
+      bg=(0, 0, 0),
+    )
+
+    offset = y+1
+    for line in lines:
+      console.print(x=x+1, y=offset, string=line)
+      offset+=1
+      if offset > height:
+        break
+  def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+    player = self.engine.player
+    key = event.sym
+    match key:
+      case tcod.event.KeySym.N1:
+        player.level.increase_stat(stat='HP', value=20)
+      case tcod.event.KeySym.N2:
+        player.level.increase_stat(stat='ATK', value=1)
+      case tcod.event.KeySym.N3:
+        player.level.increase_stat(stat='DEF', value=1)
+      case _:
+        self.engine.message_log.add_message(
+          text="Invalid entry.", 
+          fg=self.engine.colours['invalid']
+        )
+        return None
+    return super().ev_keydown(event=event)
+  
+  def ev_mousebuttondown(
+    self, event: tcod.event.MouseButtonDown
+  ) -> Optional[ActionOrHandler]:
+    """
+    Don't allow the player to click to exit the menu, like normal.
+    """
+    return None
+  
+class CharacterScreenEventHandler(AskUserEventHandler):
+  TITLE = "Stats"
+
+  def on_render(self, console: tcod.console.Console) -> None:
+    super().on_render(console=console)
+    x = self.engine.game_world.viewport_width+1
+    y = 1
+    width = self.engine.side_console-3
+    lines = []
+    lines += list(self.engine.message_log.wrap(
+      string=f"Name: {self.engine.player.name}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"HP: {self.engine.player.fighter.HP}/{self.engine.player.fighter.MAX_HP}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"Attack: {self.engine.player.fighter.ATK[0]}-{self.engine.player.fighter.ATK[1]}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    lines += list(self.engine.message_log.wrap(
+      string=f"Defence: {self.engine.player.fighter.DEF}",
+      width=width,
+    ))
+    lines += [constants.empty_space]
+    if self.engine.player.level:
+      lines += list(self.engine.message_log.wrap(
+        string=f"Level: {self.engine.player.level.curr_level}",
+        width=width,
+      ))
+      lines += [constants.empty_space]
+      lines += list(self.engine.message_log.wrap(
+        string=f"XP: {self.engine.player.level.curr_xp}",
+        width=width,
+      ))
+      lines += [constants.empty_space]
+      lines += list(self.engine.message_log.wrap(
+        string=f"Next Level: {self.engine.player.level.xp_to_next_level}",
+        width=width,
+      ))
+      lines += [constants.empty_space]
+    height = len(lines)+3
+    console.draw_frame(
+      x=x,
+      y=y,
+      width=width+1,
+      height=height,
+      title=self.TITLE,
+      clear=True,
+      fg=(255, 255, 255),
+      bg=(0, 0, 0),
+    )
+
+    offset = y+2
+    for line in lines:
+      console.print(x=x+1, y=offset, string=line)
+      offset+=1
+      if offset > height:
+        break
 
 class SingleTargetSelectHandler(SelectIndexHandler):
   def __init__(
@@ -656,141 +831,59 @@ class LineTargetSelectHandler(SelectIndexHandler):
 
     return self.callback((x, y))
 
-class LevelUpEventHandler(AskUserEventHandler):
-  TITLE = "Level Up!"
-
-  def on_render(self, console: tcod.console.Console) -> None:
-    super().on_render(console=console)
-    x = self.engine.game_world.viewport_width+1
-    y = 1
-    lines = []
-    width = self.engine.side_console-3
-    lines += list(self.engine.message_log.wrap(
-      string="Congratulations! You level up!",
-      width=width,
-    ))
-    lines += [constants.empty_space]
-    lines += list(self.engine.message_log.wrap(
-      string="Raise one stat:",
-      width=width,
-    ))
-    lines += [constants.empty_space]
-    lines += list(self.engine.message_log.wrap(
-      string=f"1)Vitality (+20 HP)",
-      width=width,
-    ))
-    lines += list(self.engine.message_log.wrap(
-      string=f"2)Strength (+1 attack)",
-      width=width,
-    ))
-    lines += list(self.engine.message_log.wrap(
-      string=f"3)Constitution (+1 defence)",
-      width=width,
-    ))
-    height = len(lines) +2
-    console.draw_frame(
-      x=x,
-      y=y,
-      width=width+1,
-      height=height,
-      title=self.TITLE,
-      clear=True,
-      fg=(255, 255, 255),
-      bg=(0, 0, 0),
-    )
-
-    offset = y+1
-    for line in lines:
-      console.print(x=x+1, y=offset, string=line)
-      offset+=1
-      if offset > height:
-        break
-  def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
-    player = self.engine.player
-    key = event.sym
-    match key:
-      case tcod.event.KeySym.N1:
-        player.level.increase_stat(stat='HP', value=20)
-      case tcod.event.KeySym.N2:
-        player.level.increase_stat(stat='ATK', value=1)
-      case tcod.event.KeySym.N3:
-        player.level.increase_stat(stat='DEF', value=1)
-      case _:
-        self.engine.message_log.add_message(
-          text="Invalid entry.", 
-          fg=self.engine.colours['invalid']
-        )
-        return None
-    return super().ev_keydown(event=event)
+class MeleeSelectHandler(SelectIndexHandler):
+  def __init__(
+    self,
+    engine: Engine,
+    callback: Callable[[Tuple[int,int]], Optional[action.Action]],
+  ):
+    super().__init__(engine=engine)
+    self.callback = callback
+    self.radius = 1
+    self.child = self
   
-  def ev_mousebuttondown(
-    self, event: tcod.event.MouseButtonDown
-  ) -> Optional[ActionOrHandler]:
-    """
-    Don't allow the player to click to exit the menu, like normal.
-    """
-    return None
-  
-class CharacterScreenEventHandler(AskUserEventHandler):
-  TITLE = "Stats"
+  def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
+    return self.callback((x, y))
 
-  def on_render(self, console: tcod.console.Console) -> None:
-    super().on_render(console=console)
-    x = self.engine.game_world.viewport_width+1
-    y = 1
-    width = self.engine.side_console-3
-    lines = []
-    lines += list(self.engine.message_log.wrap(
-      string=f"Name: {self.engine.player.name}",
-      width=width,
-    ))
-    lines += [constants.empty_space]
-    lines += list(self.engine.message_log.wrap(
-      string=f"HP: {self.engine.player.fighter.HP}/{self.engine.player.fighter.MAX_HP}",
-      width=width,
-    ))
-    lines += [constants.empty_space]
-    lines += list(self.engine.message_log.wrap(
-      string=f"Attack: {self.engine.player.fighter.ATK[0]}-{self.engine.player.fighter.ATK[1]}",
-      width=width,
-    ))
-    lines += [constants.empty_space]
-    lines += list(self.engine.message_log.wrap(
-      string=f"Defence: {self.engine.player.fighter.DEF}",
-      width=width,
-    ))
-    lines += [constants.empty_space]
-    if self.engine.player.level:
-      lines += list(self.engine.message_log.wrap(
-        string=f"Level: {self.engine.player.level.curr_level}",
-        width=width,
-      ))
-      lines += [constants.empty_space]
-      lines += list(self.engine.message_log.wrap(
-        string=f"XP: {self.engine.player.level.curr_xp}",
-        width=width,
-      ))
-      lines += [constants.empty_space]
-      lines += list(self.engine.message_log.wrap(
-        string=f"Next Level: {self.engine.player.level.xp_to_next_level}",
-        width=width,
-      ))
-      lines += [constants.empty_space]
-    height = len(lines)+3
-    console.draw_frame(
-      x=x,
-      y=y,
-      width=width+1,
-      height=height,
-      title=self.TITLE,
-      clear=True,
-      fg=(255, 255, 255),
-      bg=(0, 0, 0),
+class MeleeWeaponSelectHandler(SelectIndexHandler):
+  def __init__(
+    self,
+    engine: Engine,
+    callback: Callable[[Tuple[int,int]], Optional[action.Action]],
+    item: Item,
+    reach: int = 1
+  ):
+    if engine.player.target:
+      self.target_xy = (engine.player.target.x, engine.player.target.y)
+    else:
+      self.target_xy = (engine.player.x, engine.player.y)
+    super().__init__(
+      engine=engine,
+      target_xy=(self.target_xy)
     )
+    self.item = item
+    self.callback = callback
+    self.radius = reach
+    self.child = self
+  
+  def on_render(self, console: tcod.console.Console = None) -> None:
+    if console is None:
+      console = self.engine.console
+    super().on_render(console=console)
+    viewport = self.engine.game_map.get_viewport()
+    x, y = self.player_pos = (self.engine.player.x + self.engine.game_map.offset_x - viewport[0][0], self.engine.player.y + self.engine.game_map.offset_y - viewport[0][1])
 
-    offset = y+2
-    for line in lines:
-      console.print(x=x+1, y=offset, string=line)
-      offset+=1
-      if offset > height:
-        break
+    if hasattr(self.item.equippable, 'range'):
+      self.radius = self.item.equippable.range
+
+    # x = x - self.radius - 1
+    # y = y - self.radius - 1
+
+    # if self.item:
+    #   colour = self.item.colour
+    # else:
+    #   colour = self.engine.colours['red']
+
+
+  def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
+    return self.callback((x, y))

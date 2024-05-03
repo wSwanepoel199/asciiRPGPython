@@ -13,6 +13,7 @@ class Inventory(BaseComponent):
   def __init__(self, capacity: int):
     self.capacity = capacity
     self.items: List[Item] = []
+    self.open = False
 
   def drop(self, item:Item) -> None:
     self.items.remove(item)
