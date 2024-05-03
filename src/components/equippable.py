@@ -31,6 +31,9 @@ class Equippable(BaseComponent):
   def get_action(self, entity: Actor) -> Optional[event_handler.ActionOrHandler]:
     return actions.ItemAction(entity=entity, item=self.parent)
 
+  def action(self, action: actions.ItemAction) -> None:
+    raise NotImplementedError()
+
 class Dagger(Equippable):
   def __init__(self) -> None:
     super().__init__(equipment_type=EquipmentType.WEAPON, ATK_bonus=2)
