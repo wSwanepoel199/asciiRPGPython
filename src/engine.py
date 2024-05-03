@@ -259,7 +259,7 @@ class Engine:
       self, 
       bar_x:int = 0, 
       bar_y:int = 0, 
-      bar_text: str = '', 
+      bar_text: str = None, 
       curr_val: int = 0, 
       max_val:int = 0, 
       total_width:int = 0, 
@@ -293,7 +293,7 @@ class Engine:
         ch=1,
         bg=bar_fg
       )
-    if flip:
+    if flip and bar_text:
       msg = f"{curr_val}/{max_val}{bar_text}"
       self.console.print(
         x=self.game_map.width - len(msg) - 1,
@@ -301,7 +301,7 @@ class Engine:
         string=msg,
         fg=self.colours['white'],
       )
-    else:
+    elif bar_text:
       self.console.print(
         x=bar_x,
         y=bar_y,

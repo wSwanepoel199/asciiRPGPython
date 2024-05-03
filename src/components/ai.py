@@ -41,7 +41,7 @@ class BaseAi(Action):
         cost[entity.x, entity.y] += 10
 
     # Create a graph from the cost array and pass that graph to a new pathfinder.
-    graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
+    graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=0)
     pathfinder = tcod.path.Pathfinder(graph=graph)
 
     pathfinder.add_root(index=(self.entity.x, self.entity.y))  # Start position.
@@ -72,7 +72,8 @@ class HostileAi(BaseAi):
       dx = self.last_seen[0] - self.entity.x
       dy = self.last_seen[1] - self.entity.y
 
-    distance = max(abs(dx), abs(dy)) # Chebyshev distance.
+    # distance = max(abs(dx), abs(dy)) # Chebyshev distance.
+    distance = self.entity.distance(target.x, target.y)
     if self.engine.game_map.visible[self.entity.x, self.entity.y]:
       if distance <= 1:
         return MeleeAction(entity=self.entity, dx=dx, dy=dy).perform()

@@ -20,11 +20,13 @@ class Equippable(BaseComponent):
       ATK_bonus: int = 0,
       DEF_bonus: int = 0,
       HP_bonus: int = 0,
+      SPD_bonus: int = 0
   ):
     self.equipment_type = equipment_type
     self.ATK_bonus = ATK_bonus
     self.DEF_bonus = DEF_bonus
     self.HP_bonus = HP_bonus
+    self.SPD_bonus = SPD_bonus
 
   def get_action(self, entity: Actor) -> Optional[event_handler.ActionOrHandler]:
     return actions.ItemAction(entity=entity, item=self.parent)
