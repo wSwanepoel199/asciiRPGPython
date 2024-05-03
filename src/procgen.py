@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Tuple, Iterator, List, TYPE_CHECKING, Any
 
+from numpy import dtype, ndarray
 import random, tcod
 import multiprocessing as mp
 
@@ -26,13 +27,13 @@ max_enemies_by_floor = [
 
 available_enemies = {
   0: [
-    (actor_factory.goblin, 70)
+    (actor_factory.goblin, 60)
     ],
   3: [
-    (actor_factory.slime, 80)
+    (actor_factory.slime, 40)
     ],
   5: [
-    (actor_factory.orc, 50)
+    (actor_factory.orc, 30)
     ],
   10: [
     (actor_factory.dragon, 10)
@@ -41,24 +42,24 @@ available_enemies = {
 
 available_items = {
   0 : [
-    (item_factory.healing_potion, 80),
-    (item_factory.dagger, 60),
-    (item_factory.leather_armour, 30)
+    (item_factory.healing_potion, 70),
+    (item_factory.dagger, 50),
+    (item_factory.leather_armour, 20)
     ],
   2 : [
-    (item_factory.lightning_bolt_scroll, 70),
-    (item_factory.fireball_scroll, 60),
+    (item_factory.lightning_bolt_scroll, 60),
+    (item_factory.fireball_scroll, 50),
     ],
   3 : [
-    (item_factory.cure_wounds_scroll, 40),
+    (item_factory.cure_wounds_scroll, 30),
     (item_factory.sword, 20)
   ],
   4 : [
-    (item_factory.teleport_scroll, 40),
+    (item_factory.teleport_scroll, 30),
     ],
   5 : [
-    (item_factory.confusion_scroll, 40),
-    (item_factory.chain_mail, 20)
+    (item_factory.confusion_scroll, 20),
+    (item_factory.chain_mail, 10)
   ]
 }
 
@@ -106,8 +107,14 @@ def place_enemies(
     )
 
     for entity in monsters:
-      x = random.randint(a=room.x1 + 1, b=room.x2 - 1)
-      y = random.randint(a=room.y1 + 1, b=room.y2 - 1)
+      if room.x1+1 >= room.x2-1:
+        x = room.x1+1
+      else:
+        x = random.randint(a=room.x1+1, b=room.x2-1)
+      if room.y1+1 >= room.y2-1:
+        y = room.y1+1
+      else:
+        y = random.randint(a=room.y1+1, b=room.y2-1)
       # entity = random.choice(list(available_enemies.values()))
       if not any(entity.x == x and entity.y == y for entity in dungeon.actors):
         # entity.fighter.Base_HP += (floor_number//2)
@@ -133,8 +140,14 @@ def place_items(
   )
 
   for item in items:
-    x = random.randint(a=room.x1 + 1, b=room.x2 - 1)
-    y = random.randint(a=room.y1 + 1, b=room.y2 - 1)
+    if room.x1+1 >= room.x2-1:
+      x = room.x1+1
+    else:
+      x = random.randint(a=room.x1+1, b=room.x2-1)
+    if room.y1+1 >= room.y2-1:
+      y = room.y1+1
+    else:
+      y = random.randint(a=room.y1+1, b=room.y2-1)
     # entity = random.choice(list(available_items.values()))
     if not any(entity.x == x and entity.y == y for entity in dungeon.items):
       item.spawn(x=x, y=y, gamemap=dungeon)
@@ -156,32 +169,23 @@ def genTunnel(start: Tuple[int,int], end: Tuple[int,int]) -> Iterator[Tuple[int,
   for x,y in tcod.los.bresenham(start=(corner_x, corner_y), end=(x2, y2)).tolist():
     yield x, y
 
-def genTunnels(queue: mp.Queue, room: RecRoom, prev_room: RecRoom, dungeon: GameMap):
-  
-  start = prev_room.center
-  end = room.center
-
-  for x, y in genTunnel(start=start, end=end):
-    if not dungeon.tiles[x-1,y] == dungeon.tile_types["floor"]:
-      dungeon.tiles[x-1,y] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x+1,y] == dungeon.tile_types["floor"]:
-      dungeon.tiles[x+1,y] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x,y-1] == dungeon.tile_types["floor"]:
-      dungeon.tiles[x,y-1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x,y+1] == dungeon.tile_types["floor"]:
-      dungeon.tiles[x,y+1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x+1,y+1] == dungeon.tile_types["floor"]:
-      dungeon.tiles[x+1,y+1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x+1,y-1] == dungeon.tile_types["floor"]:
-      dungeon.tiles[x+1,y-1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x-1,y-1] == dungeon.tile_types["floor"]:
-      dungeon.tiles[x-1,y-1] = dungeon.tile_types["wall"]
-    if not dungeon.tiles[x-1,y+1] == dungeon.tile_types["floor"]:
-      dungeon.tiles[x-1,y+1] = dungeon.tile_types["wall"]
-    dungeon.tiles[x,y] = dungeon.tile_types["floor"]
-  queue.put(dungeon.tiles)
-
 # https://roguebasin.com/index.php/Complete_Roguelike_Tutorial,_using_Python%2Blibtcod,_extras#BSP_Dungeon_Generator
+
+def modWalls(wall_layout: list, dungeon: GameMap) -> None:
+  i = 0
+  j = 0
+  while i < dungeon.height:
+    if i+1 >= dungeon.height:
+      break
+    while j < dungeon.width:
+      if j+1 >= dungeon.width:
+        break
+      if dungeon.tiles[j,i] == dungeon.tile_types["wall"]:
+        wall_layout += [dungeon.modifyWall(x=j,y=i,dungeon=dungeon)]
+      j += 1
+    j = 0
+    i += 1
+
 
 def genDungeon(
     *,
@@ -206,12 +210,14 @@ def genDungeon(
   center_of_last_room = (0, 0)
   map_width = dungeon.width-2
   map_height = dungeon.height-2
+
   bsp = tcod.bsp.BSP(
     x=1,
     y=1,
     width=map_width,
     height=map_height
   )
+
   bsp.split_recursive(
     depth=2+(dungeon.game_world.current_floor//2),
     min_width=min_room_size+1,
@@ -222,7 +228,7 @@ def genDungeon(
 
   for node in bsp.inverted_level_order():
     if not node.children:
-      print('Dig a room for %s.' % node)
+      # print('Dig a room for %s.' % node)
       minx = node.x
       miny = node.y
       maxx = node.width + node.x -1
@@ -238,7 +244,7 @@ def genDungeon(
       maxx = random.randint(a=minx+min_room_size-2, b=maxx)
       maxy = random.randint(a=miny+min_room_size-2, b=maxy)
       
-      print(f"minx: {minx}, miny: {miny}, maxx: {maxx}, maxy: {maxy}")
+      # print(f"minx: {minx}, miny: {miny}, maxx: {maxx}, maxy: {maxy}")
       
       node.x = minx
       node.y = miny
@@ -266,74 +272,136 @@ def genDungeon(
       rooms.append(new_room)
 
     else:
-      print("Parent Node:\n %s" % node)
-      node1, node2 = node.children
+      # print("Parent Node:\n %s" % node)
+      left, right = node1, node2 = node.children
+      while left.children:
+        left = random.choice(left.children)
+        # left = left.children[0]
+      while right.children:
+        right = random.choice(right.children)
+        # right = right.children[0]
+      # left = bsp.find_node(node1.x, node1.y)
+      # right = bsp.find_node(node2.x, node2.y)
 
-      left = bsp.find_node(node1.x, node1.y)
-      right = bsp.find_node(node2.x, node2.y)
-
-      print('Connect the rooms:\n%s\n%s' % (left, right))
+      # print('Connect the rooms:\n%s\n%s' % (left, right))
       node.x = min(left.x, right.x)
       node.y = min(left.y, right.y)
       node.width = max(left.x+left.width, right.x+right.width) - node.x
       node.height = max(left.y+left.height, right.y+right.height) - node.y
       tunnel = None
-
-      x1 = random.randint(a=left.x+1, b=left.x+left.width-1)
-      y1 = random.randint(a=left.y+1, b=left.y+left.height-1)
-      x2 = random.randint(a=right.x+1, b=right.x+right.width-1)
-      y2 = random.randint(a=right.y+1, b=right.y+right.height-1)
+      x1 = random.randint(a=left.x+1, b=left.x+left.width-2)
+      y1 = random.randint(a=left.y+1, b=left.y+left.height-2)
+      x3 = random.randint(a=right.x+1, b=right.x+right.width-2)
+      y3 = random.randint(a=right.y+1, b=right.y+right.height-2)
+      z2 = node.position
       tunnel_size = 2
-      # print("dig from (%s, %s) to (%s, %s)" % (x1, y1, x2, y2))
-      if x1 > x2:
-        print("switched x1 and x2")
-        x1, x2 = x2, x1
-      if y1 > y2:
-        print("switched y1 and y2")
-        y1, y2 = y2, y1
+      # print("dig from (%s, %s) to (%s, %s) via (%s)" % (x1, y1, x3, y3, z2))
       if node.horizontal:
-        print("dig from (%s, %s) to (%s, %s)" % (x1, y1, x2, y2))
-        
-        tunnel = Tunnel(
-          start=(x1, y1),
-          end=(x1, y2+1),
-          width=2,
-          height=0
-        )
+        if y1 < z2:
+          tunnel = Tunnel(
+            start=(x1, y1),
+            end=(x1, z2+1),
+            width=tunnel_size,
+            height=tunnel_size-1
+          )
+        else:
+          tunnel = Tunnel(
+            start=(x1, z2),
+            end=(x1, y1),
+            width=tunnel_size,
+            height=tunnel_size-1
+          )
         dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
         tunnels.append(tunnel)
-        tunnel = Tunnel(
-          start=(x1, y2),
-          end=(x2, y2),
-          width=0,
-          height=2
-        )
+        if z2 < y3:
+          tunnel = Tunnel(
+            start=(x3, z2),
+            end=(x3, y3),
+            width=tunnel_size,
+            height=tunnel_size-1
+          )
+        else:
+          tunnel = Tunnel(
+            start=(x3, y3),
+            end=(x3, z2+1),
+            width=tunnel_size,
+            height=tunnel_size-1
+          )
+        dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
+        tunnels.append(tunnel)
+        if x1 < x3:
+          tunnel = Tunnel(
+            start=(x1, z2),
+            end=(x3, z2),
+            width=tunnel_size-1,
+            height=tunnel_size
+          )
+        else:
+          tunnel = Tunnel(
+            start=(x3, z2),
+            end=(x1, z2),
+            width=tunnel_size-1,
+            height=tunnel_size
+          )
         dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
         tunnels.append(tunnel)
       else:
-        print("dig from (%s, %s) to (%s, %s)" % (x1, y1, x2, y2))
-        
-        tunnel = Tunnel(
-          start=(x1, y1),
-          end=(x2+1, y1),
-          width=0,
-          height=2
-        )
+        if x1 < z2:
+          tunnel = Tunnel(
+            start=(x1, y1),
+            end=(z2+1, y1),
+            width=tunnel_size-1,
+            height=tunnel_size
+          )
+        else:
+            tunnel = Tunnel(
+            start=(z2, y1),
+            end=(x1, y1),
+            width=tunnel_size-1,
+            height=tunnel_size
+          )
         dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
         tunnels.append(tunnel)
-        tunnel = Tunnel(
-          start=(x2, y1),
-          end=(x2, y2),
-          width=2,
-          height=0
-        )
+        if z2 < x3:
+          tunnel = Tunnel(
+            start=(z2, y3),
+            end=(x3, y3),
+            width=tunnel_size-1,
+            height=tunnel_size
+          )
+        else:
+          tunnel = Tunnel(
+            start=(x3, y3),
+            end=(z2+1, y3),
+            width=tunnel_size-1,
+            height=tunnel_size
+          )
         dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
         tunnels.append(tunnel)
+        if y1 < y3:
+          tunnel = Tunnel(
+          start=(z2, y1),
+          end=(z2, y3),
+          width=tunnel_size,
+          height=tunnel_size-1
+          )
+        else:
+          tunnel = Tunnel(
+          start=(z2, y3),
+          end=(z2, y1),
+          width=tunnel_size,
+          height=tunnel_size-1
+          )
+        dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
+        tunnels.append(tunnel)
+
 
   for tunnel in tunnels:
     dungeon.tiles[tunnel.inner] = dungeon.tile_types["floor"]
     
-    # place_items(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+    place_enemies(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
+
+    place_items(room=tunnel, dungeon=dungeon, floor_number=engine.game_world.current_floor)
 
   for room in rooms:
     dungeon.tiles[room.inner] = dungeon.tile_types["floor"]

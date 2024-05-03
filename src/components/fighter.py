@@ -82,8 +82,8 @@ class Fighter(BaseComponent):
     if self.HP == self.MAX_HP:
       return 0
     
-    if self.HP + amount > self.MAX_HP:
-      amount = self.HP+amount - self.MAX_HP
+    if self.HP + amount >= self.MAX_HP:
+      amount = self.MAX_HP - self.HP+amount
 
     self.HP += amount
     return amount

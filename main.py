@@ -1,4 +1,4 @@
-print(__name__)
+# print(__name__)
 # ‎ 
 import tcod, traceback, os, sys
 # from src.map import Map, GameMap

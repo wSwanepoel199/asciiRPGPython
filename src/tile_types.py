@@ -39,8 +39,8 @@ tile_types = {
     light=(ord(constants.floor_char), (255, 255, 255), (0, 0, 0))
   ),
   'wall': new_tile(
-    walkable=True, 
-    transparent=True, 
+    walkable=False, 
+    transparent=False, 
     dark=(ord("\xa0"), (100, 100, 100), (10, 10, 10)),
     light=(ord("\xa0"), (255, 255, 255), (0, 0, 0))
   ),
