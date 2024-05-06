@@ -31,9 +31,9 @@ class Equippable(BaseComponent):
     self.SPD_bonus = SPD_bonus
 
   def get_action(self, entity: Actor) -> Optional[event_handler.ActionOrHandler]:
-    return actions.ItemAction(entity=entity, item=self.parent)
+    return actions.EquipmentAction(entity=entity, item=self.parent)
 
-  def action(self, action: actions.ItemAction) -> None:
+  def action(self, action: actions.EquipmentAction) -> None:
     action.entity.equipment.toggle_equip(equippable_item=self.parent)
     # raise NotImplementedError()
 
@@ -42,8 +42,8 @@ class Dagger(Equippable):
     super().__init__(equipment_type=EquipmentType.WEAPON, ATK_bonus=2)
   
   def get_action(self, entity: Actor) -> event_handler.MeleeWeaponSelectHandler:
-    if not entity.equipment.weapon:
-      return actions.ItemAction(entity=entity, item=self.parent)
+    if not entity.equipment.item_is_equipped(item=self.parent):
+      return actions.EquipmentAction(entity=entity, item=self.parent)
     if entity.equipment.weapon is self.parent:
       self.engine.message_log.add_message(
         text="Select a target.", 
@@ -52,11 +52,11 @@ class Dagger(Equippable):
       return event_handler.MeleeWeaponSelectHandler(
         engine=self.engine, 
         item=self.parent,
-        callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
+        callback=lambda xy: actions.EquipmentAction(entity=entity, item=self.parent, target_xy=xy)
       )
   
-  def action(self, action: actions.ItemAction) -> bool:
-    if not action.entity.equipment.weapon:
+  def action(self, action: actions.EquipmentAction) -> bool:
+    if not action.entity.equipment.item_is_equipped(item=self.parent):
       action.entity.equipment.toggle_equip(equippable_item=self.parent)
       return False
     else:
@@ -85,8 +85,8 @@ class Sword(Equippable):
     super().__init__(equipment_type=EquipmentType.WEAPON, ATK_bonus=4)
   
   def get_action(self, entity: Actor) -> event_handler.MeleeWeaponSelectHandler:
-    if not entity.equipment.weapon:
-      return actions.ItemAction(entity=entity, item=self.parent)
+    if not entity.equipment.item_is_equipped(item=self.parent):
+      return actions.EquipmentAction(entity=entity, item=self.parent)
     if entity.equipment.weapon is self.parent:
       self.engine.message_log.add_message(
         text="Select a target.", 
@@ -95,12 +95,12 @@ class Sword(Equippable):
       return event_handler.MeleeWeaponSelectHandler(
         engine=self.engine, 
         item=self.parent,
-        callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy),
+        callback=lambda xy: actions.EquipmentAction(entity=entity, item=self.parent, target_xy=xy),
         reach=2
       )
   
-  def action(self, action: actions.ItemAction) -> bool:
-    if not action.entity.equipment.weapon:
+  def action(self, action: actions.EquipmentAction) -> bool:
+    if not action.entity.equipment.item_is_equipped(item=self.parent):
       action.entity.equipment.toggle_equip(equippable_item=self.parent)
       return False
     else:

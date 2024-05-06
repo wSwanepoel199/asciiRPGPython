@@ -4,7 +4,7 @@ from typing import Optional, Tuple, TYPE_CHECKING
 
 import random
 
-from src.entity import Actor
+from src.entity import Actor, Item
 
 if TYPE_CHECKING:
   from src.engine import Engine
@@ -68,13 +68,33 @@ class ItemAction(Action):
   def target_actor(self) -> Optional[Actor]:
     return self.engine.game_map.get_actor_at_location(*self.target_xy)
   
-  def perform(self)->bool:
+  def perform(self)->None:
+    raise NotImplementedError()
+  
+class ConsumableAction(ItemAction):
+  def __init__(
+    self, 
+    entity: Actor, 
+    item: Item, 
+    target_xy: Optional[Tuple[int, int]] = None
+  ) -> None:
+    super().__init__(entity=entity, item=item, target_xy=target_xy)
+  def perform(self) -> bool:
     if self.item.consumable:
       return self.item.consumable.action(action=self)
-    elif self.item.equippable and not self.item.equippable.action:
-      self.entity.equipment.toggle_equip(equippable_item=self.item)
-      return False
-    elif self.item.equippable and self.item.equippable.action:
+    else:
+      raise self.engine.exceptions.Impossible(f"The {self.item.name} cannot be used.")
+    
+class EquipmentAction(ItemAction):
+  def __init__(
+    self, 
+    entity: Actor, 
+    item: Item, 
+    target_xy: Optional[Tuple[int, int]] = None
+  ) -> None:
+    super().__init__(entity=entity, item=item, target_xy=target_xy)
+  def perform(self) -> bool:
+    if self.item.equippable:
       self.item.equippable.action(action=self)
     else:
       raise self.engine.exceptions.Impossible(f"The {self.item.name} cannot be used.")

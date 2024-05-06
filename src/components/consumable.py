@@ -16,9 +16,9 @@ class Consumable(BaseComponent):
   parent: Item
 
   def get_action(self, entity: Actor) -> Optional[event_handler.ActionOrHandler]:
-    return actions.ItemAction(entity=entity, item=self.parent)
+    return actions.ConsumableAction(entity=entity, item=self.parent)
   
-  def action(self, action: actions.ItemAction) -> None:
+  def action(self, action: actions.ConsumableAction) -> None:
     raise NotImplementedError()
   
   def consume(self) -> None:
@@ -32,7 +32,7 @@ class HealingConsumable(Consumable):
     self.amount = amount
     self.on_use = on_use
   
-  def action(self, action: actions.ItemAction) -> bool:
+  def action(self, action: actions.ConsumableAction) -> bool:
     entity = action.entity
     amount_recovered = entity.fighter.heal_damage(amount=random.sample(range(*self.amount), 1)[0])
     if amount_recovered <= 0:
@@ -65,10 +65,10 @@ class LightningBoltConsumable(Consumable):
     return event_handler.LineTargetSelectHandler(
       engine=self.engine, 
       item=self.parent,
-      callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
+      callback=lambda xy: actions.ConsumableAction(entity=entity, item=self.parent, target_xy=xy)
     )
   
-  def action(self, action: actions.ItemAction) -> Optional[event_handler.InventoryEventHandler]:
+  def action(self, action: actions.ConsumableAction) -> Optional[event_handler.InventoryEventHandler]:
     entity = action.entity
     target_xy = action.target_xy
     distance = max(abs(entity.x - target_xy[0]), abs(entity.y - target_xy[1]))
@@ -113,10 +113,10 @@ class TeleportConsumable(Consumable):
     return event_handler.SingleTargetSelectHandler(
       engine=self.engine, 
       item=self.parent,
-      callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
+      callback=lambda xy: actions.ConsumableAction(entity=entity, item=self.parent, target_xy=xy)
     )
 
-  def action(self, action: actions.ItemAction) -> None:
+  def action(self, action: actions.ConsumableAction) -> None:
     entity = action.entity
     target = action.target_actor
     target_xy = action.target_xy
@@ -154,10 +154,10 @@ class ConfusionConsumable(Consumable):
     return event_handler.SingleTargetSelectHandler(
       engine=self.engine,
       item=self.parent,
-      callback=lambda xy: actions.ItemAction(entity=entity,item=self.parent, target_xy=xy)
+      callback=lambda xy: actions.ConsumableAction(entity=entity,item=self.parent, target_xy=xy)
     )
   
-  def action(self, action: actions.ItemAction) -> bool:
+  def action(self, action: actions.ConsumableAction) -> bool:
     entity = action.entity
     target = action.target_actor
     target_xy = action.target_xy
@@ -199,10 +199,10 @@ class FireballDamageConsumable(Consumable):
     return event_handler.AreaRangedSelectHandler(
       engine=self.engine, 
       item=self.parent,
-      callback=lambda xy: actions.ItemAction(entity=entity, item=self.parent, target_xy=xy)
+      callback=lambda xy: actions.ConsumableAction(entity=entity, item=self.parent, target_xy=xy)
     )
   
-  def action(self, action: actions.ItemAction) -> None:
+  def action(self, action: actions.ConsumableAction) -> None:
     target_xy= action.target_xy
 
     if not self.engine.game_map.visible[target_xy]:

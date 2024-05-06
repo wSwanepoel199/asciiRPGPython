@@ -440,7 +440,7 @@ class MainGameEventHandler(EventHandler):
         return action.PickupAction(entity=player)
       case tcod.event.KeySym.c:
         return CharacterScreenEventHandler(engine=self.engine)
-      case tcod.event.KeySym.e:
+      case tcod.event.KeySym.a:
         if player.equipment.weapon:
           return player.equipment.weapon.equippable.get_action(entity=player)
         else:
@@ -838,6 +838,15 @@ class MeleeSelectHandler(SelectIndexHandler):
     callback: Callable[[Tuple[int,int]], Optional[action.Action]],
   ):
     super().__init__(engine=engine)
+    if engine.player.target:
+      self.target_xy = (engine.player.target.x, engine.player.target.y)
+    else:
+      self.target_xy = (engine.player.x, engine.player.y)
+    super().__init__(
+      engine=engine,
+      target_xy=(self.target_xy)
+    )
+    
     self.callback = callback
     self.radius = 1
     self.child = self

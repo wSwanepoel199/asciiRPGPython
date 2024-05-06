@@ -209,7 +209,7 @@ def genDungeon(
   tunnels: List[RecRoom] = []
   center_of_last_room = (0, 0)
   map_width = dungeon.width-2
-  map_height = dungeon.height-2
+  map_height = dungeon.height-3
 
   bsp = tcod.bsp.BSP(
     x=1,
