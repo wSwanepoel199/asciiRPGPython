@@ -11,7 +11,7 @@ import src.utils.constants as constants
 
 if TYPE_CHECKING:
     from src.engine import Engine
-    from src.entity import Item
+    from src.entity import Item, Actor
 
 MOVE_KEYS = {
     # Arrow keys.
@@ -134,9 +134,9 @@ class EventHandler(BaseEventHandler):
             return False
         try:
             res = action.perform()
-            if isinstance(res, bool):
+            if isinstance(res, bool) and res is False:
                 return res
-            self.engine.handle_deaths()
+            # self.engine.handle_deaths()
         except self.engine.exceptions.Impossible as exc:
             self.engine.message_log.add_message(
                 text=exc.args[0],
@@ -959,3 +959,19 @@ class MeleeWeaponSelectHandler(SelectIndexHandler):
 
     def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
         return self.callback((x, y))
+
+
+class EnemyActionHandler:
+    def __init__(
+        self,
+        engine: Engine,
+        actor: Actor,
+        callback: Callable[[Tuple[int, int]], Optional[action.Action]]
+    ):
+        if engine.player.target:
+            self.target_xy = (engine.player.target.x, engine.player.target.y)
+        else:
+            self.target_xy = (engine.player.x, engine.player.y)
+        self.engine = engine
+        self.actor = actor
+        self.callback = callback
