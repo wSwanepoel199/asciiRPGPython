@@ -30,9 +30,8 @@ class Goblin(BaseEnemyType):
         for actor in set(self.engine.game_map.actors) - {entity} - {player}:
             dist = entity.distance(actor.x, actor.y)
             if dist <= 5 and actor.ai:
-                actor.target = player
-                actor.ai.memory = 5
-                actor.ai.last_seen = (player.x, player.y)
+                actor.ai.memory = entity.ai.memory
+                actor.ai.last_seen = entity.ai.last_seen
 
 
 class Slime(BaseEnemyType):
