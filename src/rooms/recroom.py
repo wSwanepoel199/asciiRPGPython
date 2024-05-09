@@ -19,8 +19,8 @@ class RecRoom:
 
     @property
     def center(self) -> Tuple[int, int]:
-        center_x = int((self.x1 + self.x2) / 2)
-        center_y = int((self.y1 + self.y2) / 2)
+        center_x = int((self.x1+1 + self.x2) / 2)
+        center_y = int((self.y1 + 1 + self.y2) / 2)
 
         return center_x, center_y
 
@@ -32,7 +32,7 @@ class RecRoom:
     @property
     def outer(self) -> Tuple[int, int]:
         """Return the outer area of this room as a 2D array index."""
-        return slice(self.x1, self.x2+1), slice(self.y1, self.y2+1)
+        return slice(self.x1, self.x2), slice(self.y1, self.y2)
 
     def intersects(self, other: RecRoom) -> bool:
         """Return True if this room overlaps with another RectangularRoom."""

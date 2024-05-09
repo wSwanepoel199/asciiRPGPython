@@ -265,8 +265,8 @@ def genDungeon(
                 height=node.height
             )
 
-            dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
             new_room.genWalls(gamemap=dungeon)
+            dungeon.tiles[new_room.inner] = dungeon.tile_types["floor"]
 
             new_room.node = node
             if len(rooms) == 0:
@@ -303,17 +303,30 @@ def genDungeon(
             node.height = max(left.y+left.height, right.y +
                               right.height) - node.y
             tunnel = None
-            x1 = random.randint(a=left.x, b=left.x+left.width-3)
-            y1 = random.randint(a=left.y, b=left.y+left.height-3)
-            x3 = random.randint(a=right.x, b=right.x+right.width-3)
-            y3 = random.randint(a=right.y, b=right.y+right.height-3)
+            # tunnel_size = random.randint(a=2, b=4)
+            tunnel_size = 3
+            x1 = random.randint(
+                a=left.x+1, b=max(left.x+left.width-1-tunnel_size, left.x+2)
+            )
+            y1 = random.randint(
+                a=left.y+1, b=max(left.y+left.height-1-tunnel_size, left.y+2)
+            )
+            x3 = random.randint(
+                a=right.x+1, b=max(right.x+right.width-1-tunnel_size, right.x+2)
+            )
+            y3 = random.randint(
+                a=right.y+1, b=max(right.y+right.height-1-tunnel_size, right.y+2)
+            )
             z2 = node.position
-            tunnel_size = random.randint(a=2, b=4)
             # print("dig from (%s, %s) to (%s, %s) via (%s)" % (x1, y1, x3, y3, z2))
             if node.horizontal:
-                y1 = left.y+left.height-1
+                y1 = left.y+left.height
                 y3 = right.y
                 z2 = random.randint(a=y1, b=y3)
+                # if z2 == y1:
+                #     x1 = z2
+                # elif z2 == y3:
+                #     x3 = z2
                 tunnel = Tunnel(
                     start=(x1, y1),
                     middle=(z2),
@@ -322,8 +335,8 @@ def genDungeon(
                     width=tunnel_size,
                     height=tunnel_size
                 )
-                tunnel.genFloors(dungeon)
                 tunnel.genWalls(dungeon)
+                tunnel.genFloors(dungeon)
                 tunnels.append(tunnel)
                 # if y1 < z2:
                 #     tunnel = Tunnel(
@@ -374,8 +387,13 @@ def genDungeon(
                 # dungeon.tiles[tunnel.outer] = dungeon.tile_types["wall"]
                 # tunnels.append(tunnel)
             else:
-                x1 = left.x+left.width-1
+                x1 = left.x+left.width
                 x3 = right.x
+                # if z2 == x1:
+                #     y1 = z2
+                # elif z2 == x3:
+                #     y3 = z2
+
                 z2 = random.randint(a=x1, b=x3)
                 tunnel = Tunnel(
                     start=(x1, y1),
@@ -385,8 +403,8 @@ def genDungeon(
                     width=tunnel_size,
                     height=tunnel_size
                 )
-                tunnel.genFloors(dungeon)
                 tunnel.genWalls(dungeon)
+                tunnel.genFloors(dungeon)
                 tunnels.append(tunnel)
                 pass
                 # if x1 < z2:
