@@ -212,8 +212,6 @@ class InventoryEventHandler(AskUserEventHandler):
     TITLE = " INVENTORY "
 
     def on_render(self, console: tcod.console.Console) -> None:
-        if console is None:
-            console = self.engine.console
         super().on_render(console=console)
         player = self.engine.player
         viewport = self.engine.game_map.get_viewport()
@@ -359,9 +357,7 @@ class SelectIndexHandler(AskUserEventHandler):
         self.valid = True
         self.child = None
 
-    def on_render(self, console: tcod.console.Console = None) -> None:
-        if console is None:
-            console = self.engine.console
+    def on_render(self, console: tcod.console.Console) -> None:
         super().on_render(console=console)
 
         viewport = self.engine.game_map.get_viewport()
@@ -505,9 +501,7 @@ class HistoryViewer(EventHandler):
         self.log_length = len(engine.message_log.messages)
         self.cursor = self.log_length - 1
 
-    def on_render(self, console: tcod.console.Console = None) -> None:
-        if console is None:
-            console = self.engine.console
+    def on_render(self, console: tcod.console.Console) -> None:
         super().on_render(console=console)
 
         log_console = tcod.console.Console(
@@ -722,9 +716,7 @@ class SingleTargetSelectHandler(SelectIndexHandler):
         self.radius = 8
         self.child = self
 
-    def on_render(self, console: tcod.console.Console = None) -> None:
-        if console is None:
-            console = self.engine.console
+    def on_render(self, console: tcod.console.Console) -> None:
         super().on_render(console=console)
         viewport = self.engine.game_map.get_viewport()
         x, y = self.player_pos = (
@@ -776,9 +768,7 @@ class AreaRangedSelectHandler(SelectIndexHandler):
         self.callback = callback
         self.radius = 8
 
-    def on_render(self, console: tcod.console.Console = None) -> None:
-        if console is None:
-            console = self.engine.console
+    def on_render(self, console: tcod.console.Console) -> None:
         super().on_render(console=console)
         viewport = self.engine.game_map.get_viewport()
         x, y = self.engine.mouse_location
@@ -826,9 +816,7 @@ class LineTargetSelectHandler(SelectIndexHandler):
         self.radius = 8
         self.child = self
 
-    def on_render(self, console: tcod.console.Console = None) -> None:
-        if console is None:
-            console = self.engine.console
+    def on_render(self, console: tcod.console.Console) -> None:
         super().on_render(console=console)
         viewport = self.engine.game_map.get_viewport()
         x, y = self.player_pos = (
@@ -932,9 +920,7 @@ class MeleeWeaponSelectHandler(SelectIndexHandler):
         self.radius = reach
         self.child = self
 
-    def on_render(self, console: tcod.console.Console = None) -> None:
-        if console is None:
-            console = self.engine.console
+    def on_render(self, console: tcod.console.Console) -> None:
         super().on_render(console=console)
         viewport = self.engine.game_map.get_viewport()
         x, y = self.player_pos = (

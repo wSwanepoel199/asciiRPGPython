@@ -45,13 +45,25 @@ class Tunnel:
             ] = gamemap.tile_types["wall"]
             # start to z
             if self.y1 < self.z:
-                y1, y2 = self.y1+1, self.z
+                y1, y2 = self.y1+1, self.z+1
             else:
-                y1, y2 = self.z, self.y1+1
-            gamemap.tiles[
-                x1:x2,
-                y1:y2
-            ] = gamemap.tile_types["v-wall"]
+                y1, y2 = self.z+1, self.y1+1
+            # gamemap.tiles[
+            #     x1:x2,
+            #     y1:y2
+            # ] = gamemap.tile_types["v-wall"]
+            for x in range(
+                x1,
+                x2
+            ):
+                for y in range(
+                    y1,
+                    y2
+                ):
+                    tile = gamemap.tiles[x, y]
+                    # print(tile)
+                    if tile == gamemap.tile_types["mapfill"]:
+                        gamemap.tiles[x, y] = gamemap.tile_types["v-wall"]
             # end
             x1, x2 = self.x2-self.width, self.x2+self.width*2
             y1 = self.y2
@@ -64,10 +76,22 @@ class Tunnel:
                 y1, y2 = self.z, self.y2
             else:
                 y1, y2 = self.y2, self.z
-            gamemap.tiles[
-                x1:x2,
-                y1:y2
-            ] = gamemap.tile_types["v-wall"]
+            # gamemap.tiles[
+            #     x1:x2,
+            #     y1:y2
+            # ] = gamemap.tile_types["v-wall"]
+            for x in range(
+                x1,
+                x2
+            ):
+                for y in range(
+                    y1,
+                    y2
+                ):
+                    tile = gamemap.tiles[x, y]
+                    # print(tile)
+                    if tile == gamemap.tile_types["mapfill"]:
+                        gamemap.tiles[x, y] = gamemap.tile_types["v-wall"]
 
             # connect start to end
             if self.x1 < self.x2:
@@ -75,24 +99,6 @@ class Tunnel:
             else:
                 x1, x2 = self.x2, self.x1+1
             y1, y2 = self.z-self.height, self.z+self.height*2
-            gamemap.tiles[
-                x1:x2,
-                y1:y2
-            ] = gamemap.tile_types["h-wall"]
-
-        else:
-            # start
-            x1 = self.x1
-            y1, y2 = self.y1-self.height, self.y1+self.height*2
-            gamemap.tiles[
-                x1,
-                y1:y2
-            ] = gamemap.tile_types["wall"]
-            # start to z
-            if self.x1 < self.z:
-                x1, x2 = self.x1+1, self.z
-            else:
-                x1, x2 = self.z, self.x1+1
             # gamemap.tiles[
             #     x1:x2,
             #     y1:y2
@@ -106,9 +112,39 @@ class Tunnel:
                     y2
                 ):
                     tile = gamemap.tiles[x, y]
-                    print(tile)
+                    # print(tile)
                     if tile == gamemap.tile_types["mapfill"]:
-                        tile = gamemap.tile_types["h-wall"]
+                        gamemap.tiles[x, y] = gamemap.tile_types["h-wall"]
+
+        else:
+            # start
+            x1 = self.x1
+            y1, y2 = self.y1-self.height, self.y1+self.height*2
+            gamemap.tiles[
+                x1,
+                y1:y2
+            ] = gamemap.tile_types["wall"]
+            # start to z
+            if self.x1 < self.z:
+                x1, x2 = self.x1+1, self.z+1
+            else:
+                x1, x2 = self.z+1, self.x1+1
+            # gamemap.tiles[
+            #     x1:x2,
+            #     y1:y2
+            # ] = gamemap.tile_types["h-wall"]
+            for x in range(
+                x1,
+                x2
+            ):
+                for y in range(
+                    y1,
+                    y2
+                ):
+                    tile = gamemap.tiles[x, y]
+                    # print(tile)
+                    if tile == gamemap.tile_types["mapfill"]:
+                        gamemap.tiles[x, y] = gamemap.tile_types["h-wall"]
             # end
             x1 = self.x2
             y1, y2 = self.y2-self.height, self.y2+self.height*2
@@ -121,10 +157,22 @@ class Tunnel:
                 x1, x2 = self.z, self.x2
             else:
                 x1, x2 = self.x2, self.z
-            gamemap.tiles[
-                x1:x2,
-                y1:y2
-            ] = gamemap.tile_types["h-wall"]
+            # gamemap.tiles[
+            #     x1:x2,
+            #     y1:y2
+            # ] = gamemap.tile_types["h-wall"]
+            for x in range(
+                x1,
+                x2
+            ):
+                for y in range(
+                    y1,
+                    y2
+                ):
+                    tile = gamemap.tiles[x, y]
+                    # print(tile)
+                    if tile == gamemap.tile_types["mapfill"]:
+                        gamemap.tiles[x, y] = gamemap.tile_types["h-wall"]
 
             # connect start to end
             x1, x2 = self.z-self.width, self.z+self.width*2
@@ -132,10 +180,22 @@ class Tunnel:
                 y1, y2 = self.y1, self.y2+1
             else:
                 y1, y2 = self.y2, self.y1+1
-            gamemap.tiles[
-                x1:x2,
-                y1:y2
-            ] = gamemap.tile_types["v-wall"]
+            # gamemap.tiles[
+            #     x1:x2,
+            #     y1:y2
+            # ] = gamemap.tile_types["v-wall"]
+            for x in range(
+                x1,
+                x2
+            ):
+                for y in range(
+                    y1,
+                    y2
+                ):
+                    tile = gamemap.tiles[x, y]
+                    # print(tile)
+                    if tile == gamemap.tile_types["mapfill"]:
+                        gamemap.tiles[x, y] = gamemap.tile_types["v-wall"]
 
     def genFloors(self, gamemap: GameMap) -> None:
         if self.horizontal:
