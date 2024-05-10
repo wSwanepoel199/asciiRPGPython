@@ -288,11 +288,11 @@ def genDungeon(
             # print("Parent Node:\n %s" % node)
             left, right = node.children
             while left.children:
-                left = random.choice(left.children)
-                # left = left.children[0]
+                # left = random.choice(left.children)
+                left = left.children[1]
             while right.children:
-                right = random.choice(right.children)
-                # right = right.children[0]
+                # right = random.choice(right.children)
+                right = right.children[0]
             # left = bsp.find_node(node1.x, node1.y)
             # right = bsp.find_node(node2.x, node2.y)
 
