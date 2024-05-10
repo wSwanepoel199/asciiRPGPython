@@ -42,23 +42,39 @@ class RecRoom:
                 self.y2 >= other.y1)
 
     def genWalls(self, gamemap: GameMap) -> None:
-        gamemap.tiles[self.x1, self.y1] = gamemap.tile_types["l-wall-d-r"]
-        gamemap.tiles[self.x2, self.y1] = gamemap.tile_types["l-wall-d-l"]
-        gamemap.tiles[self.x1, self.y2] = gamemap.tile_types["l-wall-t-r"]
-        gamemap.tiles[self.x2, self.y2] = gamemap.tile_types["l-wall-t-l"]
+        # gamemap.tiles[self.x1, self.y1] = gamemap.tile_types["l-wall-d-r"]
+        # gamemap.tiles[self.x2, self.y1] = gamemap.tile_types["l-wall-d-l"]
+        # gamemap.tiles[self.x1, self.y2] = gamemap.tile_types["l-wall-t-r"]
+        # gamemap.tiles[self.x2, self.y2] = gamemap.tile_types["l-wall-t-l"]
+        # gamemap.tiles[
+        #     self.x1+1:self.x2,
+        #     self.y1
+        # ] = gamemap.tile_types["h-wall"]
+        # gamemap.tiles[
+        #     self.x1+1:self.x2,
+        #     self.y2
+        # ] = gamemap.tile_types["h-wall"]
+        # gamemap.tiles[
+        #     self.x1,
+        #     self.y1+1:self.y2
+        # ] = gamemap.tile_types["v-wall"]
+        # gamemap.tiles[
+        #     self.x2,
+        #     self.y1+1:self.y2
+        # ] = gamemap.tile_types["v-wall"]
         gamemap.tiles[
-            self.x1+1:self.x2,
+            self.x1:self.x2,
             self.y1
-        ] = gamemap.tile_types["h-wall"]
+        ] = gamemap.tile_types["wall"]
         gamemap.tiles[
-            self.x1+1:self.x2,
+            self.x1:self.x2+1,
             self.y2
-        ] = gamemap.tile_types["h-wall"]
+        ] = gamemap.tile_types["wall"]
         gamemap.tiles[
             self.x1,
-            self.y1+1:self.y2
-        ] = gamemap.tile_types["v-wall"]
+            self.y1:self.y2
+        ] = gamemap.tile_types["wall"]
         gamemap.tiles[
             self.x2,
-            self.y1+1:self.y2
-        ] = gamemap.tile_types["v-wall"]
+            self.y1:self.y2
+        ] = gamemap.tile_types["wall"]

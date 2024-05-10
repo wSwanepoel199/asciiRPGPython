@@ -475,25 +475,25 @@ def genDungeon(
             place_items(room=tunnel, dungeon=dungeon,
                         floor_number=engine.game_world.current_floor)
 
-    # wall_layout = []
-    # i = 0
-    # j = 0
-    # while i < dungeon.height:
-    #   if i+1 >= dungeon.height:
-    #     break
-    #   while j < dungeon.width:
-    #     if j+1 >= dungeon.width:
-    #       break
-    #     if dungeon.tiles[j,i] == dungeon.tile_types["wall"]:
-    #       wall_layout += [dungeon.modifyWall(x=j,y=i,dungeon=dungeon)]
-    #     j += 1
-    #   j = 0
-    #   i += 1
+    wall_layout = []
+    i = 0
+    j = 0
+    while i < dungeon.height:
+        if i+1 >= dungeon.height:
+            break
+        while j < dungeon.width:
+            if j+1 >= dungeon.width:
+                break
+            if dungeon.tiles[j, i] == dungeon.tile_types["wall"]:
+                wall_layout += [dungeon.modifyWall(x=j, y=i, dungeon=dungeon)]
+            j += 1
+        j = 0
+        i += 1
 
-    # for wall in list(wall_layout):
-    #   if wall and len(wall) == 3:
-    #     dungeon.tiles[wall[0],wall[1]] = dungeon.tile_types[wall[2]]
-    #   else:
-    #     continue
+    for wall in list(wall_layout):
+        if wall and len(wall) == 3:
+            dungeon.tiles[wall[0], wall[1]] = dungeon.tile_types[wall[2]]
+        else:
+            continue
 
     return dungeon

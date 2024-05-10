@@ -66,8 +66,9 @@ class Tunnel:
                 ):
                     tile = gamemap.tiles[x, y]
                     # print(tile)
-                    if not tile == gamemap.tile_types["floor"]:
-                        gamemap.tiles[x, y] = gamemap.tile_types["v-wall"]
+                    if not (tile == gamemap.tile_types["floor"] or tile == gamemap.tile_types["wall"]):
+                        # gamemap.tiles[x, y] = gamemap.tile_types["v-wall"]
+                        gamemap.tiles[x, y] = gamemap.tile_types["wall"]
             # end
             x1, x2 = self.x2-self.width, self.x2+self.width*2
             y1 = self.y2
@@ -98,8 +99,9 @@ class Tunnel:
                 ):
                     tile = gamemap.tiles[x, y]
                     # print(tile)
-                    if not tile == gamemap.tile_types["floor"]:
-                        gamemap.tiles[x, y] = gamemap.tile_types["v-wall"]
+                    if not (tile == gamemap.tile_types["floor"] or tile == gamemap.tile_types["wall"]):
+                        # gamemap.tiles[x, y] = gamemap.tile_types["v-wall"]
+                        gamemap.tiles[x, y] = gamemap.tile_types["wall"]
 
             # connect start to end
             right = None
@@ -126,42 +128,68 @@ class Tunnel:
                 ):
                     tile = gamemap.tiles[x, y]
                     # print(tile)
-                    if not tile == gamemap.tile_types["floor"]:
-                        gamemap.tiles[x, y] = gamemap.tile_types["h-wall"]
+                    if not (tile == gamemap.tile_types["floor"] or tile == gamemap.tile_types["wall"]):
+                        # gamemap.tiles[x, y] = gamemap.tile_types["h-wall"]
+                        gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+
             if right is True:
-                gamemap.tiles[
-                    x1-self.width,
-                    self.z+self.height
-                ] = gamemap.tile_types["l-wall-t-r"]
-                gamemap.tiles[
-                    x1+self.width,
-                    self.z-self.height
-                ] = gamemap.tile_types["l-wall-t-r"]
-                gamemap.tiles[
-                    x2-self.width-1,
-                    self.z+self.height
-                ] = gamemap.tile_types["l-wall-d-l"]
-                gamemap.tiles[
-                    x2+self.width-1,
-                    self.z-self.height
-                ] = gamemap.tile_types["l-wall-d-l"]
+                x, y = x1-self.width, self.z+self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['h-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-t-r"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = x1+self.width, self.z-self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['h-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-t-r"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = x2-self.width-1, self.z+self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['h-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-d-l"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = x2+self.width-1, self.z-self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['h-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-d-l"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
             elif right is False:
-                gamemap.tiles[
-                    x1+self.width,
-                    self.z+self.height
-                ] = gamemap.tile_types["l-wall-d-r"]
-                gamemap.tiles[
-                    x1-self.width,
-                    self.z-self.height
-                ] = gamemap.tile_types["l-wall-d-r"]
-                gamemap.tiles[
-                    x2-self.width-1,
-                    self.z-self.height
-                ] = gamemap.tile_types["l-wall-t-l"]
-                gamemap.tiles[
-                    x2+self.width-1,
-                    self.z+self.height
-                ] = gamemap.tile_types["l-wall-t-l"]
+                x, y = x1+self.width, self.z+self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['h-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-d-r"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = x1-self.width, self.z-self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['h-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-d-r"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = x2-self.width-1, self.z-self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['h-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-t-l"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = x2+self.width-1, self.z+self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['h-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-t-l"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
 
         else:
             # start
@@ -190,8 +218,9 @@ class Tunnel:
                 ):
                     tile = gamemap.tiles[x, y]
                     # print(tile)
-                    if not tile == gamemap.tile_types["floor"]:
-                        gamemap.tiles[x, y] = gamemap.tile_types["h-wall"]
+                    if not (tile == gamemap.tile_types["floor"] or tile == gamemap.tile_types["wall"]):
+                        # gamemap.tiles[x, y] = gamemap.tile_types["h-wall"]
+                        gamemap.tiles[x, y] = gamemap.tile_types["wall"]
             # end
             x1 = self.x2
             y1, y2 = self.y2-self.height, self.y2+self.height*2
@@ -218,8 +247,9 @@ class Tunnel:
                 ):
                     tile = gamemap.tiles[x, y]
                     # print(tile)
-                    if not tile == gamemap.tile_types["floor"]:
-                        gamemap.tiles[x, y] = gamemap.tile_types["h-wall"]
+                    if not (tile == gamemap.tile_types["floor"] or tile == gamemap.tile_types["wall"]):
+                        # gamemap.tiles[x, y] = gamemap.tile_types["h-wall"]
+                        gamemap.tiles[x, y] = gamemap.tile_types["wall"]
 
             # connect start to end
             down = None
@@ -246,75 +276,73 @@ class Tunnel:
                 ):
                     tile = gamemap.tiles[x, y]
                     # print(tile)
-                    if not tile == gamemap.tile_types["floor"]:
-                        gamemap.tiles[x, y] = gamemap.tile_types["v-wall"]
-
+                    if not (tile == gamemap.tile_types["floor"] or tile == gamemap.tile_types["wall"]):
+                        # gamemap.tiles[x, y] = gamemap.tile_types["v-wall"]
+                        gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                    # if tile == gamemap.tile_types["l-wall-d-l"]:
+                    #     gamemap.tiles[x, y] = gamemap.tile_types["t-wall-v-l"]
+                    # if tile == gamemap.tile_types["l-wall-d-r"]:
+                    #     gamemap.tiles[x, y] = gamemap.tile_types["t-wall-v-r"]
+                    # if tile == gamemap.tile_types["l-wall-t-l"]:
+                    #     pass
             if down is True:
-                if gamemap.tiles[
-                    self.z-self.width,
-                    y1+self.height
-                ] == gamemap.tile_types['mapfill']:
-                    gamemap.tiles[
-                        self.z-self.width,
-                        y1+self.height
-                    ] = gamemap.tile_types["l-wall-d-l"]
-                if gamemap.tiles[
-                    self.z+self.width,
-                    y1-self.height
-                ] == gamemap.tile_types['mapfill']:
-                    gamemap.tiles[
-                        self.z+self.width,
-                        y1-self.height
-                    ] = gamemap.tile_types["l-wall-d-l"]
-                if gamemap.tiles[
-                    self.z-self.width,
-                    y2+self.height-1
-                ] == gamemap.tile_types['mapfill']:
-                    gamemap.tiles[
-                        self.z-self.width,
-                        y2+self.height-1
-                    ] = gamemap.tile_types["l-wall-t-r"]
-                if gamemap.tiles[
-                    self.z+self.width,
-                    y2-self.height-1
-                ] == gamemap.tile_types['mapfill']:
-                    gamemap.tiles[
-                        self.z+self.width,
-                        y2-self.height-1
-                    ] = gamemap.tile_types["l-wall-t-r"]
+                x, y = self.z-self.width, y1+self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['v-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-d-l"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = self.z+self.width, y1-self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['v-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-d-l"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = self.z-self.width, y2+self.height-1
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['v-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-t-r"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = self.z+self.width, y2-self.height-1
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['v-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-t-r"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
             elif down is False:
-                if gamemap.tiles[
-                    self.z+self.width,
-                    y1+self.height
-                ] == gamemap.tile_types['mapfill']:
-                    gamemap.tiles[
-                        self.z+self.width,
-                        y1+self.height
-                    ] = gamemap.tile_types["l-wall-d-r"]
-                if gamemap.tiles[
-                    self.z-self.width,
-                    y1-self.height
-                ] == gamemap.tile_types['mapfill']:
-                    gamemap.tiles[
-                        self.z-self.width,
-                        y1-self.height
-                    ] = gamemap.tile_types["l-wall-d-r"]
-                if gamemap.tiles[
-                    self.z+self.width,
-                    y2+self.height-1
-                ] == gamemap.tile_types['mapfill']:
-                    gamemap.tiles[
-                        self.z+self.width,
-                        y2+self.height-1
-                    ] = gamemap.tile_types["l-wall-t-l"]
-                if gamemap.tiles[
-                    self.z-self.width,
-                    y2-self.height-1
-                ] == gamemap.tile_types['mapfill']:
-                    gamemap.tiles[
-                        self.z-self.width,
-                        y2-self.height-1
-                    ] = gamemap.tile_types["l-wall-t-l"]
+                x, y = self.z+self.width, y1+self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['v-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-d-r"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = self.z-self.width, y1-self.height
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['v-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-d-r"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = self.z+self.width, y2+self.height-1
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['v-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-t-l"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
+                x, y = self.z-self.width, y2-self.height-1
+                if (
+                    gamemap.tiles[x, y] == gamemap.tile_types['mapfill']
+                    or gamemap.tiles[x, y] == gamemap.tile_types['v-wall']
+                ):
+                    gamemap.tiles[x, y] = gamemap.tile_types["l-wall-t-l"]
+                    gamemap.tiles[x, y] = gamemap.tile_types["wall"]
 
     def genFloors(self, gamemap: GameMap) -> None:
         if self.horizontal:

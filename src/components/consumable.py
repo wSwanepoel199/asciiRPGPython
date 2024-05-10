@@ -143,7 +143,7 @@ class TeleportConsumable(Consumable):
                 self.engine.game_map.tiles[
                     target_x,
                     target_y
-                ]["floor"]
+                ] == self.engine.game_map.tile_types["floor"]
                 and not self.engine.game_map.get_actor_at_location(
                     x=target_x,
                     y=target_y
