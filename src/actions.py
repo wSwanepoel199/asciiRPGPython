@@ -184,8 +184,8 @@ class MeleeAction(DirectionalAction):
 class MovementAction(DirectionalAction):
     def perform(self) -> None:
         dest_x, dest_y = self.dest_xy
-
-        if not self.engine.game_map.in_bounds(x=dest_x, y=dest_y) or not self.engine.game_map.tiles["walkable"][dest_x, dest_y] or self.engine.game_map.get_blocking_entity(x=dest_x, y=dest_y):
+        test = True
+        if (not self.engine.game_map.in_bounds(x=dest_x, y=dest_y) or not self.engine.game_map.tiles["walkable"][dest_x, dest_y] or self.engine.game_map.get_blocking_entity(x=dest_x, y=dest_y)) and test is False:
             raise self.engine.exceptions.Impossible("That way is blocked.")
 
         self.entity.move(dx=self.dx, dy=self.dy)

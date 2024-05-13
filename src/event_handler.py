@@ -4,10 +4,12 @@ from typing import Optional, TYPE_CHECKING, Callable, Tuple, Union
 
 import tcod
 import os
+import time
 import tcod.constants
 import multiprocessing as mp
 import threading as mt
 
+from src import engine
 import src.actions as action
 import src.utils.constants as constants
 
@@ -110,6 +112,47 @@ class PopupMessage(BaseEventHandler):
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[BaseEventHandler]:
         return self.parent
+
+
+class LoadingHandler(BaseEventHandler):
+    def __init__(self, parent: BaseEventHandler, process: Optional[mp.Process], queue: Optional[mp.Queue], text: str) -> None:
+        self.parent = parent
+        self.process = process
+        self.queue = queue
+        self.text = text
+
+    def on_render(self, console: tcod.console.Console) -> Optional[BaseEventHandler]:
+
+        self.parent.on_render(console=console)
+        console.rgb["fg"]
+        console.rgb['bg']
+
+        console.print(
+            x=console.width//2,
+            y=console.height//2,
+            string=self.text,
+            fg=self.parent.colours['white'],
+            bg=self.parent.colours['black'],
+            alignment=tcod.constants.CENTER
+        )
+
+        if self.process.is_alive():
+            print("Loading...")
+            # self.process.join()
+        if not self.queue.empty():
+            print("engine loaded")
+
+    def on_load(self) -> Optional[BaseEventHandler]:
+        if not self.queue.empty() and self.process.is_alive():
+            engine = self.queue.get()
+            print(engine, "loaded")
+            self.process.join()
+            print(self.process.is_alive())
+            return MainGameEventHandler(engine=engine)
+
+            # MainGameEventHandler(engine=engine)
+        else:
+            return self
 
 
 class EventHandler(BaseEventHandler):

@@ -115,14 +115,14 @@ def place_enemies(
         x, y = 0, 0
         if hasattr(room, "floors"):
             valid_spots = []
-            print("placing enemies on floor")
+            # print("placing enemies on floor \n")
             for pos in room.floors:
                 for tile in pos:
                     if tile:
                         valid_spots.append(tile)
             x, y = random.choice(valid_spots)
         else:
-            print("placing enemies at coords")
+            # print("placing enemies at coords \n")
             if room.x1+1 >= room.x2-1:
                 x = random.randint(a=room.x2-1, b=room.x1+1)
             else:
@@ -134,7 +134,7 @@ def place_enemies(
         # entity = random.choice(list(available_enemies.values()))
         lock.acquire()
         if not any(entity.x == x and entity.y == y for entity in dungeon.actors):
-            print("spawning enemy at ", x, " ", y)
+            # print("spawning enemy at ", x, " ", y, "\n")
             # entity.fighter.Base_HP += (floor_number//2)
             # entity.fighter.Base_Max_HP += (floor_number//2)
             # entity.fighter.Base_DEF += (floor_number//2)
@@ -164,14 +164,14 @@ def place_items(
         x, y = 0, 0
         if hasattr(room, "floors"):
             valid_spots = []
-            print("placing items on floor")
+            # print("placing items on floor \n")
             for pos in room.floors:
                 for tile in pos:
                     if tile:
                         valid_spots.append(tile)
             x, y = random.choice(valid_spots)
         else:
-            print("placing items at coords")
+            # print("placing items at coords \n")
             if room.x1+1 >= room.x2-1:
                 x = random.randint(a=room.x2-1, b=room.x1+1)
             else:
@@ -183,7 +183,7 @@ def place_items(
         # entity = random.choice(list(available_items.values()))
         lock.acquire()
         if not any(entity.x == x and entity.y == y for entity in dungeon.items):
-            print("spawning items at ", x, " ", y)
+            # print("spawning items at ", x, " ", y, "\n")
             item.spawn(x=x, y=y, gamemap=dungeon)
         lock.release()
 
@@ -383,74 +383,90 @@ def genDungeon(
                 tunnel.genFloors(dungeon)
                 tunnels.append(tunnel)
 
+    dungeon.tiles[center_of_last_room] = dungeon.tile_types["stairs_down"]
+
+    dungeon.stairsdown = center_of_last_room
+
     lock = mt.Lock()
-    for room in rooms:
-        # dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
-        room_spawn_enemies = mt.Thread(
-            target=place_enemies,
-            args=(
-                lock,
-                room,
-                dungeon,
-                engine.game_world.current_floor
-            ))
-        room_spawn_enemies.start()
-        # place_enemies(
-        #     room=room,
-        #     dungeon=dungeon,
-        #     floor_number=engine.game_world.current_floor
-        # )
-        room_spawn_items = mt.Thread(
-            target=place_items,
-            args=(
-                lock,
-                room,
-                dungeon,
-                engine.game_world.current_floor
-            ))
-        room_spawn_items.start()
-        # place_items(
-        #     room=room,
-        #     dungeon=dungeon,
-        #     floor_number=engine.game_world.current_floor
-        # )
 
-        dungeon.tiles[center_of_last_room] = dungeon.tile_types["stairs_down"]
+    def populateRooms(lock: mt.Lock, rooms: list):
+        for room in rooms:
+            # dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
+            # room_spawn_enemies = mt.Thread(
+            #     target=place_enemies,
+            #     args=(
+            #         lock,
+            #         room,
+            #         dungeon,
+            #         engine.game_world.current_floor
+            #     ))
+            # room_spawn_enemies.start()
+            place_enemies(
+                lock=lock,
+                room=room,
+                dungeon=dungeon,
+                floor_number=engine.game_world.current_floor
+            )
+            # room_spawn_items = mt.Thread(
+            #     target=place_items,
+            #     args=(
+            #         lock,
+            #         room,
+            #         dungeon,
+            #         engine.game_world.current_floor
+            #     ))
+            # room_spawn_items.start()
+            place_items(
+                lock=lock,
+                room=room,
+                dungeon=dungeon,
+                floor_number=engine.game_world.current_floor
+            )
+    room_thread = mt.Thread(
+        target=populateRooms,
+        args=(lock, rooms)
+    )
 
-        dungeon.stairsdown = center_of_last_room
+    def populateTunnels(lock: mt.Lock, tunnels: list):
+        for tunnel in tunnels:
+            # dungeon.tiles[tunnel.inner] = dungeon.tile_types["floor"]
+            # if random.random() < 0.3:
+            # tunnel_spawn_enemies = mt.Thread(
+            #     target=place_enemies,
+            #     args=(
+            #         lock,
+            #         tunnel,
+            #         dungeon,
+            #         engine.game_world.current_floor
+            #     ))
+            # tunnel_spawn_enemies.start()
+            place_enemies(
+                lock=lock,
+                room=tunnel,
+                dungeon=dungeon,
+                floor_number=engine.game_world.current_floor
+            )
+            # if random.random() < 0.3:
+            # tunnel_spawn_items = mt.Thread(
+            #     target=place_items,
+            #     args=(
+            #         lock,
+            #         tunnel,
+            #         dungeon,
+            #         engine.game_world.current_floor
+            #     ))
+            # tunnel_spawn_items.start()
+            place_items(
+                lock=lock,
+                room=tunnel,
+                dungeon=dungeon,
+                floor_number=engine.game_world.current_floor
+            )
 
-    for tunnel in tunnels:
-        # dungeon.tiles[tunnel.inner] = dungeon.tile_types["floor"]
-        # if random.random() < 0.3:
-        tunnel_spawn_enemies = mt.Thread(
-            target=place_enemies,
-            args=(
-                lock,
-                tunnel,
-                dungeon,
-                engine.game_world.current_floor
-            ))
-        tunnel_spawn_enemies.start()
-        # place_enemies(
-        #     room=tunnel,
-        #     dungeon=dungeon,
-        #     floor_number=engine.game_world.current_floor
-        # )
-        # if random.random() < 0.3:
-        tunnel_spawn_items = mt.Thread(
-            target=place_items,
-            args=(
-                lock,
-                tunnel,
-                dungeon,
-                engine.game_world.current_floor
-            ))
-        tunnel_spawn_items.start()
-        # place_items(
-        #     room=tunnel,
-        #     dungeon=dungeon,
-        #     floor_number=engine.game_world.current_floor
-        # )
+    tunnel_thread = mt.Thread(
+        target=populateTunnels,
+        args=(lock, tunnels)
+    )
 
     wall_layout = []
 
@@ -464,6 +480,7 @@ def genDungeon(
                 if j+1 >= dungeon.width:
                     break
                 if dungeon.tiles[j, i] == dungeon.tile_types["wall"]:
+                    print("modding wall at (%s, %s)" % (j, i))
                     dungeon.modifyWall(
                         x=j,
                         y=i,
@@ -482,21 +499,30 @@ def genDungeon(
     def updateWalls(wall_layout: list, dungeon: GameMap):
         for wall in list(wall_layout):
             if wall and len(wall) == 3:
+                print("updating wall at (%s, %s)" % (wall[0], wall[1]))
+
                 dungeon.tiles[wall[0], wall[1]] = dungeon.tile_types[wall[2]]
             else:
                 continue
+
     wall_update_thread = mt.Thread(
         target=updateWalls,
         args=(wall_layout, dungeon)
     )
+
+    room_thread.start()
+    tunnel_thread.start()
     wall_thread.start()
     wall_thread.join()
+
     wall_update_thread.start()
 
-    room_spawn_enemies.join()
-    room_spawn_items.join()
-    tunnel_spawn_enemies.join()
-    tunnel_spawn_items.join()
+    # room_spawn_enemies.join()
+    # room_spawn_items.join()
+    # tunnel_spawn_enemies.join()
+    # tunnel_spawn_items.join()
+    room_thread.join()
+    tunnel_thread.join()
     wall_update_thread.join()
 
     return dungeon
