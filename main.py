@@ -141,22 +141,16 @@ def main():
                     *context.recommended_console_size(),
                     order="F")
                 console.clear()
+                if hasattr(handler, 'process'):
+                    handler = handler.on_load()
                 if isinstance(handler, event_handler.EventHandler):
                     handler.engine.event_handler = handler
                     handler.engine.context = context
                     handler.engine.console = console
-                    # handler.engine.game_map.width = console.width-min((console.width // 4), 55)
-                    # handler.engine.game_map.height = console.height
-                    # handler.engine.game_map.console = context.new_console(
-                    #   *context.recommended_console_size(),
-                    #   order='F'
-                    # )
-                    # handler.engine.game_map.width = console.width
-                    # handler.engine.game_map.height = console.height-2
 
                 handler.on_render(console=console)
                 if hasattr(handler, 'process'):
-                    handler = handler.on_load()
+                    continue
                 context.present(console=console, integer_scaling=True)
                 try:
                     for event in tcod.event.wait():

@@ -121,7 +121,7 @@ class LoadingHandler(BaseEventHandler):
         self.queue = queue
         self.text = text
 
-    def on_render(self, console: tcod.console.Console) -> Optional[BaseEventHandler]:
+    def on_render(self, console: tcod.console.Console) -> None:
 
         self.parent.on_render(console=console)
         console.rgb["fg"]

@@ -115,14 +115,14 @@ def place_enemies(
         x, y = 0, 0
         if hasattr(room, "floors"):
             valid_spots = []
-            # print("placing enemies on floor \n")
+            print("placing enemies on floor \n")
             for pos in room.floors:
                 for tile in pos:
                     if tile:
                         valid_spots.append(tile)
             x, y = random.choice(valid_spots)
         else:
-            # print("placing enemies at coords \n")
+            print("placing enemies at coords \n")
             if room.x1+1 >= room.x2-1:
                 x = random.randint(a=room.x2-1, b=room.x1+1)
             else:
@@ -134,7 +134,7 @@ def place_enemies(
         # entity = random.choice(list(available_enemies.values()))
         lock.acquire()
         if not any(entity.x == x and entity.y == y for entity in dungeon.actors):
-            # print("spawning enemy at ", x, " ", y, "\n")
+            print("spawning enemy at ", x, " ", y, "\n")
             # entity.fighter.Base_HP += (floor_number//2)
             # entity.fighter.Base_Max_HP += (floor_number//2)
             # entity.fighter.Base_DEF += (floor_number//2)
@@ -164,14 +164,14 @@ def place_items(
         x, y = 0, 0
         if hasattr(room, "floors"):
             valid_spots = []
-            # print("placing items on floor \n")
+            print("placing items on floor \n")
             for pos in room.floors:
                 for tile in pos:
                     if tile:
                         valid_spots.append(tile)
             x, y = random.choice(valid_spots)
         else:
-            # print("placing items at coords \n")
+            print("placing items at coords \n")
             if room.x1+1 >= room.x2-1:
                 x = random.randint(a=room.x2-1, b=room.x1+1)
             else:
@@ -183,7 +183,7 @@ def place_items(
         # entity = random.choice(list(available_items.values()))
         lock.acquire()
         if not any(entity.x == x and entity.y == y for entity in dungeon.items):
-            # print("spawning items at ", x, " ", y, "\n")
+            print("spawning items at ", x, " ", y, "\n")
             item.spawn(x=x, y=y, gamemap=dungeon)
         lock.release()
 
@@ -512,10 +512,10 @@ def genDungeon(
 
     room_thread.start()
     tunnel_thread.start()
-    wall_thread.start()
-    wall_thread.join()
+    # wall_thread.start()
+    # wall_thread.join()
 
-    wall_update_thread.start()
+    # wall_update_thread.start()
 
     # room_spawn_enemies.join()
     # room_spawn_items.join()
@@ -523,6 +523,6 @@ def genDungeon(
     # tunnel_spawn_items.join()
     room_thread.join()
     tunnel_thread.join()
-    wall_update_thread.join()
+    # wall_update_thread.join()
 
     return dungeon
