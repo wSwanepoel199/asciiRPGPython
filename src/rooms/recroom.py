@@ -19,7 +19,7 @@ class RecRoom:
 
     @property
     def center(self) -> Tuple[int, int]:
-        center_x = int((self.x1+1 + self.x2) / 2)
+        center_x = int((self.x1 + 1 + self.x2) / 2)
         center_y = int((self.y1 + 1 + self.y2) / 2)
 
         return center_x, center_y
@@ -67,7 +67,7 @@ class RecRoom:
             self.y1
         ] = gamemap.tile_types["wall"]
         gamemap.tiles[
-            self.x1:self.x2+1,
+            self.x1:self.x2,
             self.y2
         ] = gamemap.tile_types["wall"]
         gamemap.tiles[
@@ -76,5 +76,5 @@ class RecRoom:
         ] = gamemap.tile_types["wall"]
         gamemap.tiles[
             self.x2,
-            self.y1:self.y2
+            self.y1:self.y2+1
         ] = gamemap.tile_types["wall"]

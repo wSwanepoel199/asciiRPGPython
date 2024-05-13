@@ -46,6 +46,20 @@ class Slime(BaseEnemyType):
             y = entity.y
             game_map = entity.gamemap
             for _ in range(2):
+                if game_map.tiles["walkable"][x, y-1] and not any(entity.x == x and entity.y == y-1 for entity in game_map.actors):
+                    actor_factory.mini_slime.spawn(
+                        gamemap=game_map,
+                        x=x,
+                        y=y-1,
+                    )
+                    continue
+                if game_map.tiles["walkable"][x+1, y-1] and not any(entity.x == x+1 and entity.y == y-1 for entity in game_map.actors):
+                    actor_factory.mini_slime.spawn(
+                        gamemap=game_map,
+                        x=x+1,
+                        y=y-1,
+                    )
+                    continue
                 if game_map.tiles["walkable"][x+1, y] and not any(entity.x == x+1 and entity.y == y for entity in game_map.actors):
                     actor_factory.mini_slime.spawn(
                         gamemap=game_map,
@@ -53,10 +67,24 @@ class Slime(BaseEnemyType):
                         y=y,
                     )
                     continue
+                if game_map.tiles["walkable"][x+1, y+1] and not any(entity.x == x+1 and entity.y == y+1 for entity in game_map.actors):
+                    actor_factory.mini_slime.spawn(
+                        gamemap=game_map,
+                        x=x+1,
+                        y=y+1,
+                    )
+                    continue
                 if game_map.tiles["walkable"][x, y+1] and not any(entity.x == x and entity.y == y+1 for entity in game_map.actors):
                     actor_factory.mini_slime.spawn(
                         gamemap=game_map,
                         x=x,
+                        y=y+1,
+                    )
+                    continue
+                if game_map.tiles["walkable"][x-1, y+1] and not any(entity.x == x-1 and entity.y == y+1 for entity in game_map.actors):
+                    actor_factory.mini_slime.spawn(
+                        gamemap=game_map,
+                        x=x-1,
                         y=y+1,
                     )
                     continue
@@ -67,10 +95,10 @@ class Slime(BaseEnemyType):
                         y=y,
                     )
                     continue
-                if game_map.tiles["walkable"][x, y-1] and not any(entity.x == x and entity.y == y-1 for entity in game_map.actors):
+                if game_map.tiles["walkable"][x-1, y-1] and not any(entity.x == x-1 and entity.y == y-1 for entity in game_map.actors):
                     actor_factory.mini_slime.spawn(
                         gamemap=game_map,
-                        x=x,
+                        x=x-1,
                         y=y-1,
                     )
                     continue

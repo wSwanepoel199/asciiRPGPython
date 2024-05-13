@@ -15,6 +15,14 @@ class Tunnel:
         self.width = width//2
         self.height = height//2
         self.horizontal = horizontal
+        self.floors = np.full(
+            shape=(
+                self.x1+self.x2+width+self.z,
+                self.y1+self.y2+height+self.z
+            ),
+            fill_value=None,
+            order="F"
+        )
 
     @property
     def center(self) -> Tuple[int, int]:
@@ -355,6 +363,9 @@ class Tunnel:
                 x1:x2,
                 y1:y2
             ] = gamemap.tile_types["floor"]
+            for x in range(x1, x2):
+                for y in range(y1, y2):
+                    self.floors[x, y] = [x, y]
 
             x1, x2 = self.x2, self.x2+self.width
             if self.z < self.y2:
@@ -365,6 +376,9 @@ class Tunnel:
                 x1:x2,
                 y1:y2
             ] = gamemap.tile_types["floor"]
+            for x in range(x1, x2):
+                for y in range(y1, y2):
+                    self.floors[x, y] = [x, y]
 
             if self.x1 < self.x2:
                 x1, x2 = self.x1, self.x2+1
@@ -375,6 +389,9 @@ class Tunnel:
                 x1:x2,
                 y1:y2
             ] = gamemap.tile_types["floor"]
+            for x in range(x1, x2):
+                for y in range(y1, y2):
+                    self.floors[x, y] = [x, y]
         else:
             if self.x1 < self.z:
                 x1, x2 = self.x1, self.z
@@ -385,6 +402,9 @@ class Tunnel:
                 x1:x2,
                 y1:y2
             ] = gamemap.tile_types["floor"]
+            for x in range(x1, x2):
+                for y in range(y1, y2):
+                    self.floors[x, y] = [x, y]
 
             if self.z < self.x2:
                 x1, x2 = self.z, self.x2+1
@@ -395,6 +415,9 @@ class Tunnel:
                 x1:x2,
                 y1:y2
             ] = gamemap.tile_types["floor"]
+            for x in range(x1, x2):
+                for y in range(y1, y2):
+                    self.floors[x, y] = [x, y]
 
             x1, x2 = self.z, self.z+self.width
             if self.y1 < self.y2:
@@ -405,3 +428,6 @@ class Tunnel:
                 x1:x2,
                 y1:y2
             ] = gamemap.tile_types["floor"]
+            for x in range(x1, x2):
+                for y in range(y1, y2):
+                    self.floors[x, y] = [x, y]

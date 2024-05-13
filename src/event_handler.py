@@ -5,6 +5,8 @@ from typing import Optional, TYPE_CHECKING, Callable, Tuple, Union
 import tcod
 import os
 import tcod.constants
+import multiprocessing as mp
+import threading as mt
 
 import src.actions as action
 import src.utils.constants as constants
@@ -144,7 +146,15 @@ class EventHandler(BaseEventHandler):
             )
             return False
 
-        self.engine.handle_enemy_turn()
+        # enemy_process = mp.Process(
+        #     target=self.engine.handle_enemy_turn,
+        # )
+        enemy_process = mt.Thread(
+            target=self.engine.handle_enemy_turn,
+        )
+        enemy_process.start()
+        enemy_process.join()
+        # self.engine.handle_enemy_turn()
         self.engine.update_fov()
         self.engine.handle_deaths()
 
