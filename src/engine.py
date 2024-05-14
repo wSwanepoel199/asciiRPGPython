@@ -24,6 +24,8 @@ class Engine:
         self.mouse_location = (0, 0)
         self.event_handler: Optional[event_handler.EventHandler] = None
         self.message_log = MessageLog()
+        self.process = None
+        self.queue = None
 
     @property
     def side_console(self) -> int:
@@ -78,8 +80,7 @@ class Engine:
             self.context = None
         save_data = lzma.compress(data=pickle.dumps(obj=self))
         with open(file=filename, mode="wb") as f:
-            f.write(save_data)\
-
+            f.write(save_data)
 
     def render(self, console: tcod.console.Console) -> None:
         self.console = console

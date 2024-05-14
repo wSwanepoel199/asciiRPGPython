@@ -15,6 +15,8 @@ from src.rooms.tunnel import Tunnel
 if TYPE_CHECKING:
     from src.engine import Engine
 
+print_console = False
+
 max_items_by_floor = [
     (1, 1),
     (4, 2),
@@ -115,14 +117,16 @@ def place_enemies(
         x, y = 0, 0
         if hasattr(room, "floors"):
             valid_spots = []
-            print("placing enemies on floor \n")
+            if print_console:
+                print("placing enemies on floor \n")
             for pos in room.floors:
                 for tile in pos:
                     if tile:
                         valid_spots.append(tile)
             x, y = random.choice(valid_spots)
         else:
-            print("placing enemies at coords \n")
+            if print_console:
+                print("placing enemies at coords \n")
             if room.x1+1 >= room.x2-1:
                 x = random.randint(a=room.x2-1, b=room.x1+1)
             else:
@@ -134,7 +138,8 @@ def place_enemies(
         # entity = random.choice(list(available_enemies.values()))
         lock.acquire()
         if not any(entity.x == x and entity.y == y for entity in dungeon.actors):
-            print("spawning enemy at ", x, " ", y, "\n")
+            if print_console:
+                print("spawning enemy at ", x, " ", y, "\n")
             # entity.fighter.Base_HP += (floor_number//2)
             # entity.fighter.Base_Max_HP += (floor_number//2)
             # entity.fighter.Base_DEF += (floor_number//2)
@@ -164,14 +169,16 @@ def place_items(
         x, y = 0, 0
         if hasattr(room, "floors"):
             valid_spots = []
-            print("placing items on floor \n")
+            if print_console:
+                print("placing items on floor \n")
             for pos in room.floors:
                 for tile in pos:
                     if tile:
                         valid_spots.append(tile)
             x, y = random.choice(valid_spots)
         else:
-            print("placing items at coords \n")
+            if print_console:
+                print("placing items at coords \n")
             if room.x1+1 >= room.x2-1:
                 x = random.randint(a=room.x2-1, b=room.x1+1)
             else:
@@ -183,7 +190,8 @@ def place_items(
         # entity = random.choice(list(available_items.values()))
         lock.acquire()
         if not any(entity.x == x and entity.y == y for entity in dungeon.items):
-            print("spawning items at ", x, " ", y, "\n")
+            if print_console:
+                print("spawning items at ", x, " ", y, "\n")
             item.spawn(x=x, y=y, gamemap=dungeon)
         lock.release()
 
@@ -480,7 +488,8 @@ def genDungeon(
                 if j+1 >= dungeon.width:
                     break
                 if dungeon.tiles[j, i] == dungeon.tile_types["wall"]:
-                    print("modding wall at (%s, %s)" % (j, i))
+                    if print_console:
+                        print("modding wall at (%s, %s)" % (j, i))
                     dungeon.modifyWall(
                         x=j,
                         y=i,
@@ -499,7 +508,8 @@ def genDungeon(
     def updateWalls(wall_layout: list, dungeon: GameMap):
         for wall in list(wall_layout):
             if wall and len(wall) == 3:
-                print("updating wall at (%s, %s)" % (wall[0], wall[1]))
+                if print_console:
+                    print("updating wall at (%s, %s)" % (wall[0], wall[1]))
 
                 dungeon.tiles[wall[0], wall[1]] = dungeon.tile_types[wall[2]]
             else:

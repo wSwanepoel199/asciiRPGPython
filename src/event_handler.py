@@ -115,10 +115,8 @@ class PopupMessage(BaseEventHandler):
 
 
 class LoadingHandler(BaseEventHandler):
-    def __init__(self, parent: BaseEventHandler, process: Optional[mp.Process], queue: Optional[mp.Queue], text: str) -> None:
+    def __init__(self, parent: BaseEventHandler, text: str) -> None:
         self.parent = parent
-        self.process = process
-        self.queue = queue
         self.text = text
 
     def on_render(self, console: tcod.console.Console) -> None:
@@ -136,30 +134,13 @@ class LoadingHandler(BaseEventHandler):
             alignment=tcod.constants.CENTER
         )
 
-        if self.process.is_alive():
-            print("Loading...")
-            # self.process.join()
-        if not self.queue.empty():
-            print("engine loaded")
-
-    def on_load(self) -> Optional[BaseEventHandler]:
-        if not self.queue.empty() and self.process.is_alive():
-            engine = self.queue.get()
-            print(engine, "loaded")
-            self.process.join()
-            print(self.process.is_alive())
-            return MainGameEventHandler(engine=engine)
-
-            # MainGameEventHandler(engine=engine)
-        else:
-            return self
-
 
 class EventHandler(BaseEventHandler):
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
 
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+        print(event)
         action_or_state = self.dispatch(event=event)
         if isinstance(action_or_state, BaseEventHandler):
             return action_or_state
@@ -481,7 +462,71 @@ class LookHandler(SelectIndexHandler):
         return MainGameEventHandler(engine=self.engine)
 
 
+# queue = mp.Queue()
+# map_process = None
+
+end1, end2 = mp.Pipe()
+
+
 class MainGameEventHandler(EventHandler):
+    def __init__(self, engine: Engine) -> None:
+        super().__init__(engine=engine)
+        self.process = None
+        self.count = 0
+
+    def on_render(self, console: tcod.console.Console) -> None:
+        map_process = self.process
+        end1, end2 = mp.Pipe()
+        if not hasattr(self.engine, 'game_map') and not map_process:
+            map_process = mp.Process(
+                target=self.engine.game_world.gen_floor,
+                args=(
+                    end1,
+                )
+            )
+            map_process.start()
+        print(map_process)
+        # if not self.queue.empty():
+        #     map = self.queue.get()
+        #     print(map)
+        print('polling pipe', end1.poll())
+        if end1.poll() and self.count > 0:
+            map = end2.recv()
+            print(map)
+        if map_process.is_alive():
+            console.rgb["fg"]
+            console.rgb['bg']
+
+            console.print(
+                x=console.width//2,
+                y=console.height//2,
+                string="Loading...",
+                fg=self.engine.colours['white'],
+                bg=self.engine.colours['black'],
+                alignment=tcod.constants.CENTER
+            )
+            print("Loading...")
+
+        else:
+            print("process terminated")
+            # map_process = None
+            # print(queue.get())
+            # self.engine.process = None
+        # if not queue.empty():
+        #     print("queue has item")
+        #     print(queue.get())
+            # self.engine.game_map = self.queue.get()
+            # self.engine.queue = None
+            # self.engine.process.join()
+            # self.engine.process = None
+
+        # if not self.queue.empty():
+        #     print(self.queue.get(block=False))
+        if hasattr(self.engine, 'game_map'):
+            super().on_render(console=console)
+        self.process = map_process
+        self.count += 1
+
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         performing_action: Optional[action.Action] = None
 

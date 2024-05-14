@@ -1,5 +1,6 @@
 # print(__name__)
 # ‎
+from unittest import skip
 import tcod
 import traceback
 import os
@@ -135,25 +136,40 @@ def main():
         #   min_rows=rows,
         #   order="F"
         # )
+        skip_once = True
         try:
             while True:
                 console = context.new_console(
                     *context.recommended_console_size(),
                     order="F")
                 console.clear()
-                if hasattr(handler, 'process'):
-                    handler = handler.on_load()
+                # if hasattr(handler, 'process') and handler.process and handler.process.is_alive():
+                #     print("alive")
                 if isinstance(handler, event_handler.EventHandler):
                     handler.engine.event_handler = handler
                     handler.engine.context = context
                     handler.engine.console = console
-
                 handler.on_render(console=console)
-                if hasattr(handler, 'process'):
-                    continue
                 context.present(console=console, integer_scaling=True)
+                # if hasattr(handler, 'process') and handler.process and not hasattr(handler.engine, 'game_map'):
+                #     if handler.process.is_alive():
+                #         continue
+
+                #     # tcod.event.Event(
+                #     #     type="PROCESS_END"
+                #     # )
+                #     # handler.process.join()
+                #     continue
                 try:
+                    # if hasattr(handler, 'process') and handler.process and not hasattr(handler.engine, 'game_map'):
+                    #     while handler.process.is_alive():
+                    #         continue
+                    if skip_once:
+                        skip_once = False
+                        continue
+                    print('waiting for event')
                     for event in tcod.event.wait():
+                        print("event triggered")
                         context.convert_event(event=event)
                         handler = handler.handle_events(event=event)
                 except Exception:
