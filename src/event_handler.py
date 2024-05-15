@@ -6,10 +6,9 @@ import tcod
 import os
 import time
 import tcod.constants
-import multiprocessing as mp
+
 import threading as mt
 
-from src import engine
 import src.actions as action
 import src.utils.constants as constants
 
@@ -173,11 +172,11 @@ class EventHandler(BaseEventHandler):
         # enemy_process = mp.Process(
         #     target=self.engine.handle_enemy_turn,
         # )
-        enemy_process = mt.Thread(
+        enemy_thread = mt.Thread(
             target=self.engine.handle_enemy_turn,
         )
-        enemy_process.start()
-        enemy_process.join()
+        enemy_thread.start()
+        enemy_thread.join()
         # self.engine.handle_enemy_turn()
         self.engine.update_fov()
         self.engine.handle_deaths()
@@ -462,38 +461,21 @@ class LookHandler(SelectIndexHandler):
         return MainGameEventHandler(engine=self.engine)
 
 
-# queue = mp.Queue()
-# map_process = None
-
-end1, end2 = mp.Pipe()
-
-
 class MainGameEventHandler(EventHandler):
     def __init__(self, engine: Engine) -> None:
         super().__init__(engine=engine)
-        self.process = None
-        self.count = 0
+        self.thread = None
 
     def on_render(self, console: tcod.console.Console) -> None:
-        map_process = self.process
-        end1, end2 = mp.Pipe()
-        if not hasattr(self.engine, 'game_map') and not map_process:
-            map_process = mp.Process(
-                target=self.engine.game_world.gen_floor,
-                args=(
-                    end1,
-                )
+        if not self.thread and not hasattr(self.engine, 'game_map'):
+            self.thread = mt.Thread(
+                target=self.engine.game_world.gen_floor
             )
-            map_process.start()
-        print(map_process)
-        # if not self.queue.empty():
-        #     map = self.queue.get()
-        #     print(map)
-        print('polling pipe', end1.poll())
-        if end1.poll() and self.count > 0:
-            map = end2.recv()
-            print(map)
-        if map_process.is_alive():
+            self.thread.start()
+        if hasattr(self.engine, 'game_map') and self.engine.game_map:
+            self.thread = None
+            super().on_render(console=console)
+        else:
             console.rgb["fg"]
             console.rgb['bg']
 
@@ -507,25 +489,10 @@ class MainGameEventHandler(EventHandler):
             )
             print("Loading...")
 
-        else:
-            print("process terminated")
-            # map_process = None
-            # print(queue.get())
-            # self.engine.process = None
-        # if not queue.empty():
-        #     print("queue has item")
-        #     print(queue.get())
-            # self.engine.game_map = self.queue.get()
-            # self.engine.queue = None
-            # self.engine.process.join()
-            # self.engine.process = None
-
-        # if not self.queue.empty():
-        #     print(self.queue.get(block=False))
-        if hasattr(self.engine, 'game_map'):
-            super().on_render(console=console)
-        self.process = map_process
-        self.count += 1
+    def map_check(self):
+        print("process check: ", self.thread.is_alive())
+        self.thread.join()
+        # self.engine.game_map = self.process.map
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         performing_action: Optional[action.Action] = None

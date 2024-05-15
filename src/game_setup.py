@@ -8,7 +8,6 @@ import pickle
 import traceback
 import tcod.constants
 from typing import Optional
-import multiprocessing as mp
 
 import src.factory.actor_factory as actor_factory
 import src.factory.item_factory as item_factory
@@ -18,9 +17,6 @@ from src.engine import Engine
 from src.map import GameWorld
 from src.utils.colour import loadColours
 
-pool = mp.Pool(processes=2)
-queue = mp.Queue()
-
 
 def new_game(
     title: str,
@@ -29,7 +25,6 @@ def new_game(
     map_max_rooms: int,
     room_min_size: int,
     room_max_size: int,
-    # queue: mp.Queue,
 ) -> None:
     """Start a new game."""
 
@@ -51,17 +46,14 @@ def new_game(
         max_room_size=room_size_max,
     )
 
-    # gen_floor_process = mp.Process(
-    #     target=engine.game_world.gen_floor,
-    # )
     # engine.game_world.gen_floor()
 
     # engine.update_fov()
 
-    # engine.message_log.add_message(
-    #     text="Hello and welcome, adventurer, to yet another dungeon!",
-    #     fg=engine.colours['welcome_text']
-    # )
+    engine.message_log.add_message(
+        text="Hello and welcome, adventurer, to yet another dungeon!",
+        fg=engine.colours['welcome_text']
+    )
 
     # dagger = copy.deepcopy(item_factory.dagger)
     # leather_armor = copy.deepcopy(item_factory.leather_armour)
@@ -74,7 +66,7 @@ def new_game(
 
     # player.inventory.items.append(leather_armor)
     # player.equipment.toggle_equip(equippable_item=leather_armor, add_message=False)
-    # queue.put(engine)
+
     return engine
 
 
@@ -142,45 +134,7 @@ class MainMenu(event_handler.BaseEventHandler):
     ) -> Optional[event_handler.BaseEventHandler]:
         match event.sym:
             case tcod.event.KeySym.n:
-                # engine = pool.apply_async(
-                #     func=new_game,
-                #     args=(
-                #         "Rogue But Worse",
-                #         self.console.width -
-                #         min((self.console.width // 3), 55),
-                #         self.console.height,
-                #         30,
-                #         6,
-                #         10
-                #     )
-                # )
-                # print(engine)
-                # game_process = mp.Process(
-                #     target=new_game,
-                #     args=(
-                #         "Rogue But Worse",
-                #         self.console.width -
-                #         min((self.console.width // 3), 55),
-                #         self.console.height,
-                #         30,
-                #         6,
-                #         10,
-                #         queue
-                #     )
-                # )
-                # game_process.start()
-                # while not queue.empty():
-                #     self.engine = queue.get()
-                # while game_process.is_alive():
-                #     return event_handler.LoadingHandler(
-                #         parent=self,
-                #         process=game_process,
-                #         queue=queue,
-                #         text="Loading...")
-                # game_process.join()
-                # return event_handler.MainGameEventHandler(engine=engine)
 
-                # print(engine)
                 return event_handler.MainGameEventHandler(engine=new_game(
                     title="Rogue But Worse",
                     width=self.console.width -

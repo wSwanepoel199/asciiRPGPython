@@ -149,6 +149,7 @@ def main():
                     handler.engine.event_handler = handler
                     handler.engine.context = context
                     handler.engine.console = console
+
                 handler.on_render(console=console)
                 context.present(console=console, integer_scaling=True)
                 # if hasattr(handler, 'process') and handler.process and not hasattr(handler.engine, 'game_map'):
@@ -161,12 +162,15 @@ def main():
                 #     # handler.process.join()
                 #     continue
                 try:
-                    # if hasattr(handler, 'process') and handler.process and not hasattr(handler.engine, 'game_map'):
-                    #     while handler.process.is_alive():
-                    #         continue
-                    if skip_once:
-                        skip_once = False
+                    if (hasattr(handler, 'thread') and handler.thread) and not (hasattr(handler.engine, 'game_map') and handler.engine.game_map):
+                        handler.map_check()
                         continue
+                        # if not hasattr(handler.engine, 'game_map'):
+                        #     continue
+                    # print(handler.process.map)
+                    # if skip_once:
+                    #     skip_once = False
+                    #     continue
                     print('waiting for event')
                     for event in tcod.event.wait():
                         print("event triggered")

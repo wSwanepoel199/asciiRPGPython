@@ -24,8 +24,6 @@ class Engine:
         self.mouse_location = (0, 0)
         self.event_handler: Optional[event_handler.EventHandler] = None
         self.message_log = MessageLog()
-        self.process = None
-        self.queue = None
 
     @property
     def side_console(self) -> int:

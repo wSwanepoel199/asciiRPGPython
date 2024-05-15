@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Iterable, Optional, TYPE_CHECKING, Tuple, List
 
 import numpy as np
-import multiprocessing as mp
 import tcod
 import random
 
@@ -647,11 +646,11 @@ class GameWorld:
 
         self.current_floor = current_floor
 
-    def gen_floor(self, pipe=None) -> None:
+    def gen_floor(self) -> None:
         from src.procgen import genDungeon
 
         self.current_floor += 1
-        map = genDungeon(
+        self.engine.game_map = genDungeon(
             map_width=20 + self.current_floor * 10,
             map_height=20 + self.current_floor * 10,
             min_room_size=self.min_room_size,
@@ -661,19 +660,5 @@ class GameWorld:
             # item_limit=self.item_limit,
             engine=self.engine
         )
-        if map:
-            print("Map ready")
-            print(map)
-            self.engine.game_map = map
-            # print(self.engine.game_map)
-            if pipe:
-                print("sending down queue")
-                if map.engine.context:
-                    map.engine.context = None
-                if map.engine.console:
-                    map.engine.console = None
-                # queue.put(
-                #     obj=map
-                # )
-                pipe.send(map)
-                pipe.close()
+
+        self.engine.update_fov()

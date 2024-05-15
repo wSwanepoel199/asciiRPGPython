@@ -4,7 +4,7 @@ from typing import Tuple, Iterator, List, TYPE_CHECKING, Any, Union
 import random
 import tcod
 import threading as mt
-import multiprocessing as mp
+
 
 import src.factory.actor_factory as actor_factory
 import src.factory.item_factory as item_factory
@@ -397,7 +397,10 @@ def genDungeon(
 
     lock = mt.Lock()
 
-    def populateRooms(lock: mt.Lock, rooms: list):
+    def populateRooms(
+        lock: mt.Lock,
+        rooms: list
+    ):
         for room in rooms:
             # dungeon.tiles[room.inner] = dungeon.tile_types["floor"]
             # room_spawn_enemies = mt.Thread(
@@ -430,12 +433,17 @@ def genDungeon(
                 dungeon=dungeon,
                 floor_number=engine.game_world.current_floor
             )
+
     room_thread = mt.Thread(
         target=populateRooms,
         args=(lock, rooms)
     )
+    # populateRooms(rooms=rooms)
 
-    def populateTunnels(lock: mt.Lock, tunnels: list):
+    def populateTunnels(
+        lock: mt.Lock,
+        tunnels: list
+    ):
         for tunnel in tunnels:
             # dungeon.tiles[tunnel.inner] = dungeon.tile_types["floor"]
             # if random.random() < 0.3:
@@ -475,6 +483,8 @@ def genDungeon(
         target=populateTunnels,
         args=(lock, tunnels)
     )
+
+    # populateTunnels(tunnels=tunnels)
 
     wall_layout = []
 
@@ -522,10 +532,10 @@ def genDungeon(
 
     room_thread.start()
     tunnel_thread.start()
-    # wall_thread.start()
-    # wall_thread.join()
+    wall_thread.start()
+    wall_thread.join()
 
-    # wall_update_thread.start()
+    wall_update_thread.start()
 
     # room_spawn_enemies.join()
     # room_spawn_items.join()
@@ -533,6 +543,6 @@ def genDungeon(
     # tunnel_spawn_items.join()
     room_thread.join()
     tunnel_thread.join()
-    # wall_update_thread.join()
+    wall_update_thread.join()
 
     return dungeon
