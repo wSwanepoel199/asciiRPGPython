@@ -139,7 +139,7 @@ class EventHandler(BaseEventHandler):
         self.engine = engine
 
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
-        print(event)
+        # print(event)
         action_or_state = self.dispatch(event=event)
         if isinstance(action_or_state, BaseEventHandler):
             return action_or_state

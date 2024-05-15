@@ -171,9 +171,7 @@ def main():
                     # if skip_once:
                     #     skip_once = False
                     #     continue
-                    print('waiting for event')
                     for event in tcod.event.wait():
-                        print("event triggered")
                         context.convert_event(event=event)
                         handler = handler.handle_events(event=event)
                 except Exception:
