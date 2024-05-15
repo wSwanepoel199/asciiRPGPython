@@ -626,7 +626,7 @@ class GameWorld:
         room_limit: int,
         min_room_size: int,
         max_room_size: int,
-        current_floor: int = 10
+        current_floor: int = 0
     ):
         self.engine = engine
 

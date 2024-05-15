@@ -12,8 +12,8 @@ player = Actor(
     colour=(255, 255, 255),
     name="Player",
     ai_cls=HostileAi,
-    fighter=Fighter(Base_HP=300, Base_ATK=[
-                    20, 50], Base_DEF=10, Base_Speed=50),
+    fighter=Fighter(Base_HP=30, Base_ATK=[
+                    2, 5], Base_DEF=1, Base_Speed=50),
     equipment=Equipment(),
     inventory=Inventory(capacity=16),
     # level=Level(level_up_base=50)
