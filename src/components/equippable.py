@@ -227,3 +227,18 @@ class ChainMail(Equippable):
 class PlateArmour(Equippable):
     def __init__(self) -> None:
         super().__init__(equipment_type=EquipmentType.ARMOUR, DEF_bonus=6)
+
+
+class AmuletOfHealth(Equippable):
+    def __init__(self) -> None:
+        super().__init__(equipment_type=EquipmentType.ACCESSORY, HP_bonus=10)
+
+
+class RingOfAgility(Equippable):
+    def __init__(self) -> None:
+        super().__init__(equipment_type=EquipmentType.ACCESSORY, ACC_bonus=3)
+
+
+class RingOfDefence(Equippable):
+    def __init__(self) -> None:
+        super().__init__(equipment_type=EquipmentType.ACCESSORY, DEF_bonus=3)

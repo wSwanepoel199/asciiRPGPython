@@ -89,3 +89,24 @@ plate_armour = Item(
     name="Plate Armour",
     equippable=equippable.PlateArmour()
 )
+
+amulet_of_health = Item(
+    char=constants.necklace,
+    colour=(163, 121, 5),
+    name="Amulet of Health",
+    equippable=equippable.AmuletOfHealth()
+)
+
+ring_of_agility = Item(
+    char=constants.ring,
+    colour=(176, 131, 25),
+    name="Ring of Agility",
+    equippable=equippable.RingOfAgility()
+)
+
+ring_of_protection = Item(
+    char=constants.ring,
+    colour=(176, 131, 25),
+    name="Ring of Protection",
+    equippable=equippable.RingOfDefence()
+)

@@ -51,6 +51,12 @@ class Equipment(BaseComponent):
         ):
             bonus += self.armour.equippable.DEF_bonus
 
+        if (
+            self.accessory is not None
+            and self.accessory.equippable is not None
+        ):
+            bonus += self.accessory.equippable.DEF_bonus
+
         return bonus
 
     @property
@@ -68,6 +74,12 @@ class Equipment(BaseComponent):
             and self.armour.equippable is not None
         ):
             bonus += self.armour.equippable.ATK_bonus
+
+        if (
+            self.accessory is not None
+            and self.accessory.equippable is not None
+        ):
+            bonus += self.accessory.equippable.ATK_bonus
 
         return bonus
 
@@ -87,6 +99,12 @@ class Equipment(BaseComponent):
         ):
             bonus += self.armour.equippable.HP_bonus
 
+        if (
+            self.accessory is not None
+            and self.accessory.equippable is not None
+        ):
+            bonus += self.accessory.equippable.HP_bonus
+
         return bonus
 
     @property
@@ -104,6 +122,12 @@ class Equipment(BaseComponent):
             and self.armour.equippable is not None
         ):
             bonus += self.armour.equippable.ACC_bonus
+
+        if (
+            self.accessory is not None
+            and self.accessory.equippable is not None
+        ):
+            bonus += self.accessory.equippable.ACC_bonus
 
         return bonus
 
