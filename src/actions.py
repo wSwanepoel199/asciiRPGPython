@@ -161,24 +161,28 @@ class MeleeAction(DirectionalAction):
         if target is self.entity:
             raise self.engine.exceptions.Impossible(
                 "You can't attack yourself!")
+        hit_chance = random.randint(1, 20)
+        hit_check = hit_chance+self.entity.fighter.ACC
         damage = random.sample(
-            range(*self.entity.fighter.ATK), 1)[0] - random.sample(range(*[target.fighter.DEF//2, target.fighter.DEF]), 1)[0]
+            range(*self.entity.fighter.ATK),
+            1)[0]
         if self.entity is self.engine.player:
             attacker_name = self.entity.name.capitalize()
-            target_name = f"the {target.name}"
             # attack_desc = f"{self.entity.name.capitalize()} attacked the {target.name}"
             attack_color = self.engine.colours['player_atk']
         else:
-            attacker_name = f"the {self.entity.name.capitalize()}"
-            target_name = target.name
+            attacker_name = f"The {self.entity.name.capitalize()}"
             # attack_desc = f"The {self.entity.name.capitalize()} attacked {target.name}"
             attack_color = self.engine.colours['enemy_atk']
-        attack_desc = f"{attacker_name} attacked {target_name}"
-        if damage > 0:
-            attack_message = f"{attack_desc} dealing {damage} damage."
+        attack_desc = f"{attacker_name} attacked the {target.name}"
+        if hit_chance == 20:
+            attack_message = f"{attack_desc}. \nRolling a {hit_chance}+{self.entity.fighter.ACC} for a {hit_check}. \n{attacker_name} scored a Critical Hit dealing {damage*2} damage."
+            target.fighter.take_damage(damage*2)
+        elif hit_check >= target.fighter.DEF:
+            attack_message = f"{attack_desc}. \nRolling a {hit_chance}+{self.entity.fighter.ACC} for a {hit_check}. \n{attacker_name} dealt {damage} damage."
             target.fighter.take_damage(damage)
         else:
-            attack_message = f"{attack_desc} but did no damage."
+            attack_message = f"{attack_desc}. \nRolling a {hit_chance}+{self.entity.fighter.ACC} for a {hit_check}. \n{attacker_name} missed."
         self.engine.message_log.add_message(
             text=attack_message, fg=attack_color)
 

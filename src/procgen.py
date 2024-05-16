@@ -46,12 +46,12 @@ available_enemies = {
 available_items = {
     0: [
         (item_factory.healing_potion, 70),
-        (item_factory.dagger, 50),
-        (item_factory.leather_armour, 20)
+        (item_factory.leather_armour, 40)
     ],
     2: [
         (item_factory.lightning_bolt_scroll, 60),
         (item_factory.fireball_scroll, 50),
+        (item_factory.short_bow, 60)
     ],
     3: [
         (item_factory.cure_wounds_scroll, 30),
@@ -59,11 +59,14 @@ available_items = {
     ],
     4: [
         (item_factory.teleport_scroll, 30),
+        (item_factory.chain_mail, 20)
     ],
     5: [
         (item_factory.confusion_scroll, 20),
-        (item_factory.chain_mail, 10)
-    ]
+    ],
+    6: [
+        (item_factory.plate_armour, 10),
+    ],
 }
 
 
@@ -102,7 +105,14 @@ def place_enemies(
     dungeon: GameMap,
     floor_number: int
 ) -> None:
-    entity_num = max(max(room.x2, room.y2)//10, 1)
+    floor_val = get_max_value_for_floor(
+        max_value_by_floor=max_enemies_by_floor,
+        floor=floor_number
+    )
+    entity_num = max(min(room.x2, room.y2)//10, floor_val)
+    print(f"\nmin num of possible enemies: {min(room.x2, room.y2)//10}")
+    print(f"\nmax num of possible enemies: {floor_val}")
+    print(f"max num of enemies: {entity_num}")
     number_of_enemies = random.randint(0, entity_num)
 
     # number_of_enemies = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_enemies_by_floor, floor=floor_number))
@@ -155,8 +165,15 @@ def place_items(
     dungeon: GameMap,
     floor_number: int
 ) -> None:
-    item_num = max(min(room.x2, room.y2)//10, 1)
-    number_of_items = random.randint(0, item_num)
+    floor_val = get_max_value_for_floor(
+        max_value_by_floor=max_items_by_floor,
+        floor=floor_number
+    )
+    entity_num = max(min(room.x2, room.y2)//10, floor_val)
+    print(f"\nmin num of possible items: {min(room.x2, room.y2)//10}")
+    print(f"\nmax num of possible items: {floor_val}")
+    print(f"max num of items: {entity_num}")
+    number_of_items = random.randint(0, entity_num)
     # number_of_items = random.randint(0, get_max_value_for_floor(max_value_by_floor=max_items_by_floor, floor=floor_number))
 
     items = get_entities_at_random(

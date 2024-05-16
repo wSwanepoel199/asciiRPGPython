@@ -62,6 +62,13 @@ sword = Item(
     equippable=equippable.Sword()
 )
 
+short_bow = Item(
+    char="}",
+    colour=(143, 64, 7),
+    name="Short Bow",
+    equippable=equippable.ShortBow()
+)
+
 leather_armour = Item(
     char=constants.armour,
     colour=(102, 63, 24),
@@ -74,4 +81,11 @@ chain_mail = Item(
     colour=(145, 142, 140),
     name="Chain Mail",
     equippable=equippable.ChainMail()
+)
+
+plate_armour = Item(
+    char=constants.armour,
+    colour=(214, 214, 214),
+    name="Plate Armour",
+    equippable=equippable.PlateArmour()
 )

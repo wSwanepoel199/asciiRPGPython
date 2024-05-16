@@ -55,14 +55,14 @@ def new_game(
         fg=engine.colours['welcome_text']
     )
 
-    # dagger = copy.deepcopy(item_factory.dagger)
+    dagger = copy.deepcopy(item_factory.dagger)
     # leather_armor = copy.deepcopy(item_factory.leather_armour)
 
-    # dagger.parent = player.inventory
+    dagger.parent = player.inventory
     # leather_armor.parent = player.inventory
 
-    # player.inventory.items.append(dagger)
-    # player.equipment.toggle_equip(equippable_item=dagger, add_message=False)
+    player.inventory.items.append(dagger)
+    player.equipment.toggle_equip(equippable_item=dagger, add_message=False)
 
     # player.inventory.items.append(leather_armor)
     # player.equipment.toggle_equip(equippable_item=leather_armor, add_message=False)

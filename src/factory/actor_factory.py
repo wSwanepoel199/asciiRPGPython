@@ -12,8 +12,12 @@ player = Actor(
     colour=(255, 255, 255),
     name="Player",
     ai_cls=HostileAi,
-    fighter=Fighter(Base_HP=30, Base_ATK=[
-                    2, 5], Base_DEF=1, Base_Speed=50),
+    fighter=Fighter(
+        Base_HP=30,
+        Base_ATK=[2, 3],
+        Base_DEF=10,
+        Base_ACC=2
+    ),
     equipment=Equipment(),
     inventory=Inventory(capacity=16),
     # level=Level(level_up_base=50)
@@ -26,7 +30,11 @@ goblin = Actor(
     name="Goblin",
     money=8,
     ai_cls=HostileAi,
-    fighter=Fighter(Base_HP=15, Base_ATK=[1, 3], Base_DEF=1, Base_Speed=80),
+    fighter=Fighter(
+        Base_HP=15,
+        Base_ATK=[2, 3],
+        Base_DEF=10,
+        Base_ACC=2),
     equipment=Equipment(),
     inventory=Inventory(capacity=0),
     enemy_type=Goblin(),
@@ -39,7 +47,11 @@ slime = Actor(
     name="Slime",
     money=10,
     ai_cls=HostileAi,
-    fighter=Fighter(Base_HP=30, Base_ATK=[2, 3], Base_DEF=2, Base_Speed=40),
+    fighter=Fighter(
+        Base_HP=30,
+        Base_ATK=[1, 3],
+        Base_DEF=12,
+        Base_ACC=1),
     equipment=Equipment(),
     inventory=Inventory(capacity=0),
     enemy_type=Slime()
@@ -53,7 +65,11 @@ mini_slime = Actor(
     name="Mini Slime",
     money=10,
     ai_cls=HostileAi,
-    fighter=Fighter(Base_HP=15, Base_ATK=[1, 2], Base_DEF=1, Base_Speed=20),
+    fighter=Fighter(
+        Base_HP=15,
+        Base_ATK=[1, 2],
+        Base_DEF=10,
+        Base_ACC=1),
     equipment=Equipment(),
     inventory=Inventory(capacity=0),
     # level=Level(xp_given=25)
@@ -66,7 +82,11 @@ orc = Actor(
     name="Orc",
     ai_cls=HostileAi,
     money=18,
-    fighter=Fighter(Base_HP=35, Base_ATK=[2, 6], Base_DEF=3, Base_Speed=30),
+    fighter=Fighter(
+        Base_HP=35,
+        Base_ATK=[3, 6],
+        Base_DEF=13,
+        Base_ACC=4),
     equipment=Equipment(),
     inventory=Inventory(capacity=0),
     # level=Level(xp_given=50)
@@ -80,7 +100,11 @@ dragon = Actor(
     name="Dragon",
     money=100,
     ai_cls=HostileAi,
-    fighter=Fighter(Base_HP=100, Base_ATK=[5, 10], Base_DEF=5, Base_Speed=20),
+    fighter=Fighter(
+        Base_HP=100,
+        Base_ATK=[5, 10],
+        Base_DEF=15,
+        Base_ACC=5),
     equipment=Equipment(),
     inventory=Inventory(capacity=0),
     # level=Level(xp_given=200)

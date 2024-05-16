@@ -219,6 +219,12 @@ class EventHandler(BaseEventHandler):
 
 
 class AskUserEventHandler(EventHandler):
+    def __init__(self, engine: Engine, parent: Optional[EventHandler] = None) -> None:
+        super().__init__(engine=engine)
+        if parent:
+            self.parent = parent
+        else:
+            self.parent = MainGameEventHandler(engine=self.engine)
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         if event.sym in {
@@ -238,7 +244,7 @@ class AskUserEventHandler(EventHandler):
     def on_exit(self) -> Optional[ActionOrHandler]:
         self.engine.mouse_location = (0, 0)
         self.engine.player.inventory.open = False
-        return MainGameEventHandler(engine=self.engine)
+        return self.parent
 
 
 class InventoryEventHandler(AskUserEventHandler):
@@ -379,8 +385,8 @@ class InventoryDropHandler(InventoryEventHandler):
 
 
 class SelectIndexHandler(AskUserEventHandler):
-    def __init__(self, engine: Engine, target_xy: Optional[Tuple[int, int]] = None):
-        super().__init__(engine=engine)
+    def __init__(self, engine: Engine, parent: Optional[EventHandler] = None,  target_xy: Optional[Tuple[int, int]] = None):
+        super().__init__(engine=engine, parent=parent)
         player = self.engine.player
         self.viewport = self.engine.game_map.get_viewport()
         if target_xy:
@@ -457,8 +463,11 @@ class SelectIndexHandler(AskUserEventHandler):
 
 
 class LookHandler(SelectIndexHandler):
-    def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:
-        return MainGameEventHandler(engine=self.engine)
+    def __init__(self, engine: Engine, parent: Optional[EventHandler] = None) -> None:
+        super().__init__(engine=engine, parent=parent)
+
+    def on_index_selected(self, x: int, y: int) -> EventHandler:
+        return self.parent
 
 
 class MainGameEventHandler(EventHandler):
@@ -506,7 +515,7 @@ class MainGameEventHandler(EventHandler):
                 # performing_action = action.EscapeAction(entity=self.engine.player)
                 raise SystemExit()
             case tcod.event.KeySym.v:
-                return HistoryViewer(engine=self.engine)
+                return HistoryViewer(engine=self.engine, parent=self)
             case tcod.event.KeySym.i:
                 self.engine.player.inventory.open = True
                 return InventoryActivationHandler(engine=self.engine)
@@ -555,16 +564,25 @@ class GameOverEventHandler(EventHandler):
         self.on_quit()
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> None:
-        if event.sym == tcod.event.KeySym.ESCAPE:
-            # action.EscapeAction(entity=self.engine.player)
-            self.on_quit()
+
+        key = event.sym
+        modifier = event.mod
+        match key:
+            case tcod.event.KeySym.ESCAPE:
+                # performing_action = action.EscapeAction(entity=self.engine.player)
+                self.on_quit()
+            case tcod.event.KeySym.v:
+                return HistoryViewer(engine=self.engine, parent=self)
+            case tcod.event.KeySym.x:
+                return LookHandler(engine=self.engine, parent=self)
 
 
 class HistoryViewer(EventHandler):
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: Engine, parent: EventHandler):
         super().__init__(engine=engine)
         self.log_length = len(engine.message_log.messages)
         self.cursor = self.log_length - 1
+        self.parent = parent
 
     def on_render(self, console: tcod.console.Console) -> None:
         super().on_render(console=console)
@@ -622,7 +640,7 @@ class HistoryViewer(EventHandler):
             # Move directly to the last message.
             self.cursor = self.log_length - 1
         else:  # Any other key moves back to the main game state.
-            return MainGameEventHandler(engine=self.engine)
+            return self.parent
         return None
 
 
@@ -732,6 +750,10 @@ class CharacterScreenEventHandler(AskUserEventHandler):
             width=width,
         ))
         lines += [constants.empty_space]
+        lines += list(self.engine.message_log.wrap(
+            string=f"Accuracy: {self.engine.player.fighter.ACC}",
+            width=width,
+        ))
         if self.engine.player.level:
             lines += list(self.engine.message_log.wrap(
                 string=f"Level: {self.engine.player.level.curr_level}",
@@ -965,6 +987,54 @@ class MeleeSelectHandler(SelectIndexHandler):
 
 
 class MeleeWeaponSelectHandler(SelectIndexHandler):
+    def __init__(
+        self,
+        engine: Engine,
+        callback: Callable[[Tuple[int, int]], Optional[action.Action]],
+        item: Item,
+        reach: int = 1
+    ):
+        if engine.player.target:
+            self.target_xy = (engine.player.target.x, engine.player.target.y)
+        else:
+            self.target_xy = (engine.player.x, engine.player.y)
+        super().__init__(
+            engine=engine,
+            target_xy=(self.target_xy)
+        )
+        self.item = item
+        self.callback = callback
+        self.radius = reach
+        self.child = self
+
+    def on_render(self, console: tcod.console.Console) -> None:
+        super().on_render(console=console)
+        viewport = self.engine.game_map.get_viewport()
+        x, y = self.player_pos = (
+            self.engine.player.x +
+            self.engine.game_map.offset_x -
+            viewport[0][0],
+            self.engine.player.y +
+            self.engine.game_map.offset_y -
+            viewport[0][1]
+        )
+
+        if hasattr(self.item.equippable, 'range'):
+            self.radius = self.item.equippable.range
+
+        # x = x - self.radius - 1
+        # y = y - self.radius - 1
+
+        # if self.item:
+        #   colour = self.item.colour
+        # else:
+        #   colour = self.engine.colours['red']
+
+    def on_index_selected(self, x: int, y: int) -> Optional[action.Action]:
+        return self.callback((x, y))
+
+
+class WeaponSelectHandler(SelectIndexHandler):
     def __init__(
         self,
         engine: Engine,

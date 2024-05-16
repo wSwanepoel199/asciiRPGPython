@@ -202,14 +202,14 @@ class Engine:
                 y=y if y < 5 else 5,
                 string=msg,
             )
-        else:
-            # render names if entities under mouse
-            self.render_names_at_mouse(
-                x=self.game_world.viewport_width+1,
-                y=y,
-                width=self.side_console-2,
-                height=self.console.height//3 - 3
-            )
+        y += 2
+        # render names if entities under mouse
+        self.render_names_at_mouse(
+            x=self.game_world.viewport_width+1,
+            y=y,
+            width=self.side_console-2,
+            height=self.console.height//3 - 3
+        )
 
         event_log_height = self.console.height // 3 * 2
         # Event Log
