@@ -46,26 +46,25 @@ available_enemies = {
 
 available_items = {
     0: [
-        (item_factory.healing_potion, 70),
-        (item_factory.leather_armour, 40)
+        (item_factory.lightning_bolt_scroll, 20),
+        (item_factory.healing_potion, 80),
     ],
     2: [
-        (item_factory.lightning_bolt_scroll, 60),
+        (item_factory.ring_of_protection, 30)
         (item_factory.fireball_scroll, 50),
-        (item_factory.short_bow, 60),
-        (item_factory.ring_of_agility, 40)
+        (item_factory.short_bow, 20),
     ],
     3: [
         (item_factory.cure_wounds_scroll, 50),
-        (item_factory.sword, 40),
-        (item_factory.ring_of_protection, 30)
+        (item_factory.ring_of_agility, 20)
+        (item_factory.sword, 30),
     ],
     4: [
-        (item_factory.teleport_scroll, 30),
-        (item_factory.amulet_of_health, 10)
+        (item_factory.amulet_of_health, 20),
+        (item_factory.teleport_scroll, 40),
     ],
     5: [
-        (item_factory.confusion_scroll, 20),
+        (item_factory.confusion_scroll, 40),
         (item_factory.chain_mail, 20),
     ],
     6: [
@@ -114,9 +113,10 @@ def place_enemies(
         floor=floor_number
     )
     entity_num = max(min(room.x2, room.y2)//10, floor_val)
-    print(f"\nmin num of possible enemies: {min(room.x2, room.y2)//10}")
-    print(f"\nmax num of possible enemies: {floor_val}")
-    print(f"max num of enemies: {entity_num}")
+    if print_console:
+        print(f"\nmin num of possible enemies: {min(room.x2, room.y2)//10}")
+        print(f"\nmax num of possible enemies: {floor_val}")
+        print(f"max num of enemies: {entity_num}")
     # number_of_enemies = random.randint(0, entity_num)
 
     number_of_enemies = random.randint(0, get_max_value_for_floor(
@@ -175,9 +175,10 @@ def place_items(
         floor=floor_number
     )
     entity_num = max(min(room.x2, room.y2)//10, floor_val)
-    print(f"\nmin num of possible items: {min(room.x2, room.y2)//10}")
-    print(f"\nmax num of possible items: {floor_val}")
-    print(f"max num of items: {entity_num}")
+    if print_console:
+        print(f"\nmin num of possible items: {min(room.x2, room.y2)//10}")
+        print(f"\nmax num of possible items: {floor_val}")
+        print(f"max num of items: {entity_num}")
     # number_of_items = random.randint(0, entity_num)
 
     number_of_items = random.randint(0, get_max_value_for_floor(
@@ -333,11 +334,11 @@ def genDungeon(
             new_room.node = node
             if len(rooms) == 0:
                 player.place(*new_room.center, gamemap=dungeon)
-                x = new_room.center[0]
-                y = new_room.center[1]
-                for item in available_items.values():
-                    for i in item:
-                        i[0].spawn(x=x, y=y, gamemap=dungeon)
+                # x = new_room.center[0]
+                # y = new_room.center[1]
+                # for item in available_items.values():
+                #     for i in item:
+                #         i[0].spawn(x=x, y=y, gamemap=dungeon)
             else:
                 center_of_last_room = new_room.center
 
