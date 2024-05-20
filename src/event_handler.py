@@ -184,35 +184,36 @@ class EventHandler(BaseEventHandler):
         return True
 
     def ev_mousemotion(self, event: tcod.event.MouseMotion) -> None:
-        if self.engine.game_map.in_bounds(x=event.tile.x, y=event.tile.y):
+        if hasattr(self.engine, 'game_map') and self.engine.game_map.in_bounds(x=event.tile.x, y=event.tile.y):
             self.engine.mouse_location = event.tile.x, event.tile.y
 
     def ev_windowresized(self, event: tcod.event.WindowResized) -> None:
+        # width, height = self.engine.context.recommended_console_size()
+        # console = self.engine.context.new_console(
+        #     min_columns=width,
+        #     min_rows=height,
+        #     order="F"
+        # )
+        # self.engine.game_world.viewport_width = width-min((width // 3), 55)
+        # self.engine.game_world.viewport_height = height
+        # self.engine.render(console=console)
+
         width, height = self.engine.context.recommended_console_size()
         console = self.engine.context.new_console(
             min_columns=width,
             min_rows=height,
             order="F"
         )
-        self.engine.game_world.viewport_width = width-min((width // 3), 55)
-        self.engine.game_world.viewport_height = height
-        self.engine.render(console=console)
-        # self.engine.game_map.render(console=console)
-        # console = self.engine.context.new_console(
-        #   *self.engine.context.recommended_console_size(),
-        #   order="F"
-        # )
-        # self.engine.render(console=console)
-        # print(self.engine.console.width, self.engine.console.height, self.engine.game_map.width, self.engine.game_map.height)
-
-        # self.on_render(console=self.engine.console)
+        self.engine.console = console
 
     def on_render(self, console: tcod.console.Console) -> None:
         # self.engine.game_map.render(console=console)
         # width, height = self.engine.context.recommended_console_size()
         # self.engine.game_world.viewport_width = width-min((width // 3), 55)
         # self.engine.game_world.viewport_height = height
-        width, height = self.engine.context.recommended_console_size()
+        # width, height = self.engine.context.recommended_console_size()
+        width = console.width
+        height = console.height
         self.engine.game_world.viewport_width = width-min((width // 3), 55)
         self.engine.game_world.viewport_height = height
         self.engine.render(console=console)
@@ -496,12 +497,22 @@ class MainGameEventHandler(EventHandler):
                 bg=self.engine.colours['black'],
                 alignment=tcod.constants.CENTER
             )
-            print("Loading...")
+            # print("Loading...")
 
     def map_check(self):
-        print("process check: ", self.thread.is_alive())
-        self.thread.join()
+        # print("process check: ", self.thread.is_alive())
+        return self.thread.is_alive()
+        # self.thread.join()
         # self.engine.game_map = self.process.map
+
+    def ev_windowresized(self, event: tcod.event.WindowResized) -> None:
+        width, height = self.engine.context.recommended_console_size()
+        console = self.engine.context.new_console(
+            min_columns=width,
+            min_rows=height,
+            order="F"
+        )
+        self.engine.console = console
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         performing_action: Optional[action.Action] = None

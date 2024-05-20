@@ -50,13 +50,13 @@ available_items = {
         (item_factory.healing_potion, 80),
     ],
     2: [
-        (item_factory.ring_of_protection, 30)
+        (item_factory.ring_of_protection, 30),
         (item_factory.fireball_scroll, 50),
         (item_factory.short_bow, 20),
     ],
     3: [
         (item_factory.cure_wounds_scroll, 50),
-        (item_factory.ring_of_agility, 20)
+        (item_factory.ring_of_agility, 20),
         (item_factory.sword, 30),
     ],
     4: [

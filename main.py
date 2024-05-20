@@ -89,37 +89,12 @@ def main():
     # | tcod.context.SDL_WINDOW_MAXIMIZED
 
     tileset = tcod.tileset.load_tilesheet(
-        # path="./src/assets/dejavu10x10_gs_tc.png",
-        # path="./src/assets/rexpaint_cp437_10x10.png",
-        # path='./src/assets/Cheepicus_15x15.png',
-        # path="./src/assets/Aesomatica_16x16.png",
-        # path="./src/assets/Runeset_24x24.png",
         path=load_asset.cheepicus_15x15,
         columns=16, rows=16,
         charmap=tcod.tileset.CHARMAP_CP437
     )
 
-    # tileset = tcod.tileset.load_tilesheet(
-    #   # path="./src/assets/dejavu10x10_gs_tc.png",
-    #   # path="./src/assets/rexpaint_cp437_10x10.png",
-    #   path="./src/assets/Cheepicus_15x15.png",
-    #   # path="./src/assets/Aesomatica_16x16.png",
-    #   # path="./src/assets/Runeset_24x24.png",
-    #   columns=16, rows=16,
-    #   charmap=tcod.tileset.CHARMAP_CP437
-    # )
     title = "Rogue But Worse"
-    # tcod.tileset.procedural_block_elements(tileset=tileset)
-    # context: tcod.context.Context = Engine().genContext(
-    #   width= width,
-    #   height= height,
-    #   columns= columns,
-    #   rows= rows,
-    #   tileset=tileset,
-    #   title=title,
-    #   vsync=True,
-    # )
-    # context.recommended_console_size()
 
     with tcod.context.new(
         width=width,
@@ -128,14 +103,10 @@ def main():
         title=title,
         sdl_window_flags=FLAGS
     ) as context:
-        consoleSize = context.recommended_console_size()
+
         handler: event_handler.BaseEventHandler = game_setup.MainMenu(
             columns=columns, rows=rows)
-        # console = context.new_console(
-        #   min_columns=columns,
-        #   min_rows=rows,
-        #   order="F"
-        # )
+
         skip_once = True
         try:
             while True:
@@ -163,15 +134,15 @@ def main():
                 #     continue
                 try:
                     if (hasattr(handler, 'thread') and handler.thread) and not (hasattr(handler.engine, 'game_map') and handler.engine.game_map):
-                        handler.map_check()
-                        continue
-                        # if not hasattr(handler.engine, 'game_map'):
-                        #     continue
+                        if not handler.map_check():
+                            continue
+                    # if not hasattr(handler.engine, 'game_map'):
+                    #     continue
                     # print(handler.process.map)
                     # if skip_once:
                     #     skip_once = False
                     #     continue
-                    for event in tcod.event.wait():
+                    for event in tcod.event.get():
                         context.convert_event(event=event)
                         handler = handler.handle_events(event=event)
                 except Exception:
